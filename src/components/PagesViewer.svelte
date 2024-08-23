@@ -7,11 +7,11 @@
 
   export let buffer: ArrayBuffer
 
-  interface pageViewerProps {
-    pdfDocument: PDFDocumentProxy;
-    pageNum: number;
-    scale: number;
-  }
+  // interface pageViewerProps {
+  //   pdfDocument: PDFDocumentProxy;
+  //   pageNum: number;
+  //   scale: number;
+  // }
 
   const DEFAULT_SCALE: number = 1.0
   const SCALE_UNIT: number = 0.2
@@ -23,7 +23,9 @@
   let pageViewport: PageViewport
   let pageNumsRows: number[][] = []
   let pageViewerContainers: HTMLDivElement[] = []
-  let zoomedPageViewerProps: pageViewerProps
+  let zoomedPageNum: number | undefined
+  let zoomViewScale: number = 3.0
+  let zoomViewOpacity: number = 1.0
 
   GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/build/pdf.worker.min.mjs', import.meta.url).toString();
   
@@ -64,9 +66,8 @@
     updatePageNumsRows()
   }
 
-  function handlePageViewerCtrlClick(event: CustomEvent<pageViewerProps>) {
-    const props = event.detail
-    zoomedPageViewerProps = { ...props }
+  function handleZoomClick(event: CustomEvent<number>) {
+    zoomedPageNum = event.detail
   }
 
   function pagesNumPerRow(): number {
@@ -113,11 +114,29 @@
     <div class="row">
       {#each pageNums as pageNum}
         <div class="col" bind:this={pageViewerContainers[pageNum]}>
-          <PageViewer pdfDocument={pdfDocument} pageNum={pageNum} scale={scale} on:pageViewport={handlePageViewport} on:ctrlClick={handlePageViewerCtrlClick} />
+          <PageViewer pdfDocument={pdfDocument} pageNum={pageNum} scale={scale} on:pageViewport={handlePageViewport} on:zoomClick={handleZoomClick} />
         </div>
       {/each}
     </div>
   {/each}
+{/if}
+
+{#if zoomedPageNum }
+  <div class="zoomView">
+    <div class="wrapper" style={`opacity: ${zoomViewOpacity};`}>
+      <PageViewer pdfDocument={pdfDocument} pageNum={zoomedPageNum} scale={zoomViewScale} />
+    </div>
+    <nav>
+      <span class="pageNum">p.{zoomedPageNum}</span>
+      <label>Scale
+        <input type="number" step="0.1" min="0.1" max="10.0" bind:value={zoomViewScale}>
+      </label>
+      <label>Transparency
+        <input type="number" step="0.1" min="0.0" max="1.0" bind:value={zoomViewOpacity}>
+      </label>
+      <button on:click={() => zoomedPageNum = undefined}>Close</button>
+    </nav>
+  </div>
 {/if}
 
 <!-- todo -->
@@ -140,5 +159,36 @@
   }
   .row .col:not(:last-child) {
     border-left: 0.02rem solid #bbbbbb;
+  }
+
+  .zoomView {
+    position: fixed;
+    left: 10vw;
+    top: 5vh;
+    width: 80vw;
+    height: 90vh;
+    display: flex;
+    flex-direction: column;
+    border: 0.27rem #2aabb7 solid;
+  }
+  .zoomView .wrapper {
+    width: 100%;
+    overflow: scroll;
+  }
+  .zoomView nav {
+    width: 100%;
+    height: 1.75rem;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    background-color: #2aabb7;
+    color: #ffffff;
+  }
+  .zoomView nav * {
+    font-size: 1.0rem;
+  }
+  .zoomView nav input {
+    width: 3.2em;
+    text-align: right;
   }
 </style>
