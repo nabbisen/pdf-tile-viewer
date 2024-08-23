@@ -1,15 +1,17 @@
 <script lang="ts">
-  import { storedContent, type ToastContent } from '../stores/toast';
+  import { subscribeToast, type ToastContent } from '../stores/toast';
 
-  let content: ToastContent | undefined
+  let contents: ToastContent[] = []
   $: {
-    storedContent.subscribe(value => content = value)
+    subscribeToast(value => contents = [...value])
   }
 </script>
 
-{#if content }
-  <div class={`toast ${content.type}`}>{content.messages}</div>
-{/if}
+<div class="toasts">
+  {#each contents as content}
+    <div class={`toast ${content.type}`}>{content.messages}</div>
+  {/each}
+</div>
 
 <style>
   @keyframes toast-fade-in {
@@ -22,11 +24,17 @@
       bottom: 0.8rem;
     }
   }
-  .toast {
+  .toasts {
     position: fixed;
     left: 1.0rem;
-    bottom: -2.0rem;
+    bottom: 0.4rem;
     width: calc(100% - 3.6rem);
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 0.4rem;
+  }
+  .toast {
+    width: 100%;
     padding: 0.5rem 0.8rem;
     background-color: #252525;
     color: #ffffff;

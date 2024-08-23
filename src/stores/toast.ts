@@ -8,21 +8,31 @@ interface ToastContent {
   type: ToastType,
 }
 
-const storedContent = writable<ToastContent | undefined>()
+const storedContents = writable<ToastContent[]>([])
+const { subscribe: subscribeToast } = storedContents
 
 function errorToast(messages: string) {
-  storedContent.set({
+  show({
     messages,
     type: 'error',
   })
-
-  setTimeout(() => {
-    hideToast()
-  }, TOAST_DURATION_MILLISECONDS);
 }
 
-function hideToast() {
-  storedContent.set(undefined)
+function show(content: ToastContent) {
+  storedContents.update(current => {
+    const ret = current
+    ret.push(content)
+    return ret
+  })
+  setTimeout(hide, TOAST_DURATION_MILLISECONDS)
 }
 
-export { storedContent, errorToast, type ToastType, type ToastContent }
+function hide() {
+  storedContents.update(current => {
+    const ret = current
+    ret.shift()
+    return ret
+  })
+}
+
+export { subscribeToast, errorToast, type ToastType, type ToastContent }
