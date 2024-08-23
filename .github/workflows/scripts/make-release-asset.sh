@@ -52,5 +52,5 @@ then
   echo "GITHUB_ENV not set, run: gh release upload $TAG src-tauri/target/$asset"
 else
   echo "APP_TAG=$TAG" >> $GITHUB_ENV
-  echo "APP_ASSET=src-tauri/target/$asset" >> $GITHUB_ENV
+  echo "APP_ASSET=src-tauri/target/$target/release/$asset" >> $GITHUB_ENV
 fi
