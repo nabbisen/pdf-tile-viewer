@@ -79,7 +79,7 @@
   </div>
   <h2>{filename}</h2>
 </header>
-<div class="wrapper">
+<div>
   {#if buffer }
     <PagesViewer buffer={buffer} />
   {:else}
@@ -110,13 +110,6 @@
 </div>
 
 <style>
-  .wrapper {
-    width: 100%;
-    height: 100%;
-    padding: 0;
-    margin: 0;
-  }
-
   header {
     position: relative;
     z-index: 10000
@@ -177,7 +170,7 @@
   }
 
   .placeholder {
-    padding: 16% 0;
+    padding: 16vh 0;
     margin: 2rem;
     text-align: center;
     border: 1px dotted black;
