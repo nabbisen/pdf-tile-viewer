@@ -13,6 +13,14 @@ PDF viewer/reader displayed in tile layout.
 
 ### Command-lines
 
+To start up:
+
+```sh
+git clone https://github.com/nabbisen/pdf-tile-viewer.git
+cd pdf-tile-viewer
+bun install
+```
+
 To develop:
 
 ```sh
