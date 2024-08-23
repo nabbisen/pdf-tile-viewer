@@ -3,17 +3,17 @@
   "version": "0.1.0",
   "identifier": "com.pdf-tile-viewer.app",
   "build": {
-    "beforeDevCommand": "bun run dev",
+    "beforeDevCommand": "bun run dev || npm run dev",
     "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "bun run build",
+    "beforeBuildCommand": "bun run build || npm run build",
     "frontendDist": "../build"
   },
   "app": {
     "windows": [
       {
         "title": "PDF Tile Viewer",
-        "width": 1000,
-        "height": 700
+        "width": 992,
+        "height": 864
       }
     ],
     "security": {
