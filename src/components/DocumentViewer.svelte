@@ -5,6 +5,7 @@
   import { onMount, onDestroy } from 'svelte'
 
   import PagesViewer from './PagesViewer.svelte';
+  import { errorToast } from '../stores/toast'
 
   let buffer: ArrayBuffer | undefined
   let filename: string = ''
@@ -53,8 +54,17 @@
   const loadPdfBuffer = async (filepath: string) => {
     clearBuffer(filepath)
 
-    const res: Array<any> = await invoke("read_pdf", { filepath: filepath })
-    buffer = new Uint8Array(res).buffer
+    try {
+      const res: Array<any> = await invoke("read_pdf", { filepath: filepath })
+      buffer = new Uint8Array(res).buffer
+    } catch (error: unknown) {
+      const messages = (typeof error === 'string') ?
+        error as string :
+        (error instanceof Error) ?
+          error.message :
+          'unknown error'
+      errorToast(messages)
+    }
   }
 
   const unloadPdfBuffer = () => {
