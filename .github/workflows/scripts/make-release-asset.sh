@@ -28,13 +28,17 @@ mkdir $BIN_NAME-main
 os_tag=$3
 case $1 in
   ubuntu*)
-    asset="$BIN_NAME-$os_tag-$TAG"
+    # asset="$BIN_NAME-$os_tag-$TAG"
+    asset="$BIN_NAME-$os_tag"
+    mv $BIN_NAME $asset
     ;;
   macos*)
-    asset="$BIN_NAME-$os_tag-$TAG"
+    asset="$BIN_NAME-$os_tag"
+    mv $BIN_NAME $asset
     ;;
   windows*)
-    asset="$BIN_NAME-$os_tag-$TAG.exe"
+    asset="$BIN_NAME-$os_tag.exe"
+    mv $BIN_NAME.exe $asset
     ;;
   *)
     echo "OS should be first parameter, was: $1"
