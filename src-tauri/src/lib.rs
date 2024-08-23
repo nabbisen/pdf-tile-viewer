@@ -16,7 +16,7 @@ fn read_pdf(filepath: &str) -> Vec<u8> {
         Ok(_) => buffer,
         Err(err) => {
             // todo reading failed
-            panic!("{}", err) ;
+            panic!("{}", err);
         }
     }
 }
