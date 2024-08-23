@@ -31,14 +31,11 @@
     const CMAP_URL = "pdfjs-dist/cmaps/";
     const CMAP_PACKED = true;
 
-    const ENABLE_XFA = true
-
     const loadingTask = getDocument({
       data: buffer,
       url: undefined,
       cMapUrl: CMAP_URL,
       cMapPacked: CMAP_PACKED,
-      enableXfa: ENABLE_XFA,
     })
 
     pdfDocument = await loadingTask.promise;
