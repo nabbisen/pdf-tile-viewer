@@ -43,7 +43,7 @@ jobs:
     - uses: actions/checkout@v3
     - name: Install Rust
       run: rustup update stable && rustup default stable && rustup component add rustfmt
-    - run: cd src-tauri && cargo fmt --check
+    - run: cd src-tauri && cargo fmt --check && cd ..
 
   # The success job is here to consolidate the total success/failure state of
   # all other jobs. This job is then included in the GitHub branch protection
