@@ -5,6 +5,7 @@
   import { onMount, onDestroy } from 'svelte'
 
   import PagesViewer from './PagesViewer.svelte';
+  import { errorToast } from '../stores/toast'
 
   let buffer: ArrayBuffer | undefined
   let filename: string = ''
@@ -18,30 +19,48 @@
 
   async function listenDragDrop() {
     unlistenDragDrop = await getCurrentWebview().onDragDropEvent((event: TauriEvent<DragDropEvent>) => {
-      // console.log(event.payload)
-      // todo
       if (event.payload.type === 'drop') {
-        const paths = event.payload.paths
-        const filepath = paths[0] // todo single file only now
-
-        loadPdfBuffer(filepath)
-
-        const existingItemIndex = loadedHistory.findIndex(x => x.filepath === filepath)
-        if (existingItemIndex !== -1) {
-          loadedHistory.splice(existingItemIndex, 1)
-        }
-        const loadedHistoryItem = <LoadedHistoryItem>{
-          filename,
-          filepath,
-          timestamp: new Date()
-        }
-        loadedHistory.push(loadedHistoryItem)
+        handleDrop(event.payload.paths)
       }
     })
   }
 
-  const clearBuffer = (filepath: string) => {
+  const handleDrop = (paths: string[]) => {
+    // todo: single file only now
+    const filepath = paths[0]
+    loadPdfBuffer(filepath)
+  }
+
+  const loadPdfBuffer = async (filepath: string) => {
+    unloadPdfBuffer()
+    
+    try {
+      const res: Array<any> = await invoke("read_pdf", { filepath: filepath })
+      buffer = new Uint8Array(res).buffer
+    } catch (error: unknown) {
+      handleLoadPdfBufferError(error)
+      return
+    }
+
+    updateFilename(filepath)
+    pushToLoadedHistory(filepath)
+  }
+  
+  const handleLoadPdfBufferError = (error: unknown) => {
+    const messages: string = (typeof error === 'string') ?
+      error as string :
+      (error instanceof Error) ?
+        error.message :
+        'unknown error'
+    errorToast(messages)
+  }
+
+  const unloadPdfBuffer = () => {
     buffer = undefined
+    filename = ''
+  }
+
+  const updateFilename = (filepath: string) => {
     const slashSplit = filepath.split('/')
     if (2 <= slashSplit.length) {
       filename = slashSplit[slashSplit.length - 1]
@@ -50,16 +69,18 @@
       filename = backslashSplit[backslashSplit.length - 1]
     }
   }
-  const loadPdfBuffer = async (filepath: string) => {
-    clearBuffer(filepath)
 
-    const res: Array<any> = await invoke("read_pdf", { filepath: filepath })
-    buffer = new Uint8Array(res).buffer
-  }
-
-  const unloadPdfBuffer = () => {
-    buffer = undefined
-    filename = ''
+  const pushToLoadedHistory = (filepath: string) => {
+    const existingItemIndex = loadedHistory.findIndex(x => x.filepath === filepath)
+    if (existingItemIndex !== -1) {
+      loadedHistory.splice(existingItemIndex, 1)
+    }
+    const loadedHistoryItem = <LoadedHistoryItem>{
+      filename,
+      filepath,
+      timestamp: new Date()
+    }
+    loadedHistory.push(loadedHistoryItem)
   }
 
   async function ready() {
@@ -79,7 +100,7 @@
   </div>
   <h2>{filename}</h2>
 </header>
-<div class="wrapper">
+<div>
   {#if buffer }
     <PagesViewer buffer={buffer} />
   {:else}
@@ -110,13 +131,6 @@
 </div>
 
 <style>
-  .wrapper {
-    width: 100%;
-    height: 100%;
-    padding: 0;
-    margin: 0;
-  }
-
   header {
     position: relative;
     z-index: 10000
@@ -177,7 +191,7 @@
   }
 
   .placeholder {
-    padding: 16% 0;
+    padding: 16vh 0;
     margin: 2rem;
     text-align: center;
     border: 1px dotted black;
