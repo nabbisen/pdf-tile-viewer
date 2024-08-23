@@ -56,7 +56,14 @@
   {#if buffer }
     <PagesViewer buffer={buffer} />
   {:else}
-    <div class="placeholder">Drop PDF file</div>
+    <div class="placeholder">
+      <strong>Drop PDF file</strong>
+      <p>
+        <b>Number of pages in a row</b> is dynamically calculated
+        with <b>app window size</b>
+        and <b>zoom scale</b> modified with Ctrl key + mouse wheel.
+      </p>
+    </div>
   {/if}
 </div>
 
@@ -132,5 +139,13 @@
     margin: 2rem;
     text-align: center;
     border: 1px dotted black;
+  }
+  .placeholder p {
+    max-width: 16.0em;
+    margin: 1.1rem auto;
+    text-align: left;
+    font-size: 0.8rem;
+    font-family: serif;
+    color: #727272;
   }
 </style>

@@ -1,8 +1,8 @@
 # PDF Tile Viewer
 
-PDF viewer/reader displayed in tile layout.
+PDF viewer/reader displayed in tile layout. Number of pages in a row is dynamically calculated with app window size and zoom scale modified with Ctrl key + mouse wheel.
 
-タイル形式の PDF ビュアー / リーダー です。
+タイル形式の PDF ビュアー / リーダー です。行あたりページ数を、アプリ Window サイズと、Ctrl + マウスホイールで変更可能なズーム倍率から、動的計算します。
 
 <p style="display: flex; gap: 0.8rem; flex-wrap: wrap;">
   <img style="flex: 1; max-width: calc(40.0% - 0.4rem);" src=".docs-assets/demo-01.png" alt="demo screenshot 01">
