@@ -39,7 +39,7 @@ fn validate_pdf(file: &mut File) -> Result<(), String> {
 #[derive(Serialize, Deserialize)]
 pub struct SearchResult {
     buffer: Vec<u8>,
-    page_nums: Vec<usize>,
+    page_indexes: Vec<usize>,
 }
 
 pub fn search(search_term: &str, filepath: &str) -> Result<SearchResult, String> {
@@ -50,74 +50,61 @@ pub fn search(search_term: &str, filepath: &str) -> Result<SearchResult, String>
         Err(_) => return Err("libpdfium.so must be missing".to_owned()),
     };
 
-    let mut document = pdfium
+    let document = pdfium
         .load_pdf_from_file(filepath, None)
         .expect("Failed to open file");
 
-    let mut page = document.pages().first().expect("Failed to get leading");
-
-    let search_options = PdfSearchOptions::new();
-    let mut search_results_bounds = page
-        .text()
-        .expect("Failed to read")
-        .search(search_term, &search_options)
-        .iter(PdfSearchDirection::SearchForward)
+    let mut page_indexes = Vec::<usize>::new();
+    document
+        .pages()
+        .iter()
         .enumerate()
-        .flat_map(|(index, segments)| {
-            segments
-                .iter()
-                .map(|segment| {
-                    println!(
-                        "Search result {}: `{}` appears at {:#?}",
-                        index,
-                        segment.text(),
-                        segment.bounds()
-                    );
+        .for_each(|(page_index, mut page)| {
+            let search_options = PdfSearchOptions::new();
+            let mut search_results_bounds = page
+                .text()
+                .expect("Failed to read")
+                .search(search_term, &search_options)
+                .iter(PdfSearchDirection::SearchForward)
+                .enumerate()
+                .flat_map(|(index, segments)| {
+                    segments
+                        .iter()
+                        .map(|segment| {
+                            println!(
+                                "Search result {}: `{}` appears at {:#?}",
+                                index,
+                                segment.text(),
+                                segment.bounds()
+                            );
 
-                    segment.bounds()
+                            segment.bounds()
+                        })
+                        .collect::<Vec<_>>()
                 })
-                .collect::<Vec<_>>()
-        })
-        .collect::<Vec<_>>();
+                .collect::<Vec<_>>();
 
-    // We now have a list of page areas that contain the search target.
-    // Highlight them in yellow...
+            if 0 < search_results_bounds.len() {
+                page_indexes.push(page_index);
+            }
 
-    let highlight_color = Some(PdfColor::YELLOW.with_alpha(128));
-    for result in search_results_bounds.drain(..) {
-        page.objects_mut()
-            .create_path_object_rect(result, None, None, highlight_color)
-            .expect("Failed to add hilighting annotation");
-    }
+            // We now have a list of page areas that contain the search target.
+            // Highlight them in yellow...
 
-    // ... and save the result out to a new document.
-
-    while document.pages().len() > 1 {
-        document
-            .pages_mut()
-            .last()
-            .expect("Failed to get last page")
-            .delete()
-            .expect("Failed to delete tailing");
-    }
+            let highlight_color = Some(PdfColor::YELLOW.with_alpha(128));
+            for result in search_results_bounds.drain(..) {
+                page.objects_mut()
+                    .create_path_object_rect(result, None, None, highlight_color)
+                    .expect("Failed to add hilighting annotation");
+            }
+        });
 
     let buffer = document.save_to_bytes().expect("Failed to write as buffer");
 
-    let page_nums = Vec::<usize>::new();
-    // let mut page_nums = Vec::<usize>::new();
-    // for (i, page) in document.pages().iter().enumerate() {
-    //     let text = page.text().expect("Failed to get page text");
-
-    //     if text
-    //         .search(search_term, &search_options)
-    //         .find_next()
-    //         .is_some()
-    //     {
-    //         page_nums.push(i + 1);
-    //     }
-    // }
-
-    Ok(SearchResult { buffer, page_nums })
+    Ok(SearchResult {
+        buffer,
+        page_indexes,
+    })
 }
 
 fn pdfium_bind_to_library() -> Result<Box<dyn PdfiumLibraryBindings>, PdfiumError> {
