@@ -3,6 +3,7 @@
   import { getDocument , GlobalWorkerOptions, type PageViewport, type PDFDocumentProxy  } from 'pdfjs-dist';
   import 'pdfjs-dist/web/pdf_viewer.css'
   import PageViewer from './PageViewer.svelte'
+  import { successToast } from '../stores/toast'
   import { debounce } from '../utils/event'
 
   export let buffer: ArrayBuffer
@@ -56,6 +57,10 @@
 
     window.addEventListener('resize', debounce(updatePageNumsRows, 200))
     window.addEventListener('wheel', debounce(handleWheel, 120))
+
+    setTimeout(() => {
+      successToast('File opened', 2700)
+    }, 400)
   }
   onMount(onMountHandler)
 

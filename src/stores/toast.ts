@@ -1,20 +1,38 @@
 import { writable } from 'svelte/store';
 
-const TOAST_DURATION_MILLISECONDS: number = 10000
+const DEFAULT_DURATION_MILLISECONDS: number = 5000
 
-type ToastType = 'error'
+type ToastType = 'info' | 'success' | 'error'
 interface ToastContent {
   messages: string,
   type: ToastType,
+  durationMilliseconds: number,
 }
 
 const storedContents = writable<ToastContent[]>([])
 const { subscribe: subscribeToast } = storedContents
 
-function errorToast(messages: string) {
+function infoToast(messages: string, durationMilliseconds?: number) {
+  show({
+    messages,
+    type: 'info',
+    durationMilliseconds: durationMilliseconds ?? DEFAULT_DURATION_MILLISECONDS
+  })
+}
+
+function successToast(messages: string, durationMilliseconds?: number) {
+  show({
+    messages,
+    type: 'success',
+    durationMilliseconds: durationMilliseconds ?? DEFAULT_DURATION_MILLISECONDS
+  })
+}
+
+function errorToast(messages: string, durationMilliseconds?: number) {
   show({
     messages,
     type: 'error',
+    durationMilliseconds: durationMilliseconds ?? DEFAULT_DURATION_MILLISECONDS
   })
 }
 
@@ -24,7 +42,7 @@ function show(content: ToastContent) {
     ret.push(content)
     return ret
   })
-  setTimeout(hide, TOAST_DURATION_MILLISECONDS)
+  setTimeout(hide, content.durationMilliseconds)
 }
 
 function hide() {
@@ -35,4 +53,4 @@ function hide() {
   })
 }
 
-export { subscribeToast, errorToast, type ToastType, type ToastContent }
+export { infoToast, successToast, errorToast, subscribeToast, type ToastType, type ToastContent }

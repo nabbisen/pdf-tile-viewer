@@ -36,13 +36,20 @@
   .toast {
     width: 100%;
     padding: 0.5rem 0.8rem;
-    background-color: #252525;
-    color: #ffffff;
     border-radius: 0.04rem;
     opacity: 0.0;
     animation: toast-fade-in 1.5s ease forwards;
   }
+  .toast.info {
+    background-color: #252525;
+    color: #ffffff;
+  }
+  .toast.success {
+    background-color: #2aabb7;
+    color: #ffffff;
+  }
   .toast.error {
     background-color: #d20f63;
+    color: #ffffff;
   }
 </style>
