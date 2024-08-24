@@ -1,7 +1,7 @@
 use tauri::{Manager, PhysicalPosition, PhysicalSize, Position, Size};
 
 mod pdf;
-use pdf::read;
+use pdf::{read, search, SearchResult};
 
 const WIDTH_RESOLUTION_RATIO: f32 = 0.8;
 const HEIGHT_RESOLUTION_RATIO: f32 = 0.9;
@@ -9,6 +9,11 @@ const HEIGHT_RESOLUTION_RATIO: f32 = 0.9;
 #[tauri::command]
 fn read_pdf(filepath: &str) -> Result<Vec<u8>, String> {
     read(filepath)
+}
+
+#[tauri::command]
+fn search_pdf(search_term: &str, filepath: &str) -> Result<SearchResult, String> {
+    search(search_term, filepath)
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -44,7 +49,7 @@ pub fn run() {
         })
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
-        .invoke_handler(tauri::generate_handler![read_pdf])
+        .invoke_handler(tauri::generate_handler![read_pdf, search_pdf])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

@@ -6,7 +6,7 @@
   import { onMount, onDestroy } from 'svelte'
 
   import DocumentViewer from './DocumentViewer.svelte'
-  import { errorToast } from '../stores/toast'
+  import { handleInvokeError } from '../utils/backend'
 
   let buffer: ArrayBuffer | undefined
   let filename: string = ''
@@ -37,26 +37,17 @@
   const loadPdfBuffer = async (filepath: string) => {
     unloadPdfBuffer()
 
+    let res: Array<any>
     try {
-      const res: Array<any> = await invoke('read_pdf', { filepath: filepath })
-      buffer = new Uint8Array(res).buffer
+      res = await invoke('read_pdf', { filepath: filepath })
     } catch (error: unknown) {
-      handleLoadPdfBufferError(error)
+      handleInvokeError(error)
       return
     }
+    buffer = new Uint8Array(res).buffer
 
     updateFilename(filepath)
     pushToLoadedHistory(filepath)
-  }
-
-  const handleLoadPdfBufferError = (error: unknown) => {
-    const messages: string =
-      typeof error === 'string'
-        ? (error as string)
-        : error instanceof Error
-          ? error.message
-          : 'unknown error'
-    errorToast(messages, 10000)
   }
 
   const unloadPdfBuffer = () => {
@@ -171,9 +162,10 @@
     right: 0.8rem;
     bottom: 0.5rem;
     width: 4em;
-    text-align: center;
     background-color: #efefef;
     font-size: 1rem;
+    text-align: center;
+    cursor: pointer;
   }
   header.has-document .logo button:hover {
     opacity: 0.93;
@@ -226,6 +218,17 @@
     font-size: 0.8rem;
     font-family: serif;
     color: #727272;
+  }
+  .placeholder button {
+    padding: 0.2rem 0.6rem;
+    background-color: #2aabb7;
+    color: #ffffff;
+    border: 0.03rem #4ccbd6 solid;
+    font-size: 1.5rem;
+    border-radius: 0.2rem;
+  }
+  .placeholder button:hover {
+    opacity: 0.87;
   }
 
   h3 {
