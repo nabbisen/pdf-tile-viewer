@@ -162,9 +162,10 @@
     right: 0.8rem;
     bottom: 0.5rem;
     width: 4em;
-    text-align: center;
     background-color: #efefef;
     font-size: 1rem;
+    text-align: center;
+    cursor: pointer;
   }
   header.has-document .logo button:hover {
     opacity: 0.93;
