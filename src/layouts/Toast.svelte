@@ -1,9 +1,9 @@
 <script lang="ts">
-  import { subscribeToast, type ToastContent } from '../stores/toast';
+  import { subscribeToast, type ToastContent } from '../stores/toast'
 
   let contents: ToastContent[] = []
   $: {
-    subscribeToast(value => contents = [...value])
+    subscribeToast((value) => (contents = [...value]))
   }
 </script>
 
@@ -16,17 +16,17 @@
 <style>
   @keyframes toast-fade-in {
     from {
-      opacity: 0.0;
-      bottom: -2.0rem;
+      opacity: 0;
+      bottom: -2rem;
     }
     to {
-      opacity: 1.0;
+      opacity: 1;
       bottom: 0.8rem;
     }
   }
   .toasts {
     position: fixed;
-    left: 1.0rem;
+    left: 1rem;
     bottom: 0.4rem;
     width: calc(100% - 3.6rem);
     display: flex;
@@ -37,7 +37,7 @@
     width: 100%;
     padding: 0.5rem 0.8rem;
     border-radius: 0.04rem;
-    opacity: 0.0;
+    opacity: 0;
     animation: toast-fade-in 1.5s ease forwards;
   }
   .toast.info {
