@@ -1,11 +1,17 @@
 <script lang="ts">
-  import { onMount } from "svelte";
-  import { getDocument , GlobalWorkerOptions, type PageViewport, type PDFDocumentProxy  } from 'pdfjs-dist';
+  import { onMount } from 'svelte'
+  import {
+    getDocument,
+    GlobalWorkerOptions,
+    type PageViewport,
+    type PDFDocumentProxy,
+  } from 'pdfjs-dist'
   import 'pdfjs-dist/web/pdf_viewer.css'
   import PageViewer from './PageViewer.svelte'
   import { successToast } from '../stores/toast'
   import { debounce } from '../utils/event'
 
+  // export let filepath: string
   export let buffer: ArrayBuffer
 
   // interface pageViewerProps {
@@ -28,11 +34,22 @@
   let zoomViewScale: number = 3.0
   let zoomViewOpacity: number = 1.0
 
-  GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/build/pdf.worker.min.mjs', import.meta.url).toString();
-  
+  GlobalWorkerOptions.workerSrc = new URL(
+    'pdfjs-dist/build/pdf.worker.min.mjs',
+    import.meta.url
+  ).toString()
+
+  $: {
+    if (zoomedPageNum) {
+      window.document.body.style.overflow = 'hidden'
+    } else {
+      window.document.body.style.overflow = 'auto'
+    }
+  }
+
   const loadPdfDocument = async () => {
-    const CMAP_URL = "pdfjs-dist/cmaps/";
-    const CMAP_PACKED = true;
+    const CMAP_URL = 'pdfjs-dist/cmaps/'
+    const CMAP_PACKED = true
 
     const loadingTask = getDocument({
       data: buffer,
@@ -41,12 +58,12 @@
       cMapPacked: CMAP_PACKED,
     })
 
-    pdfDocument = await loadingTask.promise;
+    pdfDocument = await loadingTask.promise
   }
 
   const handleWheel = (event: WheelEvent) => {
     if (event.ctrlKey) {
-      (0 < event.deltaY) ? decreaseScale() : increaseScale()
+      0 < event.deltaY ? decreaseScale() : increaseScale()
     }
   }
 
@@ -57,6 +74,12 @@
 
     window.addEventListener('resize', debounce(updatePageNumsRows, 200))
     window.addEventListener('wheel', debounce(handleWheel, 120))
+
+    window.addEventListener('keydown', (e: KeyboardEvent) => {
+      if (e.key === 'Escape' || e.key === 'Esc') {
+        zoomedPageNum = undefined
+      }
+    })
 
     setTimeout(() => {
       successToast('File opened', 2700)
@@ -83,7 +106,7 @@
 
   function updatePageNumsRows() {
     let ret: number[][] = []
-    
+
     const rowBreak = pagesNumPerRow()
     let row: number[] = []
     for (let pageNum = 1; pageNum <= pdfDocument.numPages; pageNum++) {
@@ -96,7 +119,7 @@
     if (0 < row.length) {
       ret.push(row)
     }
-    
+
     pageNumsRows = ret
   }
 
@@ -114,32 +137,40 @@
   }
 </script>
 
-{#if pdfDocument && pdfDocument.numPages }
+{#if pdfDocument && pdfDocument.numPages}
   {#each pageNumsRows as pageNums}
     <div class="row">
       {#each pageNums as pageNum}
         <div class="col" bind:this={pageViewerContainers[pageNum]}>
-          <PageViewer pdfDocument={pdfDocument} pageNum={pageNum} scale={scale} on:pageViewport={handlePageViewport} on:zoomClick={handleZoomClick} />
+          <PageViewer
+            {pdfDocument}
+            {pageNum}
+            {scale}
+            on:pageViewport={handlePageViewport}
+            on:zoomClick={handleZoomClick}
+          />
         </div>
       {/each}
     </div>
   {/each}
 {/if}
 
-{#if zoomedPageNum }
+{#if zoomedPageNum}
   <div class="zoomView">
     <div class="wrapper" style={`opacity: ${zoomViewOpacity};`}>
-      <PageViewer pdfDocument={pdfDocument} pageNum={zoomedPageNum} scale={zoomViewScale} />
+      <PageViewer {pdfDocument} pageNum={zoomedPageNum} scale={zoomViewScale} />
     </div>
     <nav>
       <span class="pageNum">p.{zoomedPageNum}</span>
-      <label>Scale
-        <input type="number" step="0.1" min="0.1" max="10.0" bind:value={zoomViewScale}>
+      <label
+        >Scale
+        <input type="number" step="0.1" min="0.1" max="10.0" bind:value={zoomViewScale} />
       </label>
-      <label>Transparency
-        <input type="number" step="0.1" min="0.0" max="1.0" bind:value={zoomViewOpacity}>
+      <label
+        >Transparency
+        <input type="number" step="0.1" min="0.0" max="1.0" bind:value={zoomViewOpacity} />
       </label>
-      <button on:click={() => zoomedPageNum = undefined}>Close</button>
+      <button on:click={() => (zoomedPageNum = undefined)}>Close</button>
     </nav>
   </div>
 {/if}
@@ -194,7 +225,7 @@
     color: #ffffff;
   }
   .zoomView nav * {
-    font-size: 1.0rem;
+    font-size: 1rem;
   }
   .zoomView nav input {
     width: 3.2em;
