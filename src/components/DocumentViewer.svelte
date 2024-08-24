@@ -2,6 +2,7 @@
   import { invoke } from '@tauri-apps/api/core'
   import { getCurrentWebview, type DragDropEvent } from '@tauri-apps/api/webview'
   import { type UnlistenFn, type Event as TauriEvent } from '@tauri-apps/api/event'
+  import { open } from '@tauri-apps/plugin-dialog';
   import { onMount, onDestroy } from 'svelte'
 
   import PagesViewer from './PagesViewer.svelte';
@@ -52,12 +53,27 @@
       (error instanceof Error) ?
         error.message :
         'unknown error'
-    errorToast(messages)
+    errorToast(messages, 10000)
   }
 
   const unloadPdfBuffer = () => {
     buffer = undefined
     filename = ''
+  }
+
+  const chooseFile = async () => {
+    const fileResponse = await open({
+      multiple: false, // todo
+      directory: false,
+      filters: [
+        {name: 'PDF', extensions: ['pdf']},
+        {name: 'All files', extensions: ['*']}
+      ],
+    });
+    if (fileResponse) {
+      const filepath = fileResponse.path
+      loadPdfBuffer(filepath)
+    }
   }
 
   const updateFilename = (filepath: string) => {
@@ -113,6 +129,7 @@
         with <b>app window size</b>
         and <b>zoom scale</b> modified with Ctrl key + mouse wheel.
       </p>
+      <button on:click={chooseFile}>Choose file</button>
     </div>
 
     <h3>History to re-open</h3>
