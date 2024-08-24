@@ -205,7 +205,6 @@
     height: 90vh;
     display: flex;
     flex-direction: column;
-    background-color: #252525;
     border: 0.27rem #2aabb7 solid;
   }
   .zoomView .wrapper {
@@ -213,6 +212,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    background-color: #252525;
     overflow: scroll;
   }
   .zoomView nav {
