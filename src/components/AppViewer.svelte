@@ -219,6 +219,17 @@
     font-family: serif;
     color: #727272;
   }
+  .placeholder button {
+    padding: 0.2rem 0.6rem;
+    background-color: #2aabb7;
+    color: #ffffff;
+    border: 0.03rem #4ccbd6 solid;
+    font-size: 1.5rem;
+    border-radius: 0.2rem;
+  }
+  .placeholder button:hover {
+    opacity: 0.87;
+  }
 
   h3 {
     display: none;
