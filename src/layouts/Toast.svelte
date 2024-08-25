@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { subscribeToast, type ToastContent } from '../stores/toast'
+  import { subscribeToast } from '../stores/toast'
+  import type { ToastContent } from '../types/toast'
 
   let contents: ToastContent[] = []
   $: {
