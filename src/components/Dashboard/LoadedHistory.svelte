@@ -54,7 +54,6 @@
     border: none;
     font-size: 1.4rem;
     text-align: left;
-    cursor: pointer;
   }
   .loaded-history h4 {
     padding: 0;

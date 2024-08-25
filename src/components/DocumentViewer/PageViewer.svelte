@@ -37,10 +37,6 @@
     dispatch('pageViewport', pdfPageView.viewport)
   }
 
-  function handleZoom(event: MouseEvent) {
-    dispatch('zoomClick', pageIndex)
-  }
-
   $: {
     if (pdfPageView) {
       pdfPageView.update({
@@ -58,59 +54,6 @@
   }
 </script>
 
-<div class="container main" data-page-number={pageIndex + 1}>
-  <div class="pdfViewer">
-    <div bind:this={pageViewerContainer}></div>
-  </div>
-  <button class="zoom" on:click={handleZoom} aria-label="zoom"></button>
-  <!-- <input type="checkbox" on:click={handleClick}> -->
+<div class="pdfViewer">
+  <div bind:this={pageViewerContainer}></div>
 </div>
-
-<style>
-  .container.main {
-    position: relative;
-  }
-  .container.main:hover {
-    /* .container.main:has(input:checked) { */
-    transform: scale(1.02) translateX(-1%) translateY(-1%);
-  }
-  .container.main:hover::before {
-    content: attr(data-page-number);
-    position: absolute;
-    left: 1.1rem;
-    top: 1.1rem;
-    color: #bbbbbb;
-    font-size: 0.8rem;
-    font-weight: bold;
-    z-index: 1;
-  }
-  .container.main .zoom {
-    position: absolute;
-    left: calc(50% - 0.5em);
-    top: 0.7rem;
-    width: 1.6rem;
-    height: 1.2rem;
-    display: none;
-    background: none;
-    font-size: 0.9rem;
-    border: none;
-  }
-  .container.main:hover .zoom {
-    display: block;
-  }
-  .container.main:hover .zoom::before {
-    content: '🧐';
-  }
-  /* input {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    opacity: 0.0;
-  }
-  input:checked {
-    background-color: #ffffef;
-    opacity: 0.06;
-  } */
-</style>
