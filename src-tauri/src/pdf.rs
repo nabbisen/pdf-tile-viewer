@@ -108,11 +108,14 @@ pub fn search(search_term: &str, filepath: &str) -> Result<SearchResult, String>
 }
 
 fn pdfium_bind_to_library() -> Result<Box<dyn PdfiumLibraryBindings>, PdfiumError> {
+    const APP_LIBPDFIUM_DIR: &str = "lib/pdfium/lib";
     Pdfium::bind_to_library(Pdfium::pdfium_platform_library_name_at_path(
         std::env::current_exe()
             .expect("Failed to get exec dir")
             .parent()
-            .expect("Failed to get exec parent dir"),
+            .expect("Failed to get exec parent dir")
+            .join(APP_LIBPDFIUM_DIR)
+            .as_path(),
     ))
     .or_else(|_| Pdfium::bind_to_library(Pdfium::pdfium_platform_library_name_at_path("./")))
     .or_else(|_| Pdfium::bind_to_system_library())

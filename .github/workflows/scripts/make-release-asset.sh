@@ -18,27 +18,54 @@ then
 fi
 export CARGO_PROFILE_RELEASE_LTO=true
 
-BIN_NAME=pdf-tile-viewer
+bin_name=pdf-tile-viewer
 # todo: to mitigate webview failure NO_STRIP is required
 env NO_STRIP=1 npm run tauri build --locked -- --target $target
 
 cd src-tauri/target/$target/release
 
-mkdir $BIN_NAME-main
+artifact=$bin_name@$TAG
+mkdir $artifact
+# todo: is not single executable but depends on libpdfium.so now
+mkdir -p $artifact/lib/pdfium
 os_tag=$3
 case $1 in
   ubuntu*)
-    # asset="$BIN_NAME-$os_tag-$TAG"
-    asset="$BIN_NAME-$os_tag"
-    mv $BIN_NAME $asset
+    cp $bin_name $artifact/
+    
+    # todo: is not single executable but depends on libpdfium.so now
+    curl -LO https://github.com/bblanchon/pdfium-binaries/releases/latest/download/pdfium-linux-x64.tgz
+    mkdir libpdfium
+    tar xzf pdfium-linux-x64.tgz -C libpdfium
+    cp -r libpdfium/lib $artifact/lib/pdfium/
+
+    asset="$bin_name@$os_tag.tar.gz"
+    tar czf ../../$asset $artifact
     ;;
   macos*)
-    asset="$BIN_NAME-$os_tag"
-    mv $BIN_NAME $asset
+    cp $bin_name $artifact/
+    
+    # todo: is not single executable but depends on libpdfium.so now
+    curl -LO https://github.com/bblanchon/pdfium-binaries/releases/latest/download/pdfium-mac-arm64.tgz
+    mkdir libpdfium
+    tar xzf pdfium-mac-arm64.tgz -C libpdfium
+    cp -r libpdfium/lib $artifact/lib/pdfium/
+
+    asset="$bin_name@$os_tag.tar.gz"
+    tar czf ../../$asset $artifact
     ;;
   windows*)
-    asset="$BIN_NAME-$os_tag.exe"
-    mv $BIN_NAME.exe $asset
+    cp $bin_name.exe $artifact/
+    
+    # todo: is not single executable but depends on libpdfium.so now
+    curl -LO https://github.com/bblanchon/pdfium-binaries/releases/latest/download/pdfium-win-x64.tgz
+    7z x pdfium-win-x64.tgz
+    7z x pdfium-win-x64.tar -olibpdfium
+    cp -r libpdfium/lib $artifact/lib/pdfium/
+    cp -r libpdfium/bin $artifact/lib/pdfium/
+
+    asset="$bin_name@$os_tag.zip"
+    7z a -w ../../$asset $artifact
     ;;
   *)
     echo "OS should be first parameter, was: $1"
@@ -52,5 +79,5 @@ then
   echo "GITHUB_ENV not set, run: gh release upload $TAG src-tauri/target/$asset"
 else
   echo "APP_TAG=$TAG" >> $GITHUB_ENV
-  echo "APP_ASSET=src-tauri/target/$target/release/$asset" >> $GITHUB_ENV
+  echo "APP_ASSET=src-tauri/target/$asset" >> $GITHUB_ENV
 fi
