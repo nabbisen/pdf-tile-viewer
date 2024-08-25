@@ -5,9 +5,8 @@ import {
 } from 'pdfjs-dist'
 
 const getDocumentBuffer = async (filepath: string): Promise<ArrayBuffer> => {
-  const res = (await invoke('read_pdf', { filepath: filepath })) as Array<any>
-  const buffer = new Uint8Array(res).buffer
-  return buffer
+  const res = (await invoke('read_pdf', { filepath: filepath }))
+  return res as ArrayBuffer
 }
 
 const getDocumentProxy = async (buffer: ArrayBuffer): Promise<PDFDocumentProxy> => {
