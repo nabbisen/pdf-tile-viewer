@@ -8,9 +8,10 @@
 
   let zoomViewScale: number = 3.0
   let zoomViewOpacity: number = 1.0
+  let windowScrollable: boolean = true
 
   $: {
-    if (pageIndex) {
+    if (pageIndex && !windowScrollable) {
       window.document.body.style.overflow = 'hidden'
     } else {
       window.document.body.style.overflow = 'auto'
@@ -37,6 +38,10 @@
     </div>
     <nav>
       <span class="pageIndex">p.{pageIndex + 1}</span>
+      <label class="window-scrollable"
+        >Window <u>{windowScrollable ? 'scrollable' : 'fixed'}</u>
+        <input id="toggle-window-scrollable" type="checkbox" bind:checked={windowScrollable} />
+      </label>
       <label
         >Scale
         <input type="number" step="0.1" min="0.1" max="10.0" bind:value={zoomViewScale} />
@@ -82,7 +87,15 @@
   .zoomView nav * {
     font-size: 1rem;
   }
-  .zoomView nav input {
+  .window-scrollable {
+    width: 9.7em;
+    text-align: left;
+    cursor: pointer;
+  }
+  .window-scrollable input {
+    display: none;
+  }
+  .zoomView nav input[type='number'] {
     width: 3.2em;
     text-align: right;
   }
