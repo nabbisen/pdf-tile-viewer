@@ -4,15 +4,9 @@
   import PageViewer from './PageViewer.svelte'
   import ZoomedPageViewer from './ZoomedPageViewer.svelte'
   import type { SearchResult } from './@types'
-  import { successToast } from '../../stores/toast'
-  import { pushToLoadedHistory } from '../../stores/loadedHistory'
-  import { getDocumentProxy } from '../../utils/pdf'
   import { debounce } from '../../utils/event'
-  import { handleInvokeError } from '../../utils/backend'
-  import { returnHome } from '../../utils/route'
 
-  export let filepath: string = ''
-  export let buffer: ArrayBuffer
+  export let pageBuffers: ArrayBuffer[] = []
   export let searchResult: SearchResult | undefined
 
   const DEFAULT_SCALE: number = 1.0
@@ -21,40 +15,28 @@
   const MAX_SCALE: number = 10.0
 
   let scale: number = DEFAULT_SCALE
-  let pdfDocument: PDFDocumentProxy
   let pageViewport: PageViewport
   let pageIndexesRows: number[][] = []
   let pageViewerContainers: HTMLDivElement[] = []
   let zoomedPageIndex: number | undefined
+  let zoomedPageBuffer: ArrayBuffer | undefined
+
+  $: {
+    if (0 < pageBuffers.length) {
+      updatePageIndexesRows()
+    }
+  }
 
   $: {
     if (searchResult) {
-      buffer = searchResult.buffer
+      pageBuffers = searchResult.pageBuffers
     }
   }
 
   onMount(() => {
-    try {
-      load(buffer)
-    } catch (error: unknown) {
-      handleInvokeError(error)
-      returnHome()
-    }
-
-    pushToLoadedHistory(filepath)
-
     window.addEventListener('resize', debounce(updatePageIndexesRows, 200))
     window.addEventListener('wheel', debounce(handleWheel, 120))
-
-    setTimeout(() => {
-      successToast('File opened', 2700)
-    }, 400)
   })
-
-  const load = async (buffer: ArrayBuffer) => {
-    pdfDocument = await getDocumentProxy(buffer)
-    updatePageIndexesRows()
-  }
 
   const handleWheel = (event: WheelEvent) => {
     if (event.ctrlKey) {
@@ -74,7 +56,7 @@
 
     const rowBreak = pageIndexesPerRow()
     let row: number[] = []
-    for (let pageIndex = 0; pageIndex < pdfDocument.numPages; pageIndex++) {
+    for (let pageIndex = 0; pageIndex < pageBuffers.length; pageIndex++) {
       if (0 < pageIndex && pageIndex % rowBreak === 0) {
         ret.push(row)
         row = []
@@ -89,8 +71,8 @@
   }
 
   const pageIndexesPerRow = (): number => {
-    if (!pdfDocument) return 0
-    if (!pageViewport) return pdfDocument.numPages
+    if (pageBuffers.length === 0) return 0
+    if (!pageViewport) return pageBuffers.length
     return Math.floor(window.innerWidth / pageViewport.width)
   }
 
@@ -112,10 +94,11 @@
     zoomedPageIndex = undefined
 
     zoomedPageIndex = pageIndex
+    zoomedPageBuffer = pageBuffers[pageIndex]
   }
 </script>
 
-{#if pdfDocument && pdfDocument.numPages}
+{#if 0 < pageBuffers.length}
   {#each pageIndexesRows as pageIndexes}
     <div class="row">
       {#each pageIndexes as pageIndex}
@@ -127,7 +110,7 @@
             <div class="page">
               <article>
                 <PageViewer
-                  {pdfDocument}
+                  pageBuffer={pageBuffers[pageIndex]}
                   {pageIndex}
                   {scale}
                   on:pageViewport={handlePageViewport}
@@ -148,7 +131,7 @@
   {/each}
 {/if}
 
-<ZoomedPageViewer pageIndex={zoomedPageIndex} {pdfDocument} />
+<ZoomedPageViewer pageIndex={zoomedPageIndex} pageBuffer={zoomedPageBuffer} />
 
 <style>
   .row {

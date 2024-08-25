@@ -4,7 +4,7 @@
   import PageViewer from './PageViewer.svelte'
 
   export let pageIndex: number | undefined
-  export let pdfDocument: PDFDocumentProxy
+  export let pageBuffer: ArrayBuffer | undefined
 
   let zoomViewScale: number = 3.0
   let zoomViewOpacity: number = 1.0
@@ -31,10 +31,10 @@
   }
 </script>
 
-{#if pageIndex !== undefined}
+{#if pageIndex !== undefined && pageBuffer !== undefined}
   <div class="zoomView">
     <div class="wrapper" style={`opacity: ${zoomViewOpacity};`}>
-      <PageViewer {pdfDocument} {pageIndex} scale={zoomViewScale} />
+      <PageViewer {pageIndex} {pageBuffer} scale={zoomViewScale} />
     </div>
     <nav>
       <span class="pageIndex">p.{pageIndex + 1}</span>

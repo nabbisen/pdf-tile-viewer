@@ -4,10 +4,9 @@ import {
   type PDFDocumentProxy,
 } from 'pdfjs-dist'
 
-const getDocumentBuffer = async (filepath: string): Promise<ArrayBuffer> => {
-  const res = (await invoke('read_pdf', { filepath: filepath })) as Array<any>
-  const buffer = new Uint8Array(res).buffer
-  return buffer
+const getPageBuffers = async (filepath: string): Promise<ArrayBuffer[]> => {
+  const res = (await invoke('read_pdf', { filepath: filepath })) as ArrayBuffer[]
+  return res
 }
 
 const getDocumentProxy = async (buffer: ArrayBuffer): Promise<PDFDocumentProxy> => {
@@ -24,4 +23,4 @@ const getDocumentProxy = async (buffer: ArrayBuffer): Promise<PDFDocumentProxy> 
   return loadingTask.promise
 }
 
-export { getDocumentBuffer, getDocumentProxy }
+export { getPageBuffers, getDocumentProxy }

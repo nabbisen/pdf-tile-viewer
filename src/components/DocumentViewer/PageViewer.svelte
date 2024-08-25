@@ -1,11 +1,11 @@
 <script lang="ts">
   import { onMount, createEventDispatcher } from 'svelte'
-  import { type PDFDocumentProxy } from 'pdfjs-dist'
   import { EventBus, PDFPageView, RenderingStates } from 'pdfjs-dist/web/pdf_viewer.mjs'
   import 'pdfjs-dist/web/pdf_viewer.css'
+  import { getDocumentProxy } from '../../utils/pdf'
 
-  export let pdfDocument: PDFDocumentProxy
   export let pageIndex: number
+  export let pageBuffer: ArrayBuffer
   export let scale: number
 
   const dispatch = createEventDispatcher()
@@ -14,7 +14,8 @@
   let pdfPageView: PDFPageView
 
   const draw = async () => {
-    const pdfPage = await pdfDocument.getPage(pageIndex + 1)
+    const pdfDocument = await getDocumentProxy(pageBuffer)
+    const pdfPage = await pdfDocument.getPage(1)
     if (!pdfPageView) {
       pdfPageView = new PDFPageView({
         id: pageIndex,
@@ -30,6 +31,7 @@
 
     dispatchPageViewport()
   }
+
   onMount(draw)
 
   function dispatchPageViewport() {
@@ -44,12 +46,6 @@
       })
       dispatchPageViewport()
       pdfPageView.draw()
-    }
-  }
-
-  $: {
-    if (pdfDocument) {
-      draw()
     }
   }
 </script>

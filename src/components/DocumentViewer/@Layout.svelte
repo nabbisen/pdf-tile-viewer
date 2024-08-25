@@ -5,7 +5,9 @@
   import Header from './Header.svelte'
   import PagesTileViewer from './PagesTileViewer.svelte'
   import type { SearchResult } from './@types'
-  import { getDocumentBuffer } from '../../utils/pdf'
+  import { getPageBuffers } from '../../utils/pdf'
+  import { successToast } from '../../stores/toast'
+  import { pushToLoadedHistory } from '../../stores/loadedHistory'
   import { handleInvokeError } from '../../utils/backend'
   import { returnHome } from '../../utils/route'
 
@@ -16,18 +18,24 @@
     load(filepath)
   })
 
-  let buffer: ArrayBuffer | undefined
+  let pageBuffers: ArrayBuffer[] | undefined
   let searchResult: SearchResult | undefined
 
   const load = (filepath: string) => {
     try {
-      getDocumentBuffer(filepath).then((x) => {
-        buffer = x
+      getPageBuffers(filepath).then((x) => {
+        pageBuffers = x
       })
     } catch (error: unknown) {
       handleInvokeError(error)
       returnHome()
     }
+
+    pushToLoadedHistory(filepath)
+
+    setTimeout(() => {
+      successToast('File opened', 2700)
+    }, 400)
   }
 
   const handleSearch = (e: CustomEvent<SearchResult>) => {
@@ -36,6 +44,6 @@
 </script>
 
 <Header {filepath} on:search={handleSearch} />
-{#if buffer}
-  <PagesTileViewer {filepath} {buffer} {searchResult} />
+{#if pageBuffers}
+  <PagesTileViewer {pageBuffers} {searchResult} />
 {/if}

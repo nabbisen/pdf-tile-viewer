@@ -1,5 +1,5 @@
 export interface SearchResult {
-  buffer: ArrayBuffer,
+  pageBuffers: ArrayBuffer[],
   matchedPageIndexes: number[],
   confirmedSearchTerm: string
 }

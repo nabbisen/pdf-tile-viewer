@@ -25,7 +25,7 @@
       handleInvokeError(error)
       return
     }
-    const buffer = res.buffer as ArrayBuffer
+    const pageBuffers = res.page_buffers as ArrayBuffer[]
 
     const matchedPageIndexes = res.page_indexes as number[]
     if (0 < matchedPageIndexes.length) {
@@ -36,7 +36,7 @@
     const confirmedSearchTerm = searchTerm
 
     const searchResult: SearchResult = {
-      buffer,
+      pageBuffers,
       matchedPageIndexes,
       confirmedSearchTerm,
     }
