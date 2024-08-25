@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount, createEventDispatcher } from 'svelte'
+  import { invoke } from '@tauri-apps/api/core'
   import {
     getDocument,
     GlobalWorkerOptions,
@@ -7,12 +8,12 @@
     type PDFDocumentProxy,
   } from 'pdfjs-dist'
   import 'pdfjs-dist/web/pdf_viewer.css'
-  import PageViewer from './PageViewer.svelte'
-  import { infoToast, successToast } from '../stores/toast'
-  import { debounce } from '../utils/event'
-  import { invoke } from '@tauri-apps/api/core'
-  import { handleInvokeError } from '../utils/backend'
-  import { filename } from '../utils/file'
+  import PageViewer from './PageViewer/Layout.svelte'
+  import { infoToast, successToast } from '../../stores/toast'
+  import { debounce } from '../../utils/event'
+  import { handleInvokeError } from '../../utils/backend'
+  import { filename } from '../../utils/file'
+  import { pushToLoadedHistory } from '../../stores/loadedHistory'
 
   export let filepath: string
 
@@ -63,7 +64,7 @@
       return
     }
 
-    dispatch('loadSuccess', filepath)
+    pushToLoadedHistory(filepath)
   }
 
   const closeDocument = () => {
@@ -249,7 +250,7 @@
 
     <div class="logo">
       <button on:click={closeDocument}>
-        <h1>Return Home</h1>
+        <h1>Home</h1>
       </button>
     </div>
   </nav>
