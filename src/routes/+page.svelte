@@ -1,5 +1,5 @@
 <script lang="ts">
-  import AppViewer from '../layouts/AppViewer.svelte'
-</script>
+  import { goto } from '$app/navigation'
 
-<AppViewer />
+  goto('/dashboard')
+</script>

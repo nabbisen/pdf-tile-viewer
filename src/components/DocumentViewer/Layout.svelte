@@ -1,5 +1,7 @@
 <script lang="ts">
-  import { onMount, createEventDispatcher } from 'svelte'
+  import { onMount } from 'svelte'
+  import { goto } from '$app/navigation'
+  import { page } from '$app/stores'
   import { invoke } from '@tauri-apps/api/core'
   import {
     getDocument,
@@ -8,21 +10,22 @@
     type PDFDocumentProxy,
   } from 'pdfjs-dist'
   import 'pdfjs-dist/web/pdf_viewer.css'
-  import PageViewer from './PageViewer/Layout.svelte'
+  import PageViewer from './PageViewer.svelte'
   import { infoToast, successToast } from '../../stores/toast'
   import { debounce } from '../../utils/event'
   import { handleInvokeError } from '../../utils/backend'
   import { filename } from '../../utils/file'
   import { pushToLoadedHistory } from '../../stores/loadedHistory'
 
-  export let filepath: string
+  let filepath: string
+  $: {
+    filepath = decodeURIComponent($page.url.searchParams.get('filepath')!)
+  }
 
   const DEFAULT_SCALE: number = 1.0
   const SCALE_UNIT: number = 0.2
   const MIN_SCALE: number = SCALE_UNIT
   const MAX_SCALE: number = 10.0
-
-  const dispatch = createEventDispatcher()
 
   let scale: number = DEFAULT_SCALE
   let pdfDocument: PDFDocumentProxy
@@ -52,7 +55,7 @@
       res = await invoke('read_pdf', { filepath: filepath })
     } catch (error: unknown) {
       handleInvokeError(error)
-      closeDocument()
+      returnHome()
       return
     }
     const buffer = new Uint8Array(res).buffer
@@ -60,15 +63,15 @@
       await loadPdfDocument(buffer)
     } catch (error: unknown) {
       handleInvokeError(error)
-      closeDocument()
+      returnHome()
       return
     }
 
     pushToLoadedHistory(filepath)
   }
 
-  const closeDocument = () => {
-    dispatch('closeDocument')
+  const returnHome = () => {
+    goto('/dashboard')
   }
 
   const loadPdfDocument = async (buffer: ArrayBuffer) => {
@@ -249,7 +252,7 @@
     </div>
 
     <div class="logo">
-      <button on:click={closeDocument}>
+      <button on:click={returnHome}>
         <h1>Home</h1>
       </button>
     </div>

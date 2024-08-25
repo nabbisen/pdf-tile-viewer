@@ -1,10 +1,8 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte'
+  import { goto } from '$app/navigation'
   import { open } from '@tauri-apps/plugin-dialog'
-  import { subscribeLoadedHistory } from '../stores/loadedHistory'
-  import type { LoadedHistoryItem } from '../types/loadedHistory'
-
-  const dispatch = createEventDispatcher()
+  import { subscribeLoadedHistory } from '../../stores/loadedHistory'
+  import type { LoadedHistoryItem } from '../../types/loadedHistory'
 
   let loadedHistory: LoadedHistoryItem[] = []
   $: {
@@ -22,8 +20,13 @@
     })
     if (fileResponse) {
       const filepath = fileResponse.path
-      dispatch('fileSelect', filepath)
+      openDocumentViewer(filepath)
     }
+  }
+
+  const openDocumentViewer = (filepath: string) => {
+    const urlParams = `filepath=${encodeURIComponent(filepath)}`
+    goto(`/document-viewer?${urlParams}`)
   }
 </script>
 
@@ -49,7 +52,7 @@
       <time>{x.timestamp.toTimeString().split(' ')[0]}</time>
       <button
         on:click={() => {
-          dispatch('fileSelect', x.filepath)
+          openDocumentViewer(x.filepath)
         }}
       >
         <h4>{x.filename}</h4>
