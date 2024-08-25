@@ -67,17 +67,16 @@ pub fn search(search_term: &str, filepath: &str) -> Result<SearchResult, String>
                 .search(search_term, &search_options)
                 .iter(PdfSearchDirection::SearchForward)
                 .enumerate()
-                .flat_map(|(index, segments)| {
+                .flat_map(|(_index, segments)| {
                     segments
                         .iter()
                         .map(|segment| {
-                            println!(
-                                "Search result {}: `{}` appears at {:#?}",
-                                index,
-                                segment.text(),
-                                segment.bounds()
-                            );
-
+                            // println!(
+                            //     "Search result {}: `{}` appears at {:#?}",
+                            //     index,
+                            //     segment.text(),
+                            //     segment.bounds()
+                            // );
                             segment.bounds()
                         })
                         .collect::<Vec<_>>()
@@ -87,9 +86,6 @@ pub fn search(search_term: &str, filepath: &str) -> Result<SearchResult, String>
             if 0 < search_results_bounds.len() {
                 page_indexes.push(page_index);
             }
-
-            // We now have a list of page areas that contain the search target.
-            // Highlight them in yellow...
 
             let highlight_color = Some(PdfColor::YELLOW.with_alpha(128));
             for result in search_results_bounds.drain(..) {

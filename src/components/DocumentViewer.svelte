@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte'
+  import { onMount, createEventDispatcher } from 'svelte'
   import {
     getDocument,
     GlobalWorkerOptions,
@@ -8,29 +8,27 @@
   } from 'pdfjs-dist'
   import 'pdfjs-dist/web/pdf_viewer.css'
   import PageViewer from './PageViewer.svelte'
-  import { successToast } from '../stores/toast'
+  import { infoToast, successToast } from '../stores/toast'
   import { debounce } from '../utils/event'
+  import { invoke } from '@tauri-apps/api/core'
+  import { handleInvokeError } from '../utils/backend'
+  import { filename } from '../utils/file'
 
-  // export let filepath: string
-  export let buffer: ArrayBuffer
-
-  // interface pageViewerProps {
-  //   pdfDocument: PDFDocumentProxy;
-  //   pageNum: number;
-  //   scale: number;
-  // }
+  export let filepath: string
 
   const DEFAULT_SCALE: number = 1.0
   const SCALE_UNIT: number = 0.2
   const MIN_SCALE: number = SCALE_UNIT
   const MAX_SCALE: number = 10.0
 
+  const dispatch = createEventDispatcher()
+
   let scale: number = DEFAULT_SCALE
   let pdfDocument: PDFDocumentProxy
   let pageViewport: PageViewport
-  let pageNumsRows: number[][] = []
+  let pageIndexesRows: number[][] = []
   let pageViewerContainers: HTMLDivElement[] = []
-  let zoomedPageNum: number | undefined
+  let zoomedPageIndex: number | undefined
   let zoomViewScale: number = 3.0
   let zoomViewOpacity: number = 1.0
 
@@ -40,14 +38,39 @@
   ).toString()
 
   $: {
-    if (zoomedPageNum) {
+    if (zoomedPageIndex) {
       window.document.body.style.overflow = 'hidden'
     } else {
       window.document.body.style.overflow = 'auto'
     }
   }
 
-  const loadPdfDocument = async () => {
+  const loadPdfBuffer = async () => {
+    let res: Array<any>
+    try {
+      res = await invoke('read_pdf', { filepath: filepath })
+    } catch (error: unknown) {
+      handleInvokeError(error)
+      closeDocument()
+      return
+    }
+    const buffer = new Uint8Array(res).buffer
+    try {
+      await loadPdfDocument(buffer)
+    } catch (error: unknown) {
+      handleInvokeError(error)
+      closeDocument()
+      return
+    }
+
+    dispatch('loadSuccess', filepath)
+  }
+
+  const closeDocument = () => {
+    dispatch('closeDocument')
+  }
+
+  const loadPdfDocument = async (buffer: ArrayBuffer) => {
     const CMAP_URL = 'pdfjs-dist/cmaps/'
     const CMAP_PACKED = true
 
@@ -68,16 +91,16 @@
   }
 
   const onMountHandler = async () => {
-    await loadPdfDocument()
+    await loadPdfBuffer()
 
-    updatePageNumsRows()
+    updatePageIndexesRows()
 
-    window.addEventListener('resize', debounce(updatePageNumsRows, 200))
+    window.addEventListener('resize', debounce(updatePageIndexesRows, 200))
     window.addEventListener('wheel', debounce(handleWheel, 120))
 
     window.addEventListener('keydown', (e: KeyboardEvent) => {
       if (e.key === 'Escape' || e.key === 'Esc') {
-        zoomedPageNum = undefined
+        zoomedPageIndex = undefined
       }
     })
 
@@ -91,36 +114,36 @@
     const viewport = event.detail
     pageViewport = viewport
 
-    updatePageNumsRows()
+    updatePageIndexesRows()
   }
 
   function handleZoomClick(event: CustomEvent<number>) {
-    zoomedPageNum = event.detail
+    zoomedPageIndex = event.detail
   }
 
-  function pagesNumPerRow(): number {
+  function pageIndexesPerRow(): number {
     if (!pdfDocument) return 0
     if (!pageViewport) return pdfDocument.numPages
     return Math.floor(window.innerWidth / pageViewport.width)
   }
 
-  function updatePageNumsRows() {
+  function updatePageIndexesRows() {
     let ret: number[][] = []
 
-    const rowBreak = pagesNumPerRow()
+    const rowBreak = pageIndexesPerRow()
     let row: number[] = []
-    for (let pageNum = 1; pageNum <= pdfDocument.numPages; pageNum++) {
-      row.push(pageNum)
-      if (pageNum % rowBreak === 0) {
+    for (let pageIndex = 0; pageIndex < pdfDocument.numPages; pageIndex++) {
+      if (0 < pageIndex && pageIndex % rowBreak === 0) {
         ret.push(row)
         row = []
       }
+      row.push(pageIndex)
     }
     if (0 < row.length) {
       ret.push(row)
     }
 
-    pageNumsRows = ret
+    pageIndexesRows = ret
   }
 
   function increaseScale() {
@@ -135,16 +158,114 @@
       scale = MIN_SCALE
     }
   }
+
+  const SEARCH_TERM_MIN_LENGTH: number = 3
+  const SEQUENTIAL_CONCAT: string = '~'
+  let matchingPageIndexes: number[] = []
+  let searchTerm: string = ''
+  let confirmedSearchTerm: string = ''
+  let isSearchFormVisible: boolean = false
+
+  const searchPdf = async () => {
+    confirmedSearchTerm = ''
+
+    let res: any
+    try {
+      res = await invoke('search_pdf', {
+        searchTerm: searchTerm,
+        filepath: filepath,
+      })
+    } catch (error: unknown) {
+      handleInvokeError(error)
+      return
+    }
+    const buffer = res.buffer as ArrayBuffer
+    await loadPdfDocument(buffer)
+
+    matchingPageIndexes = res.page_indexes as number[]
+    if (0 < matchingPageIndexes.length) {
+      successToast(`Matches: p.${displayMatchedPages(matchingPageIndexes)}`)
+    } else {
+      infoToast('No matches')
+    }
+
+    confirmedSearchTerm = searchTerm
+
+    isSearchFormVisible = false
+  }
+
+  const displayMatchedPages = (pageIndexes: number[]): string => {
+    const ret = pageIndexes
+      .map((pageIndex, arrayIndex, array) => {
+        const pageNum = pageIndex + 1
+        if (arrayIndex === 0 || arrayIndex === pageIndexes.length - 1) {
+          return pageNum.toString()
+        }
+        const prevPageIndex = array[arrayIndex - 1]
+        const nextPageIndex = array[arrayIndex + 1]
+        const isInSequentialProc =
+          pageIndex === prevPageIndex + 1 && pageIndex + 1 === nextPageIndex
+        return isInSequentialProc ? SEQUENTIAL_CONCAT : pageNum.toString()
+      })
+      .filter((pageStr, arrayIndex, array) => {
+        if (arrayIndex === 0 || arrayIndex === matchingPageIndexes.length - 1) {
+          return true
+        }
+        const prevPageStr = array[arrayIndex - 1]
+        return `${prevPageStr}${pageStr}` !== SEQUENTIAL_CONCAT.repeat(2)
+      })
+      .join(', ')
+      .replaceAll(`, ${SEQUENTIAL_CONCAT}, `, SEQUENTIAL_CONCAT)
+    return ret
+  }
+
+  const toggleSearchForm = () => {
+    isSearchFormVisible = !isSearchFormVisible
+  }
 </script>
 
+<header>
+  <h2>{filename(filepath)}</h2>
+
+  <nav>
+    <div class="search">
+      <button class="toggle" on:click={toggleSearchForm}>🔍</button>
+      {#if isSearchFormVisible}
+        <form>
+          <input
+            type="text"
+            bind:value={searchTerm}
+            placeholder={`${SEARCH_TERM_MIN_LENGTH} chars or more`}
+          />
+          <button
+            class="search"
+            disabled={searchTerm.length < SEARCH_TERM_MIN_LENGTH}
+            on:click={searchPdf}>Search</button
+          >
+          <button class="close" on:click={toggleSearchForm}>Close</button>
+        </form>
+      {/if}
+    </div>
+
+    <div class="logo">
+      <button on:click={closeDocument}>
+        <h1>Return Home</h1>
+      </button>
+    </div>
+  </nav>
+</header>
+
 {#if pdfDocument && pdfDocument.numPages}
-  {#each pageNumsRows as pageNums}
+  {#each pageIndexesRows as pageIndexes}
     <div class="row">
-      {#each pageNums as pageNum}
-        <div class="col" bind:this={pageViewerContainers[pageNum]}>
+      {#each pageIndexes as pageIndex}
+        <div class="col" bind:this={pageViewerContainers[pageIndex]}>
+          {#if matchingPageIndexes.includes(pageIndex)}
+            <div class="search-matching">"{confirmedSearchTerm}" matched</div>
+          {/if}
           <PageViewer
             {pdfDocument}
-            {pageNum}
+            {pageIndex}
             {scale}
             on:pageViewport={handlePageViewport}
             on:zoomClick={handleZoomClick}
@@ -155,13 +276,13 @@
   {/each}
 {/if}
 
-{#if zoomedPageNum}
+{#if zoomedPageIndex !== undefined}
   <div class="zoomView">
     <div class="wrapper" style={`opacity: ${zoomViewOpacity};`}>
-      <PageViewer {pdfDocument} pageNum={zoomedPageNum} scale={zoomViewScale} />
+      <PageViewer {pdfDocument} pageIndex={zoomedPageIndex} scale={zoomViewScale} />
     </div>
     <nav>
-      <span class="pageNum">p.{zoomedPageNum}</span>
+      <span class="pageIndex">p.{zoomedPageIndex + 1}</span>
       <label
         >Scale
         <input type="number" step="0.1" min="0.1" max="10.0" bind:value={zoomViewScale} />
@@ -170,17 +291,119 @@
         >Transparency
         <input type="number" step="0.1" min="0.0" max="1.0" bind:value={zoomViewOpacity} />
       </label>
-      <button on:click={() => (zoomedPageNum = undefined)}>Close</button>
+      <button class="close" on:click={() => (zoomedPageIndex = undefined)}>Close</button>
     </nav>
   </div>
 {/if}
 
-<!-- todo -->
-<!-- {#if zoomedPageViewerProps }
-  <PageViewer pdfDocument={zoomedPageViewerProps.pdfDocument} pageNum={zoomedPageViewerProps.pageNum} scale={zoomedPageViewerProps.scale} />
-{/if} -->
-
 <style>
+  header,
+  h1 {
+    font-size: 0.7rem;
+  }
+  h1 {
+    color: #878787;
+  }
+  h1::after {
+    content: '🏠';
+    display: inline-block;
+    padding: 0 0.7rem;
+  }
+  header nav {
+    position: fixed;
+    right: 0.8rem;
+    bottom: 0.5rem;
+    width: 4.4em;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 20000;
+  }
+  .logo button {
+    background-color: #efefef;
+    font-size: 0.6rem;
+    box-shadow: none;
+    border: none;
+    text-align: center;
+    cursor: pointer;
+  }
+  .logo button:hover {
+    opacity: 0.87;
+  }
+
+  .search {
+    position: relative;
+  }
+  .search button {
+    padding: 0.3rem 0.7rem;
+    background: none;
+    border: none;
+    border-radius: 0.08rem;
+  }
+  .search button:hover {
+    opacity: 0.87;
+  }
+  .search button.toggle {
+    padding: 1.1rem 0.7rem;
+    font-size: 0.8rem;
+  }
+  .search form {
+    position: absolute;
+    right: 3.2rem;
+    bottom: 1.6em;
+    width: 20.2rem;
+    padding: 1.4rem 0.8rem 1.1rem;
+    display: flex;
+    flex-direction: column;
+    background-color: #25252587;
+  }
+  .search form > * {
+    margin: 0.5rem 0;
+    text-align: center;
+  }
+  .search form input {
+    padding: 0.6rem 0.3rem;
+    font-size: 1.33rem;
+  }
+  .search form button.search {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    background-color: #b7a42a;
+    color: #ffffff;
+    font-size: 1.2rem;
+  }
+  .search form button.search:disabled {
+    background-color: #eaeaea;
+    color: #bbbbbb;
+  }
+  .search form button.close {
+    width: fit-content;
+    margin: 1.1rem auto 0;
+    background-color: #ffffff;
+    color: #252525;
+    font-size: 0.9rem;
+  }
+
+  .search-matching {
+    width: 100%;
+    background-color: #b7a42a;
+    color: #ffffff;
+    text-align: center;
+    font-size: 0.7rem;
+  }
+
+  h2 {
+    position: fixed;
+    top: 0;
+    right: 0.4rem;
+    transform: rotate(90deg) translate(100%, 0);
+    transform-origin: top right;
+    white-space: nowrap;
+    font-size: 0.8rem;
+    color: #878787;
+  }
+
   .row {
     display: flex;
   }
@@ -218,6 +441,7 @@
   .zoomView nav {
     width: 100%;
     height: 1.75rem;
+    padding: 0.3rem 0.4rem 0.1rem;
     display: flex;
     justify-content: space-around;
     align-items: center;
@@ -230,5 +454,9 @@
   .zoomView nav input {
     width: 3.2em;
     text-align: right;
+  }
+  .zoomView nav button.close {
+    background-color: #ffffff;
+    color: #252525;
   }
 </style>
