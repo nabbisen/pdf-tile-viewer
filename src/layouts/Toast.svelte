@@ -41,7 +41,7 @@
     animation: toast-fade-in 1.5s ease forwards;
   }
   .toast.info {
-    background-color: #252525;
+    background-color: #636363;
     color: #ffffff;
   }
   .toast.success {

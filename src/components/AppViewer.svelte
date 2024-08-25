@@ -1,15 +1,13 @@
 <script lang="ts">
-  import { invoke } from '@tauri-apps/api/core'
   import { getCurrentWebview, type DragDropEvent } from '@tauri-apps/api/webview'
   import { type UnlistenFn, type Event as TauriEvent } from '@tauri-apps/api/event'
   import { open } from '@tauri-apps/plugin-dialog'
   import { onMount, onDestroy } from 'svelte'
 
   import DocumentViewer from './DocumentViewer.svelte'
-  import { handleInvokeError } from '../utils/backend'
+  import { filename } from '../utils/file'
 
-  let buffer: ArrayBuffer | undefined
-  let filename: string = ''
+  let filepath: string | undefined
   let unlistenDragDrop: UnlistenFn | undefined
   interface LoadedHistoryItem {
     filename: string
@@ -30,29 +28,7 @@
 
   const handleDrop = (paths: string[]) => {
     // todo: single file only now
-    const filepath = paths[0]
-    loadPdfBuffer(filepath)
-  }
-
-  const loadPdfBuffer = async (filepath: string) => {
-    unloadPdfBuffer()
-
-    let res: Array<any>
-    try {
-      res = await invoke('read_pdf', { filepath: filepath })
-    } catch (error: unknown) {
-      handleInvokeError(error)
-      return
-    }
-    buffer = new Uint8Array(res).buffer
-
-    updateFilename(filepath)
-    pushToLoadedHistory(filepath)
-  }
-
-  const unloadPdfBuffer = () => {
-    buffer = undefined
-    filename = ''
+    filepath = paths[0]
   }
 
   const chooseFile = async () => {
@@ -65,29 +41,20 @@
       ],
     })
     if (fileResponse) {
-      const filepath = fileResponse.path
-      loadPdfBuffer(filepath)
+      filepath = fileResponse.path
     }
   }
 
-  const updateFilename = (filepath: string) => {
-    const slashSplit = filepath.split('/')
-    if (2 <= slashSplit.length) {
-      filename = slashSplit[slashSplit.length - 1]
-    } else {
-      const backslashSplit = filepath.split('\\')
-      filename = backslashSplit[backslashSplit.length - 1]
-    }
-  }
+  const pushToLoadedHistory = (e: CustomEvent<string>) => {
+    const successFilepath = e.detail
 
-  const pushToLoadedHistory = (filepath: string) => {
-    const existingItemIndex = loadedHistory.findIndex((x) => x.filepath === filepath)
+    const existingItemIndex = loadedHistory.findIndex((x) => x.filepath === successFilepath)
     if (existingItemIndex !== -1) {
       loadedHistory.splice(existingItemIndex, 1)
     }
     const loadedHistoryItem = <LoadedHistoryItem>{
-      filename,
-      filepath,
+      filename: filename(successFilepath),
+      filepath: successFilepath,
       timestamp: new Date(),
     }
     loadedHistory.push(loadedHistoryItem)
@@ -102,73 +69,54 @@
   })
 </script>
 
-<header class={buffer ? 'has-document' : ''}>
-  <div class="logo">
-    <button on:click={unloadPdfBuffer}>
+{#if filepath}
+  <DocumentViewer
+    {filepath}
+    on:loadSuccess={pushToLoadedHistory}
+    on:closeDocument={() => {
+      filepath = undefined
+    }}
+  />
+{:else}
+  <header>
+    <div class="logo">
       <h1>PDF Tile Viewer</h1>
-    </button>
-  </div>
-  <h2>{filename}</h2>
-</header>
-<div>
-  {#if buffer}
-    <DocumentViewer {buffer} />
-  {:else}
-    <span class={0 < loadedHistory.length ? 'has-history' : ''}></span>
-
-    <div class="placeholder">
-      <h2>Drop PDF file</h2>
-      <p>
-        <b>Number of pages in a row</b> is dynamically calculated with <b>app window size</b>
-        and <b>zoom scale</b> modified with Ctrl key + mouse wheel.
-      </p>
-      <button on:click={chooseFile}>Choose file</button>
     </div>
+  </header>
 
-    <h3>History to re-open</h3>
-    <ul class="loaded-history">
-      {#each loadedHistory as x}
-        <li>
-          <time>{x.timestamp.toTimeString().split(' ')[0]}</time>
-          <button on:click={() => loadPdfBuffer(x.filepath)}>
-            <h4>{x.filename}</h4>
-            <div class="filepath">{x.filepath}</div>
-          </button>
-        </li>
-      {/each}
-    </ul>
-  {/if}
-</div>
+  <span class={0 < loadedHistory.length ? 'has-history' : ''}></span>
+
+  <div class="placeholder">
+    <h2>Drop PDF file</h2>
+    <p>
+      <b>Number of pages in a row</b> is dynamically calculated with <b>app window size</b>
+      and <b>zoom scale</b> modified with Ctrl key + mouse wheel.
+    </p>
+    <button on:click={chooseFile}>Choose file</button>
+  </div>
+
+  <h3>History to re-open</h3>
+  <ul class="loaded-history">
+    {#each loadedHistory as x}
+      <li>
+        <time>{x.timestamp.toTimeString().split(' ')[0]}</time>
+        <button
+          on:click={() => {
+            filepath = x.filepath
+          }}
+        >
+          <h4>{x.filename}</h4>
+          <div class="filepath">{x.filepath}</div>
+        </button>
+      </li>
+    {/each}
+  </ul>
+{/if}
 
 <style>
   header {
     position: relative;
     z-index: 10000;
-  }
-
-  .logo button {
-    width: fit-content;
-    height: fit-content;
-    background: none;
-    border: none;
-    z-index: 10001;
-  }
-  .logo button:hover {
-    background: none;
-    border: none;
-  }
-  header.has-document .logo button {
-    position: fixed;
-    right: 0.8rem;
-    bottom: 0.5rem;
-    width: 4em;
-    background-color: #efefef;
-    font-size: 1rem;
-    text-align: center;
-    cursor: pointer;
-  }
-  header.has-document .logo button:hover {
-    opacity: 0.93;
   }
 
   h1 {
@@ -177,28 +125,10 @@
     margin: 0;
     color: #555555;
   }
-  header.has-document,
-  header.has-document h1 {
-    font-size: 0.8rem;
-  }
-  header.has-document h1 {
-    color: #878787;
-  }
   h1::after {
     content: '🦈';
     display: inline-block;
     padding: 0 0.7rem;
-  }
-
-  header h2 {
-    position: fixed;
-    top: 0;
-    right: 0.4rem;
-    transform: rotate(90deg) translate(100%, 0);
-    transform-origin: top right;
-    white-space: nowrap;
-    font-size: 0.8rem;
-    color: #878787;
   }
 
   .placeholder {

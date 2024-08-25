@@ -1,22 +1,26 @@
 <script lang="ts">
-  import { onMount, createEventDispatcher } from "svelte";
-  import { type PDFDocumentProxy } from 'pdfjs-dist';
-  import { EventBus, PDFPageView, RenderingStates } from 'pdfjs-dist/web/pdf_viewer.mjs';
+  import { onMount, createEventDispatcher } from 'svelte'
+  import { type PDFDocumentProxy } from 'pdfjs-dist'
+  import { EventBus, PDFPageView, RenderingStates } from 'pdfjs-dist/web/pdf_viewer.mjs'
   import 'pdfjs-dist/web/pdf_viewer.css'
 
-  export let pdfDocument: PDFDocumentProxy;
-  export let pageNum: number;
-  export let scale: number;
-  
+  export let pdfDocument: PDFDocumentProxy
+  export let pageIndex: number
+  export let scale: number
+
   const dispatch = createEventDispatcher()
 
-  let pageViewerContainer: HTMLDivElement
+  let pageViewerContainer: HTMLDivElement | undefined
   let pdfPageView: PDFPageView
 
-  const onMountHandler = async () => {
-    const pdfPage = await pdfDocument.getPage(pageNum)
+  const draw = async () => {
+    if (pageViewerContainer) {
+      pageViewerContainer.innerHTML = ''
+    }
+
+    const pdfPage = await pdfDocument.getPage(pageIndex + 1)
     pdfPageView = new PDFPageView({
-      id: pageNum,
+      id: pageIndex,
       container: pageViewerContainer,
       defaultViewport: pdfPage.getViewport(),
       eventBus: new EventBus(),
@@ -26,29 +30,32 @@
 
     dispatchPageViewport()
   }
-  onMount(onMountHandler)
+  onMount(draw)
 
   function dispatchPageViewport() {
-    if (pageNum !== 1 || pdfPageView.renderingState === RenderingStates.RUNNING) return
+    if (pageIndex !== 0 || pdfPageView.renderingState === RenderingStates.RUNNING) return
     dispatch('pageViewport', pdfPageView.viewport)
   }
 
   function handleZoom(event: MouseEvent) {
-    dispatch('zoomClick', pageNum)
+    dispatch('zoomClick', pageIndex)
   }
 
   $: {
     if (pdfPageView) {
       pdfPageView.update({
-        scale: scale
+        scale: scale,
       })
       dispatchPageViewport()
       pdfPageView.draw()
     }
   }
+  $: {
+    if (pdfDocument) draw()
+  }
 </script>
 
-<div class="container main" data-page-num={pageNum}>
+<div class="container main" data-page-number={pageIndex + 1}>
   <div class="pdfViewer">
     <div bind:this={pageViewerContainer}></div>
   </div>
@@ -61,11 +68,11 @@
     position: relative;
   }
   .container.main:hover {
-  /* .container.main:has(input:checked) { */
+    /* .container.main:has(input:checked) { */
     transform: scale(1.02) translateX(-1%) translateY(-1%);
   }
   .container.main:hover::before {
-    content: attr(data-page-num);
+    content: attr(data-page-number);
     position: absolute;
     left: 1.1rem;
     top: 1.1rem;
@@ -89,7 +96,7 @@
     display: block;
   }
   .container.main:hover .zoom::before {
-    content: '🔍';
+    content: '🧐';
   }
   /* input {
     position: absolute;
