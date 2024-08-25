@@ -18,7 +18,7 @@
   const DEFAULT_SCALE: number = 1.0
   const SCALE_UNIT: number = 0.2
   const MIN_SCALE: number = SCALE_UNIT
-  const MAX_SCALE: number = 10.0
+  const MAX_SCALE: number = 5.0
 
   let scale: number = DEFAULT_SCALE
   let pdfDocument: PDFDocumentProxy
@@ -115,42 +115,72 @@
   }
 </script>
 
-{#if pdfDocument && pdfDocument.numPages}
-  {#each pageIndexesRows as pageIndexes}
-    <div class="row">
-      {#each pageIndexes as pageIndex}
-        <div class="col" bind:this={pageViewerContainers[pageIndex]}>
-          <div class="tile">
-            {#if searchResult && searchResult.matchedPageIndexes.includes(pageIndex)}
-              <div class="search-matched">Search matched</div>
-            {/if}
-            <div class="page">
-              <article>
-                <PageViewer
-                  {pdfDocument}
-                  {pageIndex}
-                  {scale}
-                  on:pageViewport={handlePageViewport}
-                />
-              </article>
-              <nav>
-                <div></div>
-                <div>{pageIndex + 1}</div>
-                <button class="zoom" on:click={() => showZoomedPage(pageIndex)} aria-label="zoom"
-                  >🧐</button
-                >
-              </nav>
+<nav class="scale">
+  <h4>Scale</h4>
+  <input type="range" min={MIN_SCALE} max={MAX_SCALE} step={SCALE_UNIT} bind:value={scale} />
+</nav>
+
+<div class="document">
+  {#if pdfDocument && pdfDocument.numPages}
+    {#each pageIndexesRows as pageIndexes}
+      <div class="row">
+        {#each pageIndexes as pageIndex}
+          <div class="col" bind:this={pageViewerContainers[pageIndex]}>
+            <div class="tile">
+              {#if searchResult && searchResult.matchedPageIndexes.includes(pageIndex)}
+                <div class="search-matched">Search matched</div>
+              {/if}
+              <div class="page">
+                <article>
+                  <PageViewer
+                    {pdfDocument}
+                    {pageIndex}
+                    {scale}
+                    on:pageViewport={handlePageViewport}
+                  />
+                </article>
+                <nav>
+                  <div></div>
+                  <div>{pageIndex + 1}</div>
+                  <button class="zoom" on:click={() => showZoomedPage(pageIndex)} aria-label="zoom"
+                    >🧐</button
+                  >
+                </nav>
+              </div>
             </div>
           </div>
-        </div>
-      {/each}
-    </div>
-  {/each}
-{/if}
+        {/each}
+      </div>
+    {/each}
+  {/if}
+</div>
 
 <ZoomedPageViewer pageIndex={zoomedPageIndex} {pdfDocument} />
 
 <style>
+  nav.scale {
+    position: fixed;
+    bottom: 1.1rem;
+    left: 0.7rem;
+    z-index: 1;
+    display: flex;
+    align-items: flex-end;
+  }
+  nav.scale h4 {
+    font-size: 0.7rem;
+    color: #878787;
+    padding: 0;
+    margin: 0;
+  }
+  nav.scale input {
+    width: 5.7rem;
+    margin-left: 0.6rem;
+  }
+
+  .document {
+    padding-bottom: 2.7rem;
+  }
+
   .row {
     display: flex;
   }
