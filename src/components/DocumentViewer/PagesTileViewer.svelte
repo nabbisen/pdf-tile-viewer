@@ -107,12 +107,11 @@
     }
   }
 
-  const handleZoomClick = (event: CustomEvent<number>) => {
-    zoomedPageIndex = event.detail
-  }
-
-  const handleCloseZoomedPage = () => {
+  const showZoomedPage = (pageIndex: number) => {
+    // initialize
     zoomedPageIndex = undefined
+
+    zoomedPageIndex = pageIndex
   }
 </script>
 
@@ -121,23 +120,35 @@
     <div class="row">
       {#each pageIndexes as pageIndex}
         <div class="col" bind:this={pageViewerContainers[pageIndex]}>
-          {#if searchResult && searchResult.matchedPageIndexes.includes(pageIndex)}
-            <div class="search-matching">"{searchResult.confirmedSearchTerm}" matched</div>
-          {/if}
-          <PageViewer
-            {pdfDocument}
-            {pageIndex}
-            {scale}
-            on:pageViewport={handlePageViewport}
-            on:zoomClick={handleZoomClick}
-          />
+          <div class="tile">
+            {#if searchResult && searchResult.matchedPageIndexes.includes(pageIndex)}
+              <div class="search-matched">Search matched</div>
+            {/if}
+            <div class="page">
+              <article>
+                <PageViewer
+                  {pdfDocument}
+                  {pageIndex}
+                  {scale}
+                  on:pageViewport={handlePageViewport}
+                />
+              </article>
+              <nav>
+                <div></div>
+                <div>{pageIndex + 1}</div>
+                <button class="zoom" on:click={() => showZoomedPage(pageIndex)} aria-label="zoom"
+                  >🧐</button
+                >
+              </nav>
+            </div>
+          </div>
         </div>
       {/each}
     </div>
   {/each}
 {/if}
 
-<ZoomedPageViewer pageIndex={zoomedPageIndex} {pdfDocument} on:close={handleCloseZoomedPage} />
+<ZoomedPageViewer pageIndex={zoomedPageIndex} {pdfDocument} />
 
 <style>
   .row {
@@ -149,18 +160,50 @@
   .row:not(:last-child) {
     border-top: 0.02rem solid #bbbbbb;
   }
-  .row .col:not(:first-child) {
+  .row .col:not(:first-child) article {
     border-left: 0.02rem solid #bbbbbb;
   }
-  .row .col:not(:last-child) {
+  .row .col:not(:last-child) article {
     border-left: 0.02rem solid #bbbbbb;
   }
 
-  .search-matching {
+  .tile .page {
+    position: relative;
+  }
+  .tile .page article:hover {
+    transform: scale(1.02) translateX(-1%) translateY(-1%);
+  }
+  .tile .page nav {
+    position: absolute;
+    bottom: 0.7rem;
+    left: 10%;
+    width: 80%;
+    height: 1.1rem;
+    padding: 0.3rem 0.7rem;
+    display: none;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+  .tile .page:hover nav {
+    display: flex;
+  }
+  .tile .page nav > * {
+    font-size: 0.8rem;
+    color: #878787;
+    text-align: center;
+  }
+  .tile nav button.zoom {
+    padding: 0 0.4rem;
+    font-size: 1rem;
+  }
+
+  .search-matched {
     width: 100%;
+    padding: 0.1rem 0.5rem;
     background-color: #b7a42a;
     color: #ffffff;
     text-align: center;
     font-size: 0.7rem;
+    border-radius: 0.05rem;
   }
 </style>

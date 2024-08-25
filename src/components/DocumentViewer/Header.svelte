@@ -9,8 +9,11 @@
 
   const dispatch = createEventDispatcher()
 
+  let confirmedSearchTerm: string = ''
+
   const handleSearch = (e: CustomEvent<SearchResult>) => {
     const searchResult = e.detail
+    confirmedSearchTerm = searchResult.confirmedSearchTerm
     dispatch('search', searchResult)
   }
 </script>
@@ -19,6 +22,9 @@
   <h2>{filename(filepath)}</h2>
 
   <nav>
+    {#if 0 < confirmedSearchTerm.length}
+      <div class="confirmed-search-term">{confirmedSearchTerm}</div>
+    {/if}
     <Search {filepath} on:search={handleSearch} />
 
     <div class="logo">
@@ -62,7 +68,6 @@
     box-shadow: none;
     border: none;
     text-align: center;
-    cursor: pointer;
   }
   .logo button:hover {
     opacity: 0.87;
@@ -77,5 +82,12 @@
     white-space: nowrap;
     font-size: 0.8rem;
     color: #878787;
+  }
+
+  .confirmed-search-term {
+    padding: 0.7rem 0.3rem;
+    background-color: #b7a42a;
+    color: #ffffff;
+    border-radius: 0.07rem;
   }
 </style>

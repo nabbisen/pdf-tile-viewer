@@ -3,6 +3,10 @@ button {
   border: none;
 }
 
+button:hover {
+  cursor: pointer;
+}
+
 button:active {
   box-shadow: inset 0 4px 8px #ffffffea;
   transform: translate(2px, 4px);
