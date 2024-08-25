@@ -7,7 +7,7 @@
   export let pdfDocument: PDFDocumentProxy
 
   let zoomViewScale: number = 3.0
-  let zoomViewOpacity: number = 1.0
+  let zoomViewTransparency: number = 0.0
   let windowScrollable: boolean = true
 
   $: {
@@ -33,22 +33,22 @@
 
 {#if pageIndex !== undefined}
   <div class="zoomView">
-    <div class="wrapper" style={`opacity: ${zoomViewOpacity};`}>
+    <div class="wrapper" style={`opacity: ${1.0 - zoomViewTransparency};`}>
       <PageViewer {pdfDocument} {pageIndex} scale={zoomViewScale} />
     </div>
     <nav>
       <span class="pageIndex">p.{pageIndex + 1}</span>
       <label class="window-scrollable"
-        >Window <u>{windowScrollable ? 'scrollable' : 'fixed'}</u>
+        >is Window: <u>{windowScrollable ? 'scrollable' : 'fixed'}</u>
         <input id="toggle-window-scrollable" type="checkbox" bind:checked={windowScrollable} />
       </label>
       <label
         >Scale
-        <input type="number" step="0.1" min="0.1" max="10.0" bind:value={zoomViewScale} />
+        <input type="range" step="0.1" min="0.1" max="10.0" bind:value={zoomViewScale} />
       </label>
       <label
         >Transparency
-        <input type="number" step="0.1" min="0.0" max="1.0" bind:value={zoomViewOpacity} />
+        <input type="range" step="0.1" min="0.0" max="1.0" bind:value={zoomViewTransparency} />
       </label>
       <button class="close" on:click={close}>Close</button>
     </nav>
@@ -68,6 +68,7 @@
   }
   .zoomView .wrapper {
     width: 100%;
+    min-height: calc(100% - 2rem);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -88,15 +89,15 @@
     font-size: 1rem;
   }
   .window-scrollable {
-    width: 9.7em;
+    width: 11.2em;
     text-align: left;
     cursor: pointer;
   }
   .window-scrollable input {
     display: none;
   }
-  .zoomView nav input[type='number'] {
-    width: 3.2em;
+  .zoomView nav input[type='range'] {
+    width: 5.7em;
     text-align: right;
   }
   .zoomView nav button.close {

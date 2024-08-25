@@ -14,11 +14,16 @@ pub fn read(filepath: &str) -> Result<Vec<u8>, String> {
         Err(err) => return Err(err),
     };
 
-    let mut buffer = Vec::new();
-    match file.read_to_end(&mut buffer) {
-        Ok(_) => {}
-        Err(err) => return Err(format!("Failed to read ({})", err)),
+    let pdfium = match pdfium() {
+        Ok(x) => x,
+        Err(err) => return Err(err),
     };
+    // todo: password protected doc support
+    let document = match pdfium.load_pdf_from_file(filepath, None) {
+        Ok(x) => x,
+        Err(err) => return Err(err.to_string()),
+    };
+    let buffer = document.save_to_bytes().expect("Failed to save as buffer");
     Ok(buffer)
 }
 
@@ -43,13 +48,12 @@ pub struct SearchResult {
 }
 
 pub fn search(search_term: &str, filepath: &str) -> Result<SearchResult, String> {
-    let pdfium = match std::panic::catch_unwind(|| {
-        Pdfium::new(pdfium_bind_to_library().expect("Failed to bind to pdfium lib"))
-    }) {
+    let pdfium = match pdfium() {
         Ok(x) => x,
-        Err(_) => return Err("libpdfium.so must be missing".to_owned()),
+        Err(err) => return Err(err),
     };
 
+    // todo: password protected doc support
     let document = pdfium
         .load_pdf_from_file(filepath, None)
         .expect("Failed to open file");
@@ -101,6 +105,16 @@ pub fn search(search_term: &str, filepath: &str) -> Result<SearchResult, String>
         buffer,
         page_indexes,
     })
+}
+
+fn pdfium() -> Result<Pdfium, String> {
+    let pdfium = match std::panic::catch_unwind(|| {
+        Pdfium::new(pdfium_bind_to_library().expect("Failed to bind to pdfium lib"))
+    }) {
+        Ok(x) => x,
+        Err(_) => return Err("libpdfium.so must be missing".to_owned()),
+    };
+    Ok(pdfium)
 }
 
 fn pdfium_bind_to_library() -> Result<Box<dyn PdfiumLibraryBindings>, PdfiumError> {
