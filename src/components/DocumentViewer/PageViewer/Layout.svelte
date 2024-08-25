@@ -10,21 +10,21 @@
 
   const dispatch = createEventDispatcher()
 
-  let pageViewerContainer: HTMLDivElement | undefined
+  let pageViewerContainer: HTMLDivElement
   let pdfPageView: PDFPageView
 
   const draw = async () => {
-    if (pageViewerContainer) {
-      pageViewerContainer.innerHTML = ''
-    }
-
     const pdfPage = await pdfDocument.getPage(pageIndex + 1)
-    pdfPageView = new PDFPageView({
-      id: pageIndex,
-      container: pageViewerContainer,
-      defaultViewport: pdfPage.getViewport(),
-      eventBus: new EventBus(),
-    })
+    if (!pdfPageView) {
+      pdfPageView = new PDFPageView({
+        id: pageIndex,
+        container: pageViewerContainer,
+        defaultViewport: pdfPage.getViewport(),
+        eventBus: new EventBus(),
+      })
+    } else {
+      pdfPageView.destroy()
+    }
     pdfPageView.setPdfPage(pdfPage)
     pdfPageView.draw()
 
