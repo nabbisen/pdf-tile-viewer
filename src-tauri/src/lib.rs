@@ -7,7 +7,7 @@ const WIDTH_RESOLUTION_RATIO: f32 = 0.8;
 const HEIGHT_RESOLUTION_RATIO: f32 = 0.9;
 
 #[tauri::command]
-fn read_pdf(filepath: &str) -> Result<Vec<u8>, String> {
+fn read_pdf(filepath: &str) -> Result<Vec<Vec<u8>>, String> {
     read(filepath)
 }
 

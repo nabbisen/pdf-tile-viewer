@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::Read;
 
-pub fn read(filepath: &str) -> Result<Vec<u8>, String> {
+pub fn read(filepath: &str) -> Result<Vec<Vec<u8>>, String> {
     let mut file = match File::open(filepath) {
         Ok(x) => x,
         Err(err) => return Err(format!("Failed to open ({})", err)),
@@ -14,12 +14,17 @@ pub fn read(filepath: &str) -> Result<Vec<u8>, String> {
         Err(err) => return Err(err),
     };
 
-    let mut buffer = Vec::new();
-    match file.read_to_end(&mut buffer) {
-        Ok(_) => {}
-        Err(err) => return Err(format!("Failed to read ({})", err)),
+    let pdfium = match pdfium() {
+        Ok(x) => x,
+        Err(err) => return Err(err),
     };
-    Ok(buffer)
+    let document = match pdfium.load_pdf_from_file(filepath, None) {
+        Ok(x) => x,
+        Err(err) => return Err(err.to_string()),
+    };
+    let page_buffers = page_buffers(document, &pdfium).expect("Failed to get matched page buffers");
+
+    Ok(page_buffers)
 }
 
 fn validate_pdf(file: &mut File) -> Result<(), String> {
@@ -38,16 +43,14 @@ fn validate_pdf(file: &mut File) -> Result<(), String> {
 
 #[derive(Serialize, Deserialize)]
 pub struct SearchResult {
-    buffer: Vec<u8>,
+    page_buffers: Vec<Vec<u8>>,
     page_indexes: Vec<usize>,
 }
 
 pub fn search(search_term: &str, filepath: &str) -> Result<SearchResult, String> {
-    let pdfium = match std::panic::catch_unwind(|| {
-        Pdfium::new(pdfium_bind_to_library().expect("Failed to bind to pdfium lib"))
-    }) {
+    let pdfium = match pdfium() {
         Ok(x) => x,
-        Err(_) => return Err("libpdfium.so must be missing".to_owned()),
+        Err(err) => return Err(err),
     };
 
     let document = pdfium
@@ -95,12 +98,22 @@ pub fn search(search_term: &str, filepath: &str) -> Result<SearchResult, String>
             }
         });
 
-    let buffer = document.save_to_bytes().expect("Failed to write as buffer");
+    let page_buffers = page_buffers(document, &pdfium).expect("Failed to get matched page buffers");
 
     Ok(SearchResult {
-        buffer,
+        page_buffers,
         page_indexes,
     })
+}
+
+fn pdfium() -> Result<Pdfium, String> {
+    let pdfium = match std::panic::catch_unwind(|| {
+        Pdfium::new(pdfium_bind_to_library().expect("Failed to bind to pdfium lib"))
+    }) {
+        Ok(x) => Ok(x),
+        Err(_) => return Err("libpdfium.so must be missing".to_owned()),
+    };
+    pdfium
 }
 
 fn pdfium_bind_to_library() -> Result<Box<dyn PdfiumLibraryBindings>, PdfiumError> {
@@ -115,4 +128,40 @@ fn pdfium_bind_to_library() -> Result<Box<dyn PdfiumLibraryBindings>, PdfiumErro
     ))
     .or_else(|_| Pdfium::bind_to_library(Pdfium::pdfium_platform_library_name_at_path("./")))
     .or_else(|_| Pdfium::bind_to_system_library())
+}
+
+fn page_buffers(document: PdfDocument, pdfium: &Pdfium) -> Result<Vec<Vec<u8>>, String> {
+    let src = document.save_to_bytes().expect("Failed to get doc bytes");
+
+    let page_buffers = document
+        .pages()
+        .iter()
+        .enumerate()
+        .map(|(i, _)| {
+            let mut document = pdfium
+                .load_pdf_from_byte_vec(src.clone(), None)
+                .expect("Failed to load doc from bytes");
+            while ((i + 1) as u16) < document.pages().len() {
+                document
+                    .pages_mut()
+                    .last()
+                    .expect("Failed to get last page")
+                    .delete()
+                    .expect("Failed to delete last page");
+            }
+            while 1 < document.pages().len() {
+                document
+                    .pages_mut()
+                    .first()
+                    .expect("Failed to get first page")
+                    .delete()
+                    .expect("Failed to delete first page");
+            }
+            document
+                .save_to_bytes()
+                .expect("Failed to save page as buffer")
+        })
+        .collect();
+
+    Ok(page_buffers)
 }
