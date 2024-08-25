@@ -17,6 +17,11 @@
   import { filename } from '../../utils/file'
   import { pushToLoadedHistory } from '../../stores/loadedHistory'
 
+  GlobalWorkerOptions.workerSrc = new URL(
+    'pdfjs-dist/build/pdf.worker.min.mjs',
+    import.meta.url
+  ).toString()
+
   let filepath: string
   $: {
     filepath = decodeURIComponent($page.url.searchParams.get('filepath')!)
@@ -36,11 +41,9 @@
   let zoomViewScale: number = 3.0
   let zoomViewOpacity: number = 1.0
 
-  GlobalWorkerOptions.workerSrc = new URL(
-    'pdfjs-dist/build/pdf.worker.min.mjs',
-    import.meta.url
-  ).toString()
-
+  $: {
+    load(filepath)
+  }
   $: {
     if (zoomedPageIndex) {
       window.document.body.style.overflow = 'hidden'
@@ -49,7 +52,26 @@
     }
   }
 
-  const loadPdfBuffer = async () => {
+  const load = async (filepath: string) => {
+    await loadPdfBuffer(filepath)
+
+    updatePageIndexesRows()
+
+    window.addEventListener('resize', debounce(updatePageIndexesRows, 200))
+    window.addEventListener('wheel', debounce(handleWheel, 120))
+
+    window.addEventListener('keydown', (e: KeyboardEvent) => {
+      if (e.key === 'Escape' || e.key === 'Esc') {
+        zoomedPageIndex = undefined
+      }
+    })
+
+    setTimeout(() => {
+      successToast('File opened', 2700)
+    }, 400)
+  }
+
+  const loadPdfBuffer = async (filepath: string) => {
     let res: Array<any>
     try {
       res = await invoke('read_pdf', { filepath: filepath })
@@ -68,10 +90,6 @@
     }
 
     pushToLoadedHistory(filepath)
-  }
-
-  const returnHome = () => {
-    goto('/dashboard')
   }
 
   const loadPdfDocument = async (buffer: ArrayBuffer) => {
@@ -93,26 +111,6 @@
       0 < event.deltaY ? decreaseScale() : increaseScale()
     }
   }
-
-  const onMountHandler = async () => {
-    await loadPdfBuffer()
-
-    updatePageIndexesRows()
-
-    window.addEventListener('resize', debounce(updatePageIndexesRows, 200))
-    window.addEventListener('wheel', debounce(handleWheel, 120))
-
-    window.addEventListener('keydown', (e: KeyboardEvent) => {
-      if (e.key === 'Escape' || e.key === 'Esc') {
-        zoomedPageIndex = undefined
-      }
-    })
-
-    setTimeout(() => {
-      successToast('File opened', 2700)
-    }, 400)
-  }
-  onMount(onMountHandler)
 
   function handlePageViewport(event: CustomEvent<PageViewport>) {
     const viewport = event.detail
@@ -148,6 +146,10 @@
     }
 
     pageIndexesRows = ret
+  }
+
+  const returnHome = () => {
+    goto('/dashboard')
   }
 
   function increaseScale() {

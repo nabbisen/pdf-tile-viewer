@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { goto } from '$app/navigation'
   import { open } from '@tauri-apps/plugin-dialog'
+  import { openDocumentViewer } from '../../utils/route'
   import { subscribeLoadedHistory } from '../../stores/loadedHistory'
   import type { LoadedHistoryItem } from '../../types/loadedHistory'
 
@@ -22,11 +22,6 @@
       const filepath = fileResponse.path
       openDocumentViewer(filepath)
     }
-  }
-
-  const openDocumentViewer = (filepath: string) => {
-    const urlParams = `filepath=${encodeURIComponent(filepath)}`
-    goto(`/document-viewer?${urlParams}`)
   }
 </script>
 

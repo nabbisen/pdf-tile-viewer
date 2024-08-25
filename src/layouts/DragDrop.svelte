@@ -1,7 +1,8 @@
 <script lang="ts">
+  import { onMount, onDestroy } from 'svelte'
   import { getCurrentWebview, type DragDropEvent } from '@tauri-apps/api/webview'
   import { type UnlistenFn, type Event as TauriEvent } from '@tauri-apps/api/event'
-  import { onMount, onDestroy } from 'svelte'
+  import { openDocumentViewer } from '../utils/route'
 
   let filepath: string | undefined
   let unlistenDragDrop: UnlistenFn | undefined
@@ -19,6 +20,7 @@
   const handleDrop = (paths: string[]) => {
     // todo: single file only now
     filepath = paths[0]
+    openDocumentViewer(filepath)
   }
 
   onMount(listenDragDrop)
