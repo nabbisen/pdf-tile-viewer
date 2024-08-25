@@ -131,33 +131,19 @@ fn pdfium_bind_to_library() -> Result<Box<dyn PdfiumLibraryBindings>, PdfiumErro
 }
 
 fn page_buffers(document: PdfDocument, pdfium: &Pdfium) -> Result<Vec<Vec<u8>>, String> {
-    let src = document.save_to_bytes().expect("Failed to get doc bytes");
-
     let page_buffers = document
         .pages()
         .iter()
         .enumerate()
         .map(|(i, _)| {
-            let mut document = pdfium
-                .load_pdf_from_byte_vec(src.clone(), None)
-                .expect("Failed to load doc from bytes");
-            while ((i + 1) as u16) < document.pages().len() {
-                document
-                    .pages_mut()
-                    .last()
-                    .expect("Failed to get last page")
-                    .delete()
-                    .expect("Failed to delete last page");
-            }
-            while 1 < document.pages().len() {
-                document
-                    .pages_mut()
-                    .first()
-                    .expect("Failed to get first page")
-                    .delete()
-                    .expect("Failed to delete first page");
-            }
-            document
+            let mut new_document = pdfium.create_new_pdf().expect("Failed to create new doc");
+
+            new_document
+                .pages_mut()
+                .copy_page_from_document(&document, i as u16, 0)
+                .expect("Failed to copy on single page doc");
+
+            new_document
                 .save_to_bytes()
                 .expect("Failed to save page as buffer")
         })
