@@ -50,8 +50,11 @@
       pdfPageView.draw()
     }
   }
+
   $: {
-    if (pdfDocument) draw()
+    if (pdfDocument) {
+      draw()
+    }
   }
 </script>
 
