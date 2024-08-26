@@ -157,7 +157,7 @@
         <button class="clear" on:click={clear} disabled={confirmedSearchTerm === undefined}
           >Clear 🈳
         </button>
-        <button class="close" on:click={toggleSearchForm}>Close ❎</button>
+        <button class="close auxiliary" on:click={toggleSearchForm}>Close</button>
       </footer>
     </form>
   {/if}

@@ -3,10 +3,12 @@
   import { type PDFDocumentProxy } from 'pdfjs-dist'
   import { EventBus, PDFPageView, RenderingStates } from 'pdfjs-dist/web/pdf_viewer.mjs'
   import 'pdfjs-dist/web/pdf_viewer.css'
+  import type { PageViewerClass } from '../../types/components/documentViewer'
 
   export let pdfDocument: PDFDocumentProxy
   export let pageIndex: number
   export let scale: number
+  export let viewerClass: PageViewerClass
 
   const dispatch = createEventDispatcher()
 
@@ -56,6 +58,14 @@
   }
 </script>
 
-<div class="pdfViewer">
+<div class={`pdfViewer viewer ${viewerClass}`}>
   <div bind:this={pageViewerContainer}></div>
 </div>
+
+<style>
+  .viewer.zoom {
+    overflow: scroll;
+    height: 100%;
+    width: 100%;
+  }
+</style>
