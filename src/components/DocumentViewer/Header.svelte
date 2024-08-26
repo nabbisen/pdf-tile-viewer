@@ -115,7 +115,7 @@
 
   nav .footer .logo button {
     width: 3.2rem;
-    height: 2.7rem;
+    height: 3.2rem;
     background-color: #efefef;
     font-size: 0.6rem;
     box-shadow: none;
