@@ -103,6 +103,9 @@
   .background-scrollable input {
     display: none;
   }
+  .background-scrollable u {
+    cursor: pointer;
+  }
   .zoomView nav input[type='range'] {
     width: 5.7em;
     text-align: right;

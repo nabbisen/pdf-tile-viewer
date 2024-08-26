@@ -19,6 +19,7 @@
   .tooltip {
     position: absolute;
     padding: 0.44rem;
+    background-color: #ffffffce;
     color: #636363;
     font-size: 0.63rem;
     text-align: center;
@@ -26,8 +27,8 @@
     visibility: hidden;
     z-index: 1;
     transition:
-      opacity 0.4s,
-      visibility 0.4s;
+      opacity 0.3s,
+      visibility 0.3s;
   }
 
   .tooltip-container:hover .tooltip {

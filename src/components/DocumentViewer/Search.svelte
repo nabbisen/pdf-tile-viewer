@@ -9,6 +9,10 @@
     setDisplayMatchedPages,
     reload,
   } from '../../stores/components/documentViewer'
+  import {
+    subscribeConfirmedSearchTerm,
+    subscribeDisplayMatchedPages,
+  } from '../../stores/components/documentViewer'
   import { infoToast, successToast } from '../../stores/layouts/toast'
   import { loaderStart, loaderStop } from '../../stores/layouts/loader'
   import Tooltip from '../@common/Tooltip.svelte'
@@ -18,9 +22,19 @@
   const SEARCH_TERM_MIN_LENGTH: number = 3
   const SEQUENTIAL_CONCAT: string = '~'
 
-  let searchTerm: string = ''
   let confirmedSearchTerm: string | undefined
+  let displayMatchedPages: string | undefined
+
+  let searchTerm: string = ''
   let searchFormVisible: boolean = false
+
+  $: {
+    subscribeConfirmedSearchTerm((value) => (confirmedSearchTerm = value))
+  }
+
+  $: {
+    subscribeDisplayMatchedPages((value) => (displayMatchedPages = value))
+  }
 
   onMount(ready)
 
@@ -106,6 +120,23 @@
   }
 </script>
 
+<div class="search-result">
+  {#if confirmedSearchTerm && 0 < confirmedSearchTerm.length}
+    <div class="confirmed-search-term">
+      <h3>Keyword</h3>
+      <div>{confirmedSearchTerm}</div>
+    </div>
+    <div class="search-matched">
+      {#if displayMatchedPages}
+        <h4>matched</h4>
+        <strong>{displayMatchedPages}</strong>
+      {:else}
+        <div class="no-matched">no matched</div>
+      {/if}
+    </div>
+  {/if}
+</div>
+
 <div class="search">
   <Tooltip messages="Search" position="left">
     <button class="toggle" on:click={toggleSearchForm}>🔍</button>
@@ -133,6 +164,46 @@
 </div>
 
 <style>
+  .search-result h3,
+  .search-result h4 {
+    padding: 0;
+    margin: 0;
+    font-size: 0.6rem;
+    font-weight: normal;
+  }
+  .search-result h3 {
+    margin-bottom: 0.4rem;
+  }
+  .search-result h4 {
+    margin-bottom: 0.1rem;
+  }
+  .search-result h4::after {
+    content: ':';
+  }
+
+  .search-result .confirmed-search-term,
+  .search-result .search-matched {
+    margin: 0.6rem 0 0.1rem;
+    color: #b7a42a;
+    text-align: center;
+  }
+  .search-result .confirmed-search-term div {
+    padding: 0.7rem 0.3rem;
+    border: 0.04rem #b7a42a solid;
+    border-radius: 0.07rem;
+  }
+  .search-result .search-matched {
+    max-width: 3.2rem;
+    line-height: 1.4em;
+    text-align: right;
+  }
+  .search-result .search-matched .no-matched {
+    text-align: center;
+  }
+  .search-result .search-matched strong {
+    font-size: 0.57rem;
+  }
+
   .search {
     position: relative;
   }

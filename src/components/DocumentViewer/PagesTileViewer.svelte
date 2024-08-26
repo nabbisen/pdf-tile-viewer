@@ -272,7 +272,7 @@
     border-left: 0.02rem solid #bbbbbb;
   }
   .col:last-child {
-    padding-right: 1.5rem;
+    padding-right: 4.4rem;
   }
 
   .tile.scrolled-into-view,
