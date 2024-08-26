@@ -9,6 +9,6 @@ PDF viewer/reader displayed in tile layout. Number of pages in a row is dynamica
   <img style="flex: 1; max-width: calc(60.0% - 0.4rem);" src="docs/.docs-assets/demo-02.png" alt="demo screenshot 02">
 </p>
 
-The Latest executables on multiple platforms are in [Releases](https://github.com/nabbisen/pdf-tile-viewer/releases).
+The Latest executables on multiple platforms are in [Releases](https://github.com/nabbisen/pdf-tile-viewer/releases). No Installation is required. Just launch the executable to start.
 
-[Releases](https://github.com/nabbisen/pdf-tile-viewer/releases) ページ内に最新の実行ファイルがあります。
+[Releases](https://github.com/nabbisen/pdf-tile-viewer/releases) ページ内に最新の実行ファイルがあります。インストール不要です。実行ファイルを起動すれば使えます。
