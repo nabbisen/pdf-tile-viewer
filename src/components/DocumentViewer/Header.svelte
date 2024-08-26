@@ -3,65 +3,86 @@
   import Search from './Search.svelte'
   import { filename } from '../../utils/file'
   import { returnHome } from '../../utils/route'
-  import {
-    subscribeConfirmedSearchTerm,
-    subscribeDisplayMatchedPages,
-  } from '../../stores/components/documentViewer'
   import { errorToast } from '../../stores/layouts/toast'
+  import Tooltip from '../@common/Tooltip.svelte'
 
   export let filepath: string | undefined
-
-  let confirmedSearchTerm: string | undefined
-  let displayMatchedPages: string | undefined
-
-  $: {
-    subscribeConfirmedSearchTerm((value) => (confirmedSearchTerm = value))
-  }
-
-  $: {
-    subscribeDisplayMatchedPages((value) => (displayMatchedPages = value))
-  }
 
   function filenameClick() {
     invoke('open_file_manager', { filepath: filepath }).catch((e: string) => {
       errorToast(e)
     })
   }
+
+  function scrollToTop() {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    })
+  }
+  function scrollToRight() {
+    window.scrollTo({
+      left: document.body.scrollWidth,
+      behavior: 'smooth',
+    })
+  }
+  function scrollToBottom() {
+    window.scrollTo({
+      top: document.body.scrollHeight,
+      behavior: 'smooth',
+    })
+  }
+  function scrollToLeft() {
+    window.scrollTo({
+      left: 0,
+      behavior: 'smooth',
+    })
+  }
 </script>
 
 <header>
   <h2>
-    <button on:click={filenameClick}>{filename(filepath || '')}</button>
+    <Tooltip messages="Click to open file manager" position="right">
+      <button on:click={filenameClick}>{filename(filepath || '')}</button>
+    </Tooltip>
   </h2>
 
   <nav>
-    <div class="search-result">
-      {#if confirmedSearchTerm && 0 < confirmedSearchTerm.length}
-        <div class="confirmed-search-term">
-          <h3>Keyword</h3>
-          <div>{confirmedSearchTerm}</div>
-        </div>
-        <div class="search-matched">
-          {#if displayMatchedPages}
-            <h4>matched</h4>
-            <strong>{displayMatchedPages}</strong>
-          {:else}
-            <div class="no-matched">no matched</div>
-          {/if}
-        </div>
-      {/if}
-    </div>
     <Search {filepath} />
 
-    <div class="logo">
-      <button on:click={returnHome}>
-        <h1>Home</h1>
-      </button>
+    <div class="footer">
+      <div class="logo">
+        <Tooltip messages="Double click" position="left">
+          <button on:dblclick={returnHome}>
+            <h1>Home</h1>
+          </button>
+        </Tooltip>
+      </div>
+      <div class="scroll-to">
+        <button class="top" on:click={scrollToTop}>↑</button>
+        <button class="right" on:click={scrollToRight}>→</button>
+        <button class="bottom" on:click={scrollToBottom}>↓</button>
+        <button class="left" on:click={scrollToLeft}>←</button>
+      </div>
     </div>
   </nav>
 </header>
 
 <style>
+  h2 {
+    position: fixed;
+    top: 0;
+    right: 0.4rem;
+    transform: rotate(90deg) translate(100%, 0);
+    transform-origin: top right;
+    white-space: nowrap;
+  }
+  h2 button {
+    color: #5d9ae5;
+    font-size: 0.8rem;
+    font-weight: bold;
+  }
+
   header,
   h1 {
     font-size: 0.7rem;
@@ -80,7 +101,6 @@
     position: fixed;
     right: 0.8rem;
     bottom: 0.5rem;
-    width: 4.4em;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -88,64 +108,53 @@
     z-index: 20000;
   }
 
-  .logo button {
+  nav .footer {
+    display: flex;
+    flex-direction: row-reverse;
+  }
+
+  nav .footer .logo button {
+    width: 3.2rem;
+    height: 2.7rem;
     background-color: #efefef;
     font-size: 0.6rem;
     box-shadow: none;
     border: none;
-    text-align: center;
   }
-  .logo button:hover {
+  nav .footer .logo button:hover {
     opacity: 0.87;
   }
 
-  h2 {
-    position: fixed;
-    top: 0;
-    right: 0.4rem;
-    transform: rotate(90deg) translate(100%, 0);
-    transform-origin: top right;
-    white-space: nowrap;
+  nav .footer .scroll-to {
+    position: relative;
+    margin-right: 0.7rem;
   }
-  h2 button {
-    color: #5d9ae5;
+  nav .footer .scroll-to button {
+    position: absolute;
+    color: #252525;
     font-size: 0.8rem;
     font-weight: bold;
   }
-
-  .search-result h3,
-  .search-result h4 {
-    padding: 0;
-    margin: 0;
-    font-size: 0.6rem;
-    font-weight: normal;
+  nav .footer .scroll-to button:hover {
+    color: #bbbbbb;
   }
-  .search-result h3 {
-    margin-bottom: 0.4rem;
+  nav .footer .scroll-to button:disabled {
+    visibility: hidden;
   }
-  .search-result h4 {
-    margin-bottom: 0.1rem;
+  nav .footer .scroll-to .top {
+    right: 0.8rem;
+    bottom: 1.5rem;
   }
-  .search-result h4::after {
-    content: ':';
+  nav .footer .scroll-to .right {
+    right: 0;
+    bottom: 0.75rem;
   }
-
-  .search-result .confirmed-search-term,
-  .search-result .search-matched {
-    margin: 0.6rem 0 0.1rem;
-    color: #b7a42a;
-    text-align: center;
+  nav .footer .scroll-to .bottom {
+    right: 0.8rem;
+    bottom: 0;
   }
-  .search-result .confirmed-search-term div {
-    padding: 0.7rem 0.3rem;
-    border: 0.04rem #b7a42a solid;
-    border-radius: 0.07rem;
-  }
-  .search-result .search-matched {
-    line-height: 1.4em;
-    text-align: right;
-  }
-  .search-result .search-matched .no-matched {
-    text-align: center;
+  nav .footer .scroll-to .left {
+    right: 1.6rem;
+    bottom: 0.75rem;
   }
 </style>

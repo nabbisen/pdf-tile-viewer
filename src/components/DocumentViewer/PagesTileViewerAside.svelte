@@ -157,5 +157,6 @@
     display: inline-block;
     font-size: 0.8rem;
     font-weight: bold;
+    cursor: pointer;
   }
 </style>
