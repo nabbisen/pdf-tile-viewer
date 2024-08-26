@@ -16,15 +16,17 @@
 
   const searchPdf = async () => {
     let res: any
-    try {
-      res = await invoke('search_pdf', {
-        searchTerm: searchTerm,
-        filepath: filepath,
+    invoke('search_pdf', {
+      searchTerm: searchTerm,
+      filepath: filepath,
+    })
+      .then((ret: unknown) => {
+        res = ret
       })
-    } catch (error: unknown) {
-      handleInvokeError(error)
-      return
-    }
+      .catch((error: unknown) => {
+        handleInvokeError(error)
+        return
+      })
     const buffer = res.buffer as ArrayBuffer
 
     const matchedPageIndexes = res.page_indexes as number[]

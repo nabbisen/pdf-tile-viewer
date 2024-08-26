@@ -34,12 +34,10 @@
   }
 
   onMount(() => {
-    try {
-      load(buffer)
-    } catch (error: unknown) {
+    load(buffer).catch((error: unknown) => {
       handleInvokeError(error)
       returnHome()
-    }
+    })
 
     pushToLoadedHistory(filepath)
 

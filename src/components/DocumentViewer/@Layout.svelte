@@ -20,14 +20,14 @@
   let searchResult: SearchResult | undefined
 
   const load = (filepath: string) => {
-    try {
-      getDocumentBuffer(filepath).then((x) => {
+    getDocumentBuffer(filepath)
+      .then((x) => {
         buffer = x
       })
-    } catch (error: unknown) {
-      handleInvokeError(error)
-      returnHome()
-    }
+      .catch((error: unknown) => {
+        handleInvokeError(error)
+        returnHome()
+      })
   }
 
   const handleSearch = (e: CustomEvent<SearchResult>) => {
