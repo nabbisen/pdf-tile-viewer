@@ -2,11 +2,59 @@
 
 ## Development
 
+### structure
+
+`/src` to frontend
+
+`/src-tauri` to backend
+
+### Code style - Frontend
+
+#### Functions
+
+##### `.svelte` <script>
+
+traditional function
+
+- hoisting (defs order unrestricted)
+- `$:` reactivity / `onMount()` etc. top in `<script>` followed by traditional functions
+
+```svelte
+<!-- svelte -->
+<script>
+  import ...
+
+  $: {
+    someFn(someVar)
+  }
+
+  onMoutn(someHandler)
+
+  function someHandler() {
+    ...
+  }
+
+  function someFn(someVar: someType) {
+    ...
+  }
+</script>
+```
+
+#### `.ts` : arrow functions
+
+- defs orders restricted
+
+```ts
+const someFn = (param: paramType) => {
+  ...
+}
+```
+
 ### System requirements
 
 - [Rust](https://www.rust-lang.org/)
 - [Bun](https://bun.sh/)
-    - [Node.js](https://nodejs.org/) is also available
+  - [Node.js](https://nodejs.org/) is also available
 
 ### Command-lines
 

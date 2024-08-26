@@ -1,12 +1,13 @@
 import { goto } from '$app/navigation'
+import { setFilepath, reset } from '../stores/components/documentViewer'
 
 const returnHome = () => {
   goto('/dashboard')
 }
 
 const openDocumentViewer = (filepath: string) => {
-  const urlParams = `filepath=${encodeURIComponent(filepath)}`
-  goto(`/document-viewer?${urlParams}`)
+  setFilepath(filepath)
+  goto('/document-viewer')
 }
 
 export { returnHome, openDocumentViewer }

@@ -1,41 +1,33 @@
 <script lang="ts">
-  import { onMount } from 'svelte'
-  import { page } from '$app/stores'
   import 'pdfjs-dist/web/pdf_viewer.css'
   import Header from './Header.svelte'
   import PagesTileViewer from './PagesTileViewer.svelte'
-  import type { SearchResult } from './@types'
   import { getDocumentBuffer } from '../../utils/pdf'
   import { handleInvokeError } from '../../utils/backend'
   import { returnHome } from '../../utils/route'
+  import { subscribeFilepath, setBuffer } from '../../stores/components/documentViewer'
 
-  let filepath: string = ''
+  let filepath: string | undefined
 
-  onMount(() => {
-    filepath = $page.url.searchParams.get('filepath')!
-    load(filepath)
-  })
+  $: {
+    subscribeFilepath((value) => (filepath = value))
+  }
 
-  let buffer: ArrayBuffer | undefined
-  let searchResult: SearchResult | undefined
+  $: {
+    if (filepath) load()
+  }
 
-  const load = (filepath: string) => {
-    getDocumentBuffer(filepath)
+  function load() {
+    getDocumentBuffer(filepath!)
       .then((x) => {
-        buffer = x
+        setBuffer(x)
       })
       .catch((error: unknown) => {
         handleInvokeError(error)
         returnHome()
       })
   }
-
-  const handleSearch = (e: CustomEvent<SearchResult>) => {
-    searchResult = e.detail
-  }
 </script>
 
-<Header {filepath} on:search={handleSearch} />
-{#if buffer}
-  <PagesTileViewer {filepath} {buffer} {searchResult} />
-{/if}
+<Header {filepath} />
+<PagesTileViewer {filepath} />

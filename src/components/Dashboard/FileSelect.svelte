@@ -1,6 +1,6 @@
 <script lang="ts">
   import { open } from '@tauri-apps/plugin-dialog'
-  import { subscribeLoadedHistory } from '../../stores/loadedHistory'
+  import { subscribeLoadedHistory } from '../../stores/components/loadedHistory'
   import type { LoadedHistoryItem } from '../../types/loadedHistory'
   import { openDocumentViewer } from '../../utils/route'
 
@@ -10,7 +10,7 @@
     subscribeLoadedHistory((value) => (loadedHistory = [...value]))
   }
 
-  const fileSelect = async () => {
+  async function fileSelect() {
     const fileResponse = await open({
       multiple: false, // todo
       directory: false,

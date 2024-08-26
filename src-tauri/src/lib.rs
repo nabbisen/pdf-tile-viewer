@@ -1,10 +1,12 @@
-use tauri::{Manager, PhysicalPosition, PhysicalSize, Position, Size};
+use tauri::{AppHandle, Manager, PhysicalPosition, PhysicalSize, Position, Size};
 
-mod pdf;
-use pdf::{read, search, SearchResult};
+mod internal;
+use internal::file::run_file_manager;
+use internal::pdf::{read, search, SearchResult};
+use internal::tauri::window_default_title;
 
-const WIDTH_RESOLUTION_RATIO: f32 = 0.8;
-const HEIGHT_RESOLUTION_RATIO: f32 = 0.9;
+const WIDTH_RESOLUTION_RATIO: f32 = 0.80;
+const HEIGHT_RESOLUTION_RATIO: f32 = 0.87;
 
 #[tauri::command]
 fn read_pdf(filepath: &str) -> Result<Vec<u8>, String> {
@@ -14,6 +16,29 @@ fn read_pdf(filepath: &str) -> Result<Vec<u8>, String> {
 #[tauri::command]
 fn search_pdf(search_term: &str, filepath: &str) -> Result<SearchResult, String> {
     search(search_term, filepath)
+}
+
+#[tauri::command]
+fn open_file_manager(filepath: &str) -> Result<(), String> {
+    run_file_manager(filepath)
+}
+
+#[tauri::command]
+fn set_window_title(app: AppHandle, window: tauri::Window, filepath: &str) -> Result<(), String> {
+    let default_title = window_default_title(&app);
+    window
+        .set_title(format!("{} [{}]", filepath, default_title).as_str())
+        .expect("Failed to set window title");
+    Ok(())
+}
+
+#[tauri::command]
+fn reset_window_title(app: AppHandle, window: tauri::Window) -> Result<(), String> {
+    let default_title = window_default_title(&app);
+    window
+        .set_title(default_title.as_str())
+        .expect("Failed to set window title");
+    Ok(())
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -49,7 +74,13 @@ pub fn run() {
         })
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
-        .invoke_handler(tauri::generate_handler![read_pdf, search_pdf])
+        .invoke_handler(tauri::generate_handler![
+            read_pdf,
+            search_pdf,
+            open_file_manager,
+            set_window_title,
+            reset_window_title
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

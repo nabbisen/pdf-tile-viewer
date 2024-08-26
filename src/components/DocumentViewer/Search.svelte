@@ -1,53 +1,80 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte'
+  import { onMount } from 'svelte'
   import { invoke } from '@tauri-apps/api/core'
-  import { infoToast, successToast } from '../../stores/toast'
   import { handleInvokeError } from '../../utils/backend'
-  import type { SearchResult } from './@types'
+  import {
+    setBuffer,
+    setMatchedPageIndexes,
+    setConfirmedSearchTerm,
+    setDisplayMatchedPages,
+    reload,
+  } from '../../stores/components/documentViewer'
+  import { infoToast, successToast } from '../../stores/layouts/toast'
+  import { loaderStart, loaderStop } from '../../stores/layouts/loader'
 
   export let filepath: string = ''
 
-  const dispatch = createEventDispatcher()
-
   const SEARCH_TERM_MIN_LENGTH: number = 3
   const SEQUENTIAL_CONCAT: string = '~'
-  let searchTerm: string = ''
-  let isSearchFormVisible: boolean = false
 
-  const searchPdf = async () => {
-    let res: any
+  let searchTerm: string = ''
+  let confirmedSearchTerm: string | undefined
+  let searchFormVisible: boolean = false
+
+  onMount(ready)
+
+  function ready() {
+    window.addEventListener('keydown', (e: KeyboardEvent) => {
+      if (e.key === 'Escape' || e.key === 'Esc') {
+        searchFormVisible = false
+      }
+    })
+  }
+
+  function searchPdf() {
+    if (searchTerm && searchTerm === confirmedSearchTerm) return
+
+    loaderStart()
+
     invoke('search_pdf', {
       searchTerm: searchTerm,
       filepath: filepath,
     })
-      .then((ret: unknown) => {
-        res = ret
-      })
+      .then(searchCallback)
       .catch((error: unknown) => {
         handleInvokeError(error)
         return
       })
+  }
+
+  function searchCallback(res: any) {
     const buffer = res.buffer as ArrayBuffer
+    setBuffer(buffer)
 
     const matchedPageIndexes = res.page_indexes as number[]
     if (0 < matchedPageIndexes.length) {
-      successToast(`Matches: p.${displayMatchedPages(matchedPageIndexes)}`)
+      const displayMatchedPages = getDisplayMatchedPages(matchedPageIndexes)
+      successToast(`Matched: ${displayMatchedPages}`)
+      setDisplayMatchedPages(displayMatchedPages)
     } else {
-      infoToast('No matches')
+      infoToast('No matched')
+      setDisplayMatchedPages(undefined)
     }
-    const confirmedSearchTerm = searchTerm
+    setMatchedPageIndexes(matchedPageIndexes)
 
-    const searchResult: SearchResult = {
-      buffer,
-      matchedPageIndexes,
-      confirmedSearchTerm,
-    }
-    dispatch('search', searchResult)
+    confirmedSearchTerm = searchTerm
+    setConfirmedSearchTerm(confirmedSearchTerm)
 
-    isSearchFormVisible = false
+    searchFormVisible = false
+
+    loaderStop()
   }
 
-  const displayMatchedPages = (pageIndexes: number[]): string => {
+  function toggleSearchForm() {
+    searchFormVisible = !searchFormVisible
+  }
+
+  const getDisplayMatchedPages = (pageIndexes: number[]): string => {
     const ret = pageIndexes
       .map((pageIndex, arrayIndex, array) => {
         const pageNum = pageIndex + 1
@@ -69,17 +96,18 @@
       })
       .join(', ')
       .replaceAll(`, ${SEQUENTIAL_CONCAT}, `, SEQUENTIAL_CONCAT)
-    return ret
+    return `p.${ret}`
   }
 
-  const toggleSearchForm = () => {
-    isSearchFormVisible = !isSearchFormVisible
+  function clear() {
+    searchFormVisible = false
+    reload(filepath)
   }
 </script>
 
 <div class="search">
   <button class="toggle" on:click={toggleSearchForm}>🔍</button>
-  {#if isSearchFormVisible}
+  {#if searchFormVisible}
     <form>
       <input
         type="text"
@@ -91,7 +119,12 @@
         disabled={searchTerm.length < SEARCH_TERM_MIN_LENGTH}
         on:click={searchPdf}>Search</button
       >
-      <button class="close" on:click={toggleSearchForm}>Close</button>
+      <footer>
+        <button class="clear" on:click={clear} disabled={confirmedSearchTerm === undefined}
+          >Clear 🈳
+        </button>
+        <button class="close" on:click={toggleSearchForm}>Close ❎</button>
+      </footer>
     </form>
   {/if}
 </div>
@@ -138,11 +171,13 @@
     color: #ffffff;
     font-size: 1.2rem;
   }
-  .search form button.search:disabled {
-    background-color: #eaeaea;
-    color: #bbbbbb;
+  .search form footer {
+    width: 14.4rem;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-around;
   }
-  .search form button.close {
+  .search form footer button {
     width: fit-content;
     margin: 1.1rem auto 0;
     background-color: #ffffff;
