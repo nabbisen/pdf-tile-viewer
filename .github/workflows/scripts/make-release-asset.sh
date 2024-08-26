@@ -61,6 +61,7 @@ case $1 in
     curl -LO https://github.com/bblanchon/pdfium-binaries/releases/latest/download/pdfium-win-x64.tgz
     7z x pdfium-win-x64.tgz
     7z x pdfium-win-x64.tar -olibpdfium
+    # windows requires .dll in bin instead of .dll.lib in lib
     cp -r libpdfium/bin $artifact/lib/pdfium/
     mv $artifact/lib/pdfium/bin $artifact/lib/pdfium/lib
 
