@@ -49,24 +49,28 @@
     <div class="page-nums">
       <div class="total"><strong>{numPages}</strong></div>
       <button class="toggle-page-num" on:click={togglePageNum}
-        >🔢 <span>{pageNumVisible ? 'on' : 'off'}</span></button
+        >🔢 <span class="button auxiliary">{pageNumVisible ? 'on' : 'off'}</span></button
       >
     </div>
     <div class="scroll-to-page">
       <h4>Jump</h4>
       <span>p.</span>
       <input type="number" bind:value={scrollToPageNum} min="1" max={numPages} step="1" />
-      <button on:click={scrollToPage}>Go</button>
+      <button class="auxiliary" on:click={scrollToPage}>Go</button>
     </div>
     <div class="pages-per-row">
       <h4>Pages per row</h4>
       <span>is: </span>
-      <label
-        ><u>
-          {fixPagesPerRow ? 'fixed' : 'auto-determined'}
-        </u>
-        <input type="checkbox" bind:checked={fixPagesPerRow} on:change={fixPagesPerRowChange} />
-      </label>
+      <button
+        class="auxiliary"
+        on:click={() => {
+          fixPagesPerRow = !fixPagesPerRow
+          fixPagesPerRowChange()
+        }}
+      >
+        {fixPagesPerRow ? 'fixed' : 'auto-determined'}
+      </button>
+      <input type="checkbox" bind:checked={fixPagesPerRow} on:change={fixPagesPerRowChange} />
       {#if fixPagesPerRow}
         <span>at: </span>
         <input
@@ -137,26 +141,12 @@
     color: #444444;
     text-align: right;
   }
-  aside .toggle-page-num span,
-  aside .scroll-to-page button {
-    padding: 0.1rem 0.8rem;
-    background-color: #636363;
-    color: #ffffff;
-    border-radius: 0.12rem;
-  }
   aside .toggle-page-num span {
     padding-left: 0.3rem;
     padding-right: 0.3rem;
   }
 
-  aside label input[type='checkbox'] {
+  aside .pages-per-row button + input[type='checkbox'] {
     display: none;
-  }
-
-  aside .pages-per-row u {
-    display: inline-block;
-    font-size: 0.8rem;
-    font-weight: bold;
-    cursor: pointer;
   }
 </style>

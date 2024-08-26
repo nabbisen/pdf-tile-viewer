@@ -35,19 +35,18 @@
 
 {#if pageIndex !== undefined}
   <div class="zoomView">
-    <div class="wrapper" style={`opacity: ${1.0 - zoomViewTransparency};`}>
-      <PageViewer {pdfDocument} {pageIndex} scale={zoomViewScale} />
+    <div class="viewer-wrapper" style={`opacity: ${1.0 - zoomViewTransparency};`}>
+      <PageViewer {pdfDocument} {pageIndex} scale={zoomViewScale} viewerClass="zoom" />
     </div>
     <nav>
       <span class="pageIndex">p.{pageIndex + 1}</span>
-      <label class="background-scrollable"
-        >Background is: <u>{backgroundScrollable ? 'scrollable' : 'fixed'}</u>
-        <input
-          id="toggle-background-scrollable"
-          type="checkbox"
-          bind:checked={backgroundScrollable}
-        />
-      </label>
+      <div class="background-scrollable">
+        Background is:
+        <button class="auxiliary" on:click={() => (backgroundScrollable = !backgroundScrollable)}>
+          {backgroundScrollable ? 'scrollable' : 'fixed'}
+        </button>
+        <input type="checkbox" bind:checked={backgroundScrollable} />
+      </div>
       <label
         >Scale
         <input type="range" step="0.1" min="0.1" max="10.0" bind:value={zoomViewScale} />
@@ -56,7 +55,7 @@
         >Transparency
         <input type="range" step="0.1" min="0.0" max="1.0" bind:value={zoomViewTransparency} />
       </label>
-      <button class="close" on:click={close}>Close ❎</button>
+      <button class="close auxiliary" on:click={close}>Close</button>
     </nav>
   </div>
 {/if}
@@ -71,21 +70,19 @@
     display: flex;
     flex-direction: column;
     border: 0.27rem #2aabb7 solid;
-    z-index: 2;
+    z-index: 20001;
   }
-  .zoomView .wrapper {
-    width: 100%;
-    min-height: calc(100% - 2rem);
+  .zoomView .viewer-wrapper {
+    height: calc(100% - 3.2rem);
     display: flex;
     justify-content: center;
     align-items: center;
     background-color: #252525;
-    overflow: scroll;
   }
   .zoomView nav {
     width: calc(100% - 0.8rem);
     height: 1.75rem;
-    padding: 0.3rem 0.4rem 0.1rem;
+    padding: 0.8rem 0.4rem 0.3rem;
     display: flex;
     justify-content: space-around;
     align-items: center;
@@ -100,11 +97,8 @@
     text-align: left;
     cursor: pointer;
   }
-  .background-scrollable input {
+  .background-scrollable button + input[type='checkbox'] {
     display: none;
-  }
-  .background-scrollable u {
-    cursor: pointer;
   }
   .zoomView nav input[type='range'] {
     width: 5.7em;

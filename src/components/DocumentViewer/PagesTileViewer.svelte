@@ -210,6 +210,7 @@
                     {pdfDocument}
                     {pageIndex}
                     {scale}
+                    viewerClass="tile"
                     on:pageViewport={handlePageViewport}
                   />
                 </article>

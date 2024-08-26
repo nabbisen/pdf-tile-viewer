@@ -22,10 +22,23 @@ button:disabled:hover {
   opacity: unset !important;
 }
 
+button.auxiliary,
+.button.auxiliary {
+  padding: 0.1rem 0.8rem;
+  background-color: #636363 !important;
+  color: #ffffff !important;
+  border-radius: 0.12rem;
+}
+
+button.auxiliary:active,
+.button.auxiliary:active {
+  box-shadow: inset 0 4px 8px #727272ea;
+}
+
 /* overflow scroll bars */
 ::-webkit-scrollbar {
   width: 44px;
-  height: 18px;
+  height: 25px;
 }
 
 ::-webkit-scrollbar-thumb {
