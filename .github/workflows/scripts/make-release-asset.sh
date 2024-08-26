@@ -61,8 +61,8 @@ case $1 in
     curl -LO https://github.com/bblanchon/pdfium-binaries/releases/latest/download/pdfium-win-x64.tgz
     7z x pdfium-win-x64.tgz
     7z x pdfium-win-x64.tar -olibpdfium
-    cp -r libpdfium/lib $artifact/lib/pdfium/
     cp -r libpdfium/bin $artifact/lib/pdfium/
+    mv $artifact/lib/pdfium/bin $artifact/lib/pdfium/lib
 
     asset="$bin_name@$os_tag.zip"
     7z a -w ../../$asset $artifact
