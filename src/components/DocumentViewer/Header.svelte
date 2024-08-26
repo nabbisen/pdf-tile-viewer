@@ -1,31 +1,57 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte'
+  import { invoke } from '@tauri-apps/api/core'
   import Search from './Search.svelte'
   import { filename } from '../../utils/file'
   import { returnHome } from '../../utils/route'
-  import type { SearchResult } from './@types'
+  import {
+    subscribeConfirmedSearchTerm,
+    subscribeDisplayMatchedPages,
+  } from '../../stores/components/documentViewer'
+  import { errorToast } from '../../stores/layouts/toast'
 
-  export let filepath: string = ''
+  export let filepath: string | undefined
 
-  const dispatch = createEventDispatcher()
+  let confirmedSearchTerm: string | undefined
+  let displayMatchedPages: string | undefined
 
-  let confirmedSearchTerm: string = ''
+  $: {
+    subscribeConfirmedSearchTerm((value) => (confirmedSearchTerm = value))
+  }
 
-  const handleSearch = (e: CustomEvent<SearchResult>) => {
-    const searchResult = e.detail
-    confirmedSearchTerm = searchResult.confirmedSearchTerm
-    dispatch('search', searchResult)
+  $: {
+    subscribeDisplayMatchedPages((value) => (displayMatchedPages = value))
+  }
+
+  function filenameClick() {
+    invoke('open_file_manager', { filepath: filepath }).catch((e: string) => {
+      errorToast(e)
+    })
   }
 </script>
 
 <header>
-  <h2>{filename(filepath)}</h2>
+  <h2>
+    <button on:click={filenameClick}>{filename(filepath || '')}</button>
+  </h2>
 
   <nav>
-    {#if 0 < confirmedSearchTerm.length}
-      <div class="confirmed-search-term">{confirmedSearchTerm}</div>
-    {/if}
-    <Search {filepath} on:search={handleSearch} />
+    <div class="search-result">
+      {#if confirmedSearchTerm && 0 < confirmedSearchTerm.length}
+        <div class="confirmed-search-term">
+          <h3>Keyword</h3>
+          <div>{confirmedSearchTerm}</div>
+        </div>
+        <div class="search-matched">
+          {#if displayMatchedPages}
+            <h4>matched</h4>
+            <strong>{displayMatchedPages}</strong>
+          {:else}
+            <div class="no-matched">no matched</div>
+          {/if}
+        </div>
+      {/if}
+    </div>
+    <Search {filepath} />
 
     <div class="logo">
       <button on:click={returnHome}>
@@ -80,14 +106,46 @@
     transform: rotate(90deg) translate(100%, 0);
     transform-origin: top right;
     white-space: nowrap;
+  }
+  h2 button {
+    color: #5d9ae5;
     font-size: 0.8rem;
-    color: #878787;
+    font-weight: bold;
   }
 
-  .confirmed-search-term {
+  .search-result h3,
+  .search-result h4 {
+    padding: 0;
+    margin: 0;
+    font-size: 0.6rem;
+    font-weight: normal;
+  }
+  .search-result h3 {
+    margin-bottom: 0.4rem;
+  }
+  .search-result h4 {
+    margin-bottom: 0.1rem;
+  }
+  .search-result h4::after {
+    content: ':';
+  }
+
+  .search-result .confirmed-search-term,
+  .search-result .search-matched {
+    margin: 0.6rem 0 0.1rem;
+    color: #b7a42a;
+    text-align: center;
+  }
+  .search-result .confirmed-search-term div {
     padding: 0.7rem 0.3rem;
-    background-color: #b7a42a;
-    color: #ffffff;
+    border: 0.04rem #b7a42a solid;
     border-radius: 0.07rem;
+  }
+  .search-result .search-matched {
+    line-height: 1.4em;
+    text-align: right;
+  }
+  .search-result .search-matched .no-matched {
+    text-align: center;
   }
 </style>

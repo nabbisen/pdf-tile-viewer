@@ -7,6 +7,12 @@
   let filepath: string | undefined
   let unlistenDragDrop: UnlistenFn | undefined
 
+  onMount(listenDragDrop)
+
+  onDestroy(() => {
+    unlistenDragDrop && unlistenDragDrop()
+  })
+
   async function listenDragDrop() {
     unlistenDragDrop = await getCurrentWebview().onDragDropEvent(
       (event: TauriEvent<DragDropEvent>) => {
@@ -17,14 +23,9 @@
     )
   }
 
-  const handleDrop = (paths: string[]) => {
+  function handleDrop(paths: string[]) {
     // todo: single file only now
     filepath = paths[0]
     openDocumentViewer(filepath)
   }
-
-  onMount(listenDragDrop)
-  onDestroy(() => {
-    unlistenDragDrop && unlistenDragDrop()
-  })
 </script>

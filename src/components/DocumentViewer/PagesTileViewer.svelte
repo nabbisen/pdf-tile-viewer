@@ -1,24 +1,34 @@
 <script lang="ts">
-  import { onMount } from 'svelte'
+  import { onDestroy } from 'svelte'
+  import { invoke } from '@tauri-apps/api/core'
   import { type PageViewport, type PDFDocumentProxy } from 'pdfjs-dist'
   import PageViewer from './PageViewer.svelte'
   import ZoomedPageViewer from './ZoomedPageViewer.svelte'
-  import type { SearchResult } from './@types'
-  import { successToast } from '../../stores/toast'
-  import { pushToLoadedHistory } from '../../stores/loadedHistory'
+  import { pushToLoadedHistory } from '../../stores/components/loadedHistory'
   import { getDocumentProxy } from '../../utils/pdf'
   import { debounce } from '../../utils/event'
   import { handleInvokeError } from '../../utils/backend'
   import { returnHome } from '../../utils/route'
-
-  export let filepath: string = ''
-  export let buffer: ArrayBuffer
-  export let searchResult: SearchResult | undefined
+  import {
+    subscribeBuffer,
+    subscribeMatchedPageIndexes,
+    reset,
+    subscribeDisplayMatchedPages,
+  } from '../../stores/components/documentViewer'
+  import PagesTileViewerAside from './PagesTileViewerAside.svelte'
 
   const DEFAULT_SCALE: number = 1.0
   const SCALE_UNIT: number = 0.2
   const MIN_SCALE: number = SCALE_UNIT
   const MAX_SCALE: number = 5.0
+
+  export let filepath: string | undefined
+
+  let initialized: boolean = false
+
+  let buffer: ArrayBuffer | undefined
+  let matchedPageIndexes: number[] = []
+  let displayMatchedPages: string | undefined
 
   let scale: number = DEFAULT_SCALE
   let pdfDocument: PDFDocumentProxy
@@ -26,50 +36,75 @@
   let pageIndexesRows: number[][] = []
   let pageViewerContainers: HTMLDivElement[] = []
   let zoomedPageIndex: number | undefined
+  let pageNumVisible: boolean = false
+  let fixPagesPerRow: boolean = false
+  let pagesPerRow: number
 
   $: {
-    if (searchResult) {
-      buffer = searchResult.buffer
+    subscribeBuffer((value) => (buffer = value))
+  }
+
+  $: {
+    subscribeMatchedPageIndexes((value) => (matchedPageIndexes = value))
+  }
+
+  $: {
+    subscribeDisplayMatchedPages((value) => (displayMatchedPages = value))
+  }
+
+  $: {
+    if (buffer) load()
+  }
+
+  onDestroy(() => {
+    if (pdfDocument) pdfDocument.destroy()
+    reset()
+  })
+
+  function load() {
+    getDocumentProxy(buffer!)
+      .then(loadCallback)
+      .catch((error: unknown) => {
+        handleInvokeError(error)
+        returnHome()
+      })
+  }
+
+  function loadCallback(ret: PDFDocumentProxy) {
+    pdfDocument = ret
+
+    updatePageIndexesRows()
+
+    if (!initialized) {
+      initialize()
     }
   }
 
-  onMount(() => {
-    try {
-      load(buffer)
-    } catch (error: unknown) {
-      handleInvokeError(error)
-      returnHome()
-    }
-
-    pushToLoadedHistory(filepath)
+  function initialize() {
+    pushToLoadedHistory(filepath!)
 
     window.addEventListener('resize', debounce(updatePageIndexesRows, 200))
     window.addEventListener('wheel', debounce(handleWheel, 120))
 
-    setTimeout(() => {
-      successToast('File opened', 2700)
-    }, 400)
-  })
+    invoke('set_window_title', { filepath: filepath })
 
-  const load = async (buffer: ArrayBuffer) => {
-    pdfDocument = await getDocumentProxy(buffer)
-    updatePageIndexesRows()
+    initialized = true
   }
 
-  const handleWheel = (event: WheelEvent) => {
+  function handleWheel(event: WheelEvent) {
     if (event.ctrlKey) {
       0 < event.deltaY ? decreaseScale() : increaseScale()
     }
   }
 
-  const handlePageViewport = (event: CustomEvent<PageViewport>) => {
+  function handlePageViewport(event: CustomEvent<PageViewport>) {
     const viewport = event.detail
     pageViewport = viewport
 
     updatePageIndexesRows()
   }
 
-  const updatePageIndexesRows = () => {
+  function updatePageIndexesRows() {
     let ret: number[][] = []
 
     const rowBreak = pageIndexesPerRow()
@@ -88,37 +123,73 @@
     pageIndexesRows = ret
   }
 
-  const pageIndexesPerRow = (): number => {
+  function pageIndexesPerRow(): number {
     if (!pdfDocument) return 0
+
+    if (fixPagesPerRow) return pagesPerRow
+
     if (!pageViewport) return pdfDocument.numPages
     return Math.floor(window.innerWidth / pageViewport.width)
   }
 
-  const increaseScale = () => {
+  function fixPagesPerRowChange(e: CustomEvent<{ fixPagesPerRow: boolean; pagesPerRow: number }>) {
+    const { fixPagesPerRow: _fixPagesPerRow, pagesPerRow: _pagesPerRow } = e.detail
+
+    fixPagesPerRow = _fixPagesPerRow
+    pagesPerRow = _pagesPerRow
+
+    updatePageIndexesRows()
+  }
+
+  function increaseScale() {
     scale = scale + SCALE_UNIT
     if (MAX_SCALE < scale) {
       scale = MAX_SCALE
     }
   }
-  const decreaseScale = () => {
+  function decreaseScale() {
     scale = scale - SCALE_UNIT
     if (scale < MIN_SCALE) {
       scale = MIN_SCALE
     }
   }
 
-  const showZoomedPage = (pageIndex: number) => {
+  function showZoomedPage(pageIndex: number) {
     // initialize
     zoomedPageIndex = undefined
 
     zoomedPageIndex = pageIndex
   }
-</script>
 
-<nav class="scale">
-  <h4>Scale</h4>
-  <input type="range" min={MIN_SCALE} max={MAX_SCALE} step={SCALE_UNIT} bind:value={scale} />
-</nav>
+  function scaleChangeHandler(e: CustomEvent<number>) {
+    if (!e.detail) return
+    scale = Number(e.detail)
+  }
+
+  function togglePageNum() {
+    pageNumVisible = !pageNumVisible
+  }
+
+  let scrollToPageIndex: number | undefined
+  let scrollEffectTimer: number | undefined
+
+  function scrollToPage(e: CustomEvent<number>) {
+    const scrollToPageNum = e.detail
+    if (!scrollToPageNum || !Number.isInteger(scrollToPageNum)) return
+    const pageIndex = Number(scrollToPageNum) - 1
+    const found = document.querySelector(`.tile[data-page-index="${pageIndex}"]`)
+    if (!found) return
+
+    found.scrollIntoView({ behavior: 'smooth' })
+    scrollToPageIndex = pageIndex
+
+    if (scrollEffectTimer !== undefined) clearTimeout(scrollEffectTimer)
+    scrollEffectTimer = setTimeout(() => {
+      scrollToPageIndex = undefined
+      scrollEffectTimer = undefined
+    }, 5700)
+  }
+</script>
 
 <div class="document">
   {#if pdfDocument && pdfDocument.numPages}
@@ -126,10 +197,12 @@
       <div class="row">
         {#each pageIndexes as pageIndex}
           <div class="col" bind:this={pageViewerContainers[pageIndex]}>
-            <div class="tile">
-              {#if searchResult && searchResult.matchedPageIndexes.includes(pageIndex)}
-                <div class="search-matched">Search matched</div>
-              {/if}
+            <div
+              class="tile"
+              data-page-index={pageIndex}
+              class:scrolled-into-view={scrollToPageIndex === pageIndex}
+              class:search-matched={matchedPageIndexes.includes(pageIndex)}
+            >
               <div class="page">
                 <article>
                   <PageViewer
@@ -140,11 +213,11 @@
                   />
                 </article>
                 <nav>
+                  <!-- left part (empty currently) -->
                   <div></div>
-                  <div>{pageIndex + 1}</div>
+                  <div class="pageNum" class:visible={pageNumVisible}>{pageIndex + 1}</div>
                   <button class="zoom" on:click={() => showZoomedPage(pageIndex)} aria-label="zoom"
-                    >🧐</button
-                  >
+                  ></button>
                 </nav>
               </div>
             </div>
@@ -157,26 +230,22 @@
 
 <ZoomedPageViewer pageIndex={zoomedPageIndex} {pdfDocument} />
 
-<style>
-  nav.scale {
-    position: fixed;
-    bottom: 1.1rem;
-    left: 0.7rem;
-    z-index: 1;
-    display: flex;
-    align-items: flex-end;
-  }
-  nav.scale h4 {
-    font-size: 0.7rem;
-    color: #878787;
-    padding: 0;
-    margin: 0;
-  }
-  nav.scale input {
-    width: 5.7rem;
-    margin-left: 0.6rem;
-  }
+{#if pdfDocument}
+  <PagesTileViewerAside
+    {MIN_SCALE}
+    {MAX_SCALE}
+    {SCALE_UNIT}
+    {scale}
+    numPages={pdfDocument.numPages}
+    {pageNumVisible}
+    on:scaleChange={scaleChangeHandler}
+    on:togglePageNum={togglePageNum}
+    on:scrollToPage={scrollToPage}
+    on:fixPagesPerRowChange={fixPagesPerRowChange}
+  />
+{/if}
 
+<style>
   .document {
     padding-bottom: 2.7rem;
   }
@@ -197,11 +266,53 @@
     border-left: 0.02rem solid #bbbbbb;
   }
 
+  .tile.scrolled-into-view,
+  .tile.search-matched {
+    position: relative;
+  }
+  .tile.scrolled-into-view::before,
+  .tile.search-matched::before {
+    content: '';
+    position: absolute;
+    left: 5%;
+    bottom: 0;
+    width: 90%;
+    height: 0.2rem;
+  }
+  .tile.scrolled-into-view::before {
+    background-color: #5d9ae5;
+  }
+  .tile.search-matched::before {
+    background-color: #b7a42a;
+  }
+  .tile.scrolled-into-view.search-matched::before {
+    background: linear-gradient(
+      to right,
+      #5d9ae5 0%,
+      #5d9ae5 27%,
+      #b7a42a 27%,
+      #b7a42a 73%,
+      #5d9ae5 73%,
+      #5d9ae5 100%
+    );
+  }
+  .tile.search-matched::after {
+    content: 'Search matched';
+    position: absolute;
+    left: 0;
+    bottom: 0.18rem;
+    width: 100%;
+    color: #b7a42a;
+    text-align: center;
+    font-size: 0.7rem;
+    z-index: 1;
+  }
+
   .tile .page {
     position: relative;
   }
   .tile .page article:hover {
-    transform: scale(1.02) translateX(-1%) translateY(-1%);
+    transform: scale(1.003) translateX(-0.09%) translateY(-0.09%);
   }
   .tile .page nav {
     position: absolute;
@@ -214,7 +325,8 @@
     justify-content: space-between;
     align-items: flex-end;
   }
-  .tile .page:hover nav {
+  .tile .page:hover nav,
+  .tile .page nav:has(.pageNum.visible) {
     display: flex;
   }
   .tile .page nav > * {
@@ -222,18 +334,14 @@
     color: #878787;
     text-align: center;
   }
-  .tile nav button.zoom {
+  .tile .page nav button.zoom {
     padding: 0 0.4rem;
     font-size: 1rem;
   }
-
-  .search-matched {
-    width: 100%;
-    padding: 0.1rem 0.5rem;
-    background-color: #b7a42a;
-    color: #ffffff;
-    text-align: center;
-    font-size: 0.7rem;
-    border-radius: 0.05rem;
+  .tile .page nav button.zoom::before {
+    content: '🧐';
+  }
+  .tile .page:not(:hover) nav .pageNum.visible ~ button.zoom::before {
+    content: '';
   }
 </style>

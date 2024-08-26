@@ -112,7 +112,7 @@ fn pdfium() -> Result<Pdfium, String> {
         Pdfium::new(pdfium_bind_to_library().expect("Failed to bind to pdfium lib"))
     }) {
         Ok(x) => x,
-        Err(_) => return Err("libpdfium.so must be missing".to_owned()),
+        Err(_) => return Err("pdfium lib must be missing".to_owned()),
     };
     Ok(pdfium)
 }

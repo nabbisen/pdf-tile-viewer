@@ -1,12 +1,9 @@
 import { invoke } from '@tauri-apps/api/core'
-import {
-  getDocument,
-  type PDFDocumentProxy,
-} from 'pdfjs-dist'
+import { getDocument, type PDFDocumentProxy } from 'pdfjs-dist'
 
 const getDocumentBuffer = async (filepath: string): Promise<ArrayBuffer> => {
-  const res = (await invoke('read_pdf', { filepath: filepath }))
-  return res as ArrayBuffer
+  const promise = invoke('read_pdf', { filepath: filepath }) as Promise<ArrayBuffer>
+  return promise
 }
 
 const getDocumentProxy = async (buffer: ArrayBuffer): Promise<PDFDocumentProxy> => {

@@ -1,6 +1,6 @@
 import { writable } from 'svelte/store'
-import type { LoadedHistoryItem } from '../types/loadedHistory'
-import { filename } from '../utils/file'
+import type { LoadedHistoryItem } from '../../types/loadedHistory'
+import { filename } from '../../utils/file'
 
 let stored = writable<LoadedHistoryItem[]>([])
 const { subscribe: subscribeLoadedHistory } = stored

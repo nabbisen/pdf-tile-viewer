@@ -13,8 +13,27 @@
   let pageViewerContainer: HTMLDivElement
   let pdfPageView: PDFPageView
 
-  const draw = async () => {
+  $: {
+    if (pdfPageView) {
+      pdfPageView.update({
+        scale: scale,
+      })
+      dispatchPageViewport()
+      pdfPageView.draw()
+    }
+  }
+
+  $: {
+    if (pdfDocument) {
+      draw()
+    }
+  }
+
+  onMount(draw)
+
+  async function draw() {
     const pdfPage = await pdfDocument.getPage(pageIndex + 1)
+
     if (!pdfPageView) {
       pdfPageView = new PDFPageView({
         id: pageIndex,
@@ -30,27 +49,10 @@
 
     dispatchPageViewport()
   }
-  onMount(draw)
 
   function dispatchPageViewport() {
     if (pageIndex !== 0 || pdfPageView.renderingState === RenderingStates.RUNNING) return
     dispatch('pageViewport', pdfPageView.viewport)
-  }
-
-  $: {
-    if (pdfPageView) {
-      pdfPageView.update({
-        scale: scale,
-      })
-      dispatchPageViewport()
-      pdfPageView.draw()
-    }
-  }
-
-  $: {
-    if (pdfDocument) {
-      draw()
-    }
   }
 </script>
 

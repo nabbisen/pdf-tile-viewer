@@ -5,6 +5,7 @@
   import DragDrop from './DragDrop.svelte'
   // import Footer from './Footer.svelte'
   import Toast from './Toast.svelte'
+  import Loader from './Loader.svelte'
 
   import '../app.css'
 
@@ -21,3 +22,4 @@
 <!-- <footer><Footer /></footer> -->
 
 <Toast />
+<Loader />

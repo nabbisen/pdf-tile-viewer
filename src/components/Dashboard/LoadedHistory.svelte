@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { subscribeLoadedHistory } from '../../stores/loadedHistory'
+  import { subscribeLoadedHistory } from '../../stores/components/loadedHistory'
   import type { LoadedHistoryItem } from '../../types/loadedHistory'
   import { openDocumentViewer } from '../../utils/route'
 
@@ -9,15 +9,19 @@
     subscribeLoadedHistory((value) => (loadedHistory = [...value]))
   }
 
-  const historyItemOnClick = (filepath: string) => {
+  function historyItemOnClick(filepath: string) {
     openDocumentViewer(filepath)
+  }
+
+  function displayLoadingHistory(): LoadedHistoryItem[] {
+    return loadedHistory.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
   }
 </script>
 
 {#if 0 < loadedHistory.length}
   <h3>History to re-open</h3>
   <ul class="loaded-history">
-    {#each loadedHistory as x}
+    {#each displayLoadingHistory() as x}
       <li>
         <time>{x.timestamp.toTimeString().split(' ')[0]}</time>
         <button on:click={() => historyItemOnClick(x.filepath)}>

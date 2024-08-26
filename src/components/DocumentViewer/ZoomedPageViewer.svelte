@@ -8,25 +8,27 @@
 
   let zoomViewScale: number = 3.0
   let zoomViewTransparency: number = 0.0
-  let windowScrollable: boolean = true
+  let backgroundScrollable: boolean = true
 
   $: {
-    if (pageIndex && !windowScrollable) {
+    if (pageIndex && !backgroundScrollable) {
       window.document.body.style.overflow = 'hidden'
     } else {
       window.document.body.style.overflow = 'auto'
     }
   }
 
-  onMount(() => {
+  onMount(ready)
+
+  function ready() {
     window.addEventListener('keydown', (e: KeyboardEvent) => {
       if (e.key === 'Escape' || e.key === 'Esc') {
         pageIndex = undefined
       }
     })
-  })
+  }
 
-  const close = () => {
+  function close() {
     pageIndex = undefined
   }
 </script>
@@ -38,9 +40,13 @@
     </div>
     <nav>
       <span class="pageIndex">p.{pageIndex + 1}</span>
-      <label class="window-scrollable"
-        >is Window: <u>{windowScrollable ? 'scrollable' : 'fixed'}</u>
-        <input id="toggle-window-scrollable" type="checkbox" bind:checked={windowScrollable} />
+      <label class="background-scrollable"
+        >Background is: <u>{backgroundScrollable ? 'scrollable' : 'fixed'}</u>
+        <input
+          id="toggle-background-scrollable"
+          type="checkbox"
+          bind:checked={backgroundScrollable}
+        />
       </label>
       <label
         >Scale
@@ -50,7 +56,7 @@
         >Transparency
         <input type="range" step="0.1" min="0.0" max="1.0" bind:value={zoomViewTransparency} />
       </label>
-      <button class="close" on:click={close}>Close</button>
+      <button class="close" on:click={close}>Close ❎</button>
     </nav>
   </div>
 {/if}
@@ -65,6 +71,7 @@
     display: flex;
     flex-direction: column;
     border: 0.27rem #2aabb7 solid;
+    z-index: 2;
   }
   .zoomView .wrapper {
     width: 100%;
@@ -76,7 +83,7 @@
     overflow: scroll;
   }
   .zoomView nav {
-    width: 100%;
+    width: calc(100% - 0.8rem);
     height: 1.75rem;
     padding: 0.3rem 0.4rem 0.1rem;
     display: flex;
@@ -88,12 +95,12 @@
   .zoomView nav * {
     font-size: 1rem;
   }
-  .window-scrollable {
-    width: 11.2em;
+  .background-scrollable {
+    width: 14.4em;
     text-align: left;
     cursor: pointer;
   }
-  .window-scrollable input {
+  .background-scrollable input {
     display: none;
   }
   .zoomView nav input[type='range'] {

@@ -1,12 +1,12 @@
 import { writable } from 'svelte/store'
-import type {ToastContent} from '../types/toast'
+import type { ToastContent } from '../../types/toast'
 
 const DEFAULT_DURATION_MILLISECONDS: number = 5000
 
-const stored = writable<ToastContent[]>([])
-const { subscribe: subscribeToast } = stored
+const _toastContents = writable<ToastContent[]>([])
+const { subscribe: subscribeToast } = _toastContents
 
-function infoToast(messages: string, durationMilliseconds?: number) {
+const infoToast = (messages: string, durationMilliseconds?: number) => {
   show({
     messages,
     type: 'info',
@@ -14,7 +14,7 @@ function infoToast(messages: string, durationMilliseconds?: number) {
   })
 }
 
-function successToast(messages: string, durationMilliseconds?: number) {
+const successToast = (messages: string, durationMilliseconds?: number) => {
   show({
     messages,
     type: 'success',
@@ -22,7 +22,7 @@ function successToast(messages: string, durationMilliseconds?: number) {
   })
 }
 
-function errorToast(messages: string, durationMilliseconds?: number) {
+const errorToast = (messages: string, durationMilliseconds?: number) => {
   show({
     messages,
     type: 'error',
@@ -30,8 +30,8 @@ function errorToast(messages: string, durationMilliseconds?: number) {
   })
 }
 
-function show(content: ToastContent) {
-  stored.update((current) => {
+const show = (content: ToastContent) => {
+  _toastContents.update((current) => {
     const ret = current
     ret.push(content)
     return ret
@@ -39,8 +39,8 @@ function show(content: ToastContent) {
   setTimeout(hide, content.durationMilliseconds)
 }
 
-function hide() {
-  stored.update((current) => {
+const hide = () => {
+  _toastContents.update((current) => {
     const ret = current
     ret.shift()
     return ret

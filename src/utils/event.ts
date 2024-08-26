@@ -1,12 +1,14 @@
-export function debounce<T extends (...args: any[]) => void>(
-  func: T,
-  wait: number
+function debounce<T extends (...args: any[]) => void>(
+  callback: T,
+  waitMilliseconds: number
 ): (...args: Parameters<T>) => void {
-  let timeout: number | undefined
+  let timerId: number | undefined
   return function (...args: Parameters<T>): void {
-    if (timeout) {
-      clearTimeout(timeout)
+    if (timerId) {
+      clearTimeout(timerId)
     }
-    timeout = setTimeout(() => func(...args), wait)
+    timerId = setTimeout(() => callback(...args), waitMilliseconds)
   }
 }
+
+export { debounce }
