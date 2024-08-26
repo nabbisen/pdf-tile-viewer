@@ -8,6 +8,7 @@
     subscribeDisplayMatchedPages,
   } from '../../stores/components/documentViewer'
   import { errorToast } from '../../stores/layouts/toast'
+  import Tooltip from '../@common/Tooltip.svelte'
 
   export let filepath: string | undefined
 
@@ -31,7 +32,9 @@
 
 <header>
   <h2>
-    <button on:click={filenameClick}>{filename(filepath || '')}</button>
+    <Tooltip messages="Click to open file manager" position="right">
+      <button on:click={filenameClick}>{filename(filepath || '')}</button>
+    </Tooltip>
   </h2>
 
   <nav>

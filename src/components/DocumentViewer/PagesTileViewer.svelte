@@ -16,6 +16,7 @@
     subscribeDisplayMatchedPages,
   } from '../../stores/components/documentViewer'
   import PagesTileViewerAside from './PagesTileViewerAside.svelte'
+  import Tooltip from '../@common/Tooltip.svelte'
 
   const DEFAULT_SCALE: number = 1.0
   const SCALE_UNIT: number = 0.2
@@ -216,8 +217,13 @@
                   <!-- left part (empty currently) -->
                   <div></div>
                   <div class="pageNum" class:visible={pageNumVisible}>{pageIndex + 1}</div>
-                  <button class="zoom" on:click={() => showZoomedPage(pageIndex)} aria-label="zoom"
-                  ></button>
+                  <Tooltip messages="Zoom up" position="bottom">
+                    <button
+                      class="zoom"
+                      on:click={() => showZoomedPage(pageIndex)}
+                      aria-label="zoom"
+                    ></button></Tooltip
+                  >
                 </nav>
               </div>
             </div>
@@ -264,6 +270,9 @@
   }
   .row .col:not(:last-child) article {
     border-left: 0.02rem solid #bbbbbb;
+  }
+  .col:last-child {
+    padding-right: 1.5rem;
   }
 
   .tile.scrolled-into-view,
@@ -341,7 +350,7 @@
   .tile .page nav button.zoom::before {
     content: '🧐';
   }
-  .tile .page:not(:hover) nav .pageNum.visible ~ button.zoom::before {
+  .tile .page:not(:hover) nav .pageNum.visible ~ * button.zoom::before {
     content: '';
   }
 </style>

@@ -11,6 +11,7 @@
   } from '../../stores/components/documentViewer'
   import { infoToast, successToast } from '../../stores/layouts/toast'
   import { loaderStart, loaderStop } from '../../stores/layouts/loader'
+  import Tooltip from '../@common/Tooltip.svelte'
 
   export let filepath: string = ''
 
@@ -106,7 +107,9 @@
 </script>
 
 <div class="search">
-  <button class="toggle" on:click={toggleSearchForm}>🔍</button>
+  <Tooltip messages="Search" position="left">
+    <button class="toggle" on:click={toggleSearchForm}>🔍</button>
+  </Tooltip>
   {#if searchFormVisible}
     <form>
       <input
