@@ -1,5 +1,5 @@
 import { writable } from 'svelte/store'
-import type { ToastContent } from '../../types/toast'
+import type { ToastContent } from '../../types/components/toast'
 
 const DEFAULT_DURATION_MILLISECONDS: number = 5000
 

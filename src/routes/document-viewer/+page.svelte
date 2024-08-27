@@ -1,5 +1,5 @@
 <script lang="ts">
-  import DocumentViewer from '../../components/DocumentViewer/@Layout.svelte'
+  import DocumentViewer from '../../pages/DocumentViewer/@Layout.svelte'
 </script>
 
 <DocumentViewer />

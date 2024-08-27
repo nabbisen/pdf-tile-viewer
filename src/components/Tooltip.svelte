@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { TooltipPosition } from '../../types/components/tooltip'
+  import type { TooltipPosition } from '../types/components/tooltip'
 
   export let messages: string
   export let position: TooltipPosition

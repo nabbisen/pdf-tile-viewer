@@ -9,8 +9,8 @@ button:hover {
 }
 
 button:not(:disabled):active {
-  box-shadow: inset 0 4px 8px #ffffffea;
-  transform: translate(2px, 4px);
+  box-shadow: inset 0 0.12rem 0.24rem #ffffffea;
+  transform: translate(0.06rem, 0.12rem);
 }
 
 button:disabled {
@@ -32,18 +32,18 @@ button.auxiliary,
 
 button.auxiliary:active,
 .button.auxiliary:active {
-  box-shadow: inset 0 4px 8px #727272ea;
+  box-shadow: inset 0 0.12rem 0.24rem #727272ea;
 }
 
 /* overflow scroll bars */
 ::-webkit-scrollbar {
-  width: 44px;
-  height: 25px;
+  width: 1.4rem;
+  height: 1.0rem;
 }
 
 ::-webkit-scrollbar-thumb {
   background: #bbbbbb;
-  border-radius: 6px;
+  border-radius: 0.2rem;
 }
 
 ::-webkit-scrollbar-thumb:hover {

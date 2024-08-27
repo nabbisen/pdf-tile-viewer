@@ -1,7 +1,7 @@
 <script lang="ts">
   import { open } from '@tauri-apps/plugin-dialog'
-  import { subscribeLoadedHistory } from '../../stores/components/loadedHistory'
-  import type { LoadedHistoryItem } from '../../types/loadedHistory'
+  import { subscribeLoadedHistory } from '../../stores/pages/loadedHistory'
+  import type { LoadedHistoryItem } from '../../types/pages/loadedHistory'
   import { openDocumentViewer } from '../../utils/route'
 
   let loadedHistory: LoadedHistoryItem[] = []

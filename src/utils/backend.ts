@@ -1,4 +1,4 @@
-import { errorToast } from '../stores/layouts/toast'
+import { errorToast } from '../stores/components/toast'
 
 const handleInvokeError = (error: unknown) => {
   const messages: string =

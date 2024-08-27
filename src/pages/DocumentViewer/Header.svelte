@@ -3,8 +3,8 @@
   import Search from './Search.svelte'
   import { filename } from '../../utils/file'
   import { returnHome } from '../../utils/route'
-  import { errorToast } from '../../stores/layouts/toast'
-  import Tooltip from '../@common/Tooltip.svelte'
+  import { errorToast } from '../../stores/components/toast'
+  import Tooltip from '../../components/Tooltip.svelte'
 
   export let filepath: string | undefined
 
@@ -123,6 +123,10 @@
   }
   nav .footer .logo button:hover {
     opacity: 0.87;
+  }
+  nav .footer .logo button:active {
+    box-shadow: unset;
+    transform: unset;
   }
 
   nav .footer .scroll-to {

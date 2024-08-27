@@ -1,5 +1,5 @@
 import { goto } from '$app/navigation'
-import { setFilepath, reset } from '../stores/components/documentViewer'
+import { setFilepath, reset } from '../stores/pages/documentViewer'
 
 const returnHome = () => {
   goto('/dashboard')
