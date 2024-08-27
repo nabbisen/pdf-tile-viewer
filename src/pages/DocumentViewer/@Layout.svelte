@@ -19,8 +19,9 @@
 
   function load() {
     getDocumentBuffer(filepath!)
-      .then((x) => {
-        setBuffer(x)
+      .then((res) => {
+        const buffer = new Uint8Array(res).buffer as ArrayBuffer
+        setBuffer(buffer)
       })
       .catch((error: unknown) => {
         handleInvokeError(error)
