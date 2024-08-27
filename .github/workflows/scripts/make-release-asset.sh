@@ -26,6 +26,10 @@ cd src-tauri/target/$target/release
 
 artifact=$bin_name@$TAG
 mkdir $artifact
+
+readme="$(dirname "$0")/readme.txt"
+cp $readme $artifact
+
 # todo: is not single executable but depends on libpdfium.so now
 mkdir -p $artifact/lib/pdfium
 os_tag=$3
