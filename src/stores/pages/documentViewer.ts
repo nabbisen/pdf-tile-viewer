@@ -6,6 +6,7 @@ let matchedPageIndexes = writable<number[]>([])
 let confirmedSearchTerm = writable<string | undefined>()
 let displayMatchedPages = writable<string | undefined>()
 let zoomedPageIndex = writable<number | undefined>()
+let zoomViewBackgroundLocked = writable<boolean>(false)
 let zenMode = writable<boolean>(false)
 
 const { subscribe: subscribeFilepath } = filepath
@@ -14,6 +15,7 @@ const { subscribe: subscribeMatchedPageIndexes } = matchedPageIndexes
 const { subscribe: subscribeConfirmedSearchTerm } = confirmedSearchTerm
 const { subscribe: subscribeDisplayMatchedPages } = displayMatchedPages
 const { subscribe: subscribeZoomedPageIndex } = zoomedPageIndex
+const { subscribe: subscribeZoomViewBackgroundLocked } = zoomViewBackgroundLocked
 const { subscribe: subscribeZenMode } = zenMode
 
 const setFilepath = (value: string) => {
@@ -38,6 +40,10 @@ const setDisplayMatchedPages = (value: string | undefined) => {
 
 const setZoomedPageIndex = (value: number | undefined) => {
   zoomedPageIndex.set(value)
+}
+
+const setZoomViewBackgroundLocked = (value: boolean) => {
+  zoomViewBackgroundLocked.set(value)
 }
 
 const setZenMode = (value: boolean) => {
@@ -71,6 +77,8 @@ export {
   subscribeDisplayMatchedPages,
   setZoomedPageIndex,
   subscribeZoomedPageIndex,
+  setZoomViewBackgroundLocked,
+  subscribeZoomViewBackgroundLocked,
   setZenMode,
   subscribeZenMode,
   reset,

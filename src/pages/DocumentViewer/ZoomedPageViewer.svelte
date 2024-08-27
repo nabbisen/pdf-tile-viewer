@@ -2,7 +2,12 @@
   import { onDestroy, onMount } from 'svelte'
   import type { PDFDocumentProxy } from 'pdfjs-dist'
   import PageViewer from './PageViewer.svelte'
-  import { subscribeZoomedPageIndex, setZoomedPageIndex } from '../../stores/pages/documentViewer'
+  import {
+    setZoomedPageIndex,
+    subscribeZoomedPageIndex,
+    setZoomViewBackgroundLocked,
+    subscribeZoomViewBackgroundLocked,
+  } from '../../stores/pages/documentViewer'
 
   export let pdfDocument: PDFDocumentProxy
 
@@ -10,17 +15,21 @@
 
   let zoomViewScale: number = 2.7
   let zoomViewTransparency: number = 0.0
-  let backgroundScrollable: boolean = true
+  let backgroundLocked: boolean = false
 
   $: {
     subscribeZoomedPageIndex((value) => (pageIndex = value!))
   }
 
   $: {
-    if (pageIndex && !backgroundScrollable) {
-      window.document.body.style.overflow = 'hidden'
+    subscribeZoomViewBackgroundLocked((value) => (backgroundLocked = value!))
+  }
+
+  $: {
+    if (backgroundLocked) {
+      lockBackground()
     } else {
-      window.document.body.style.overflow = 'auto'
+      unlockBackground()
     }
   }
 
@@ -29,6 +38,8 @@
   })
 
   onDestroy(() => {
+    unlockBackground()
+
     window.removeEventListener('keydown', windowOnKeydown)
   })
 
@@ -50,8 +61,20 @@
     setZoomedPageIndex(_pageIndex)
   }
 
+  function lockBackgroundOnClick() {
+    setZoomViewBackgroundLocked(!backgroundLocked)
+  }
+
   function close() {
     setZoomedPageIndex(undefined)
+  }
+
+  function lockBackground() {
+    window.document.body.style.overflow = 'hidden'
+  }
+
+  function unlockBackground() {
+    window.document.body.style.overflow = 'auto'
   }
 </script>
 
@@ -69,12 +92,11 @@
         disabled={pageIndex === pdfDocument.numPages - 1}>→</button
       >
     </div>
-    <div class="background-scrollable">
+    <div class="lock-background">
       Background:
-      <button class="auxiliary" on:click={() => (backgroundScrollable = !backgroundScrollable)}>
-        {backgroundScrollable ? 'scrollable' : 'fixed'}
+      <button class="auxiliary" on:click={lockBackgroundOnClick}>
+        {backgroundLocked ? 'locked' : 'free'}
       </button>
-      <input type="checkbox" bind:checked={backgroundScrollable} />
     </div>
     <label
       >Scale
@@ -137,13 +159,10 @@
     border-radius: 50%;
   }
 
-  nav .background-scrollable {
+  nav .lock-background {
     width: 14.4em;
     text-align: left;
     cursor: pointer;
-  }
-  nav .background-scrollable button + input[type='checkbox'] {
-    display: none;
   }
   nav .zoomView nav input[type='range'] {
     width: 5.7em;
