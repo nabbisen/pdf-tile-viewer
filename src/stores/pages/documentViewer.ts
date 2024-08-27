@@ -5,12 +5,14 @@ let buffer = writable<ArrayBuffer | undefined>()
 let matchedPageIndexes = writable<number[]>([])
 let confirmedSearchTerm = writable<string | undefined>()
 let displayMatchedPages = writable<string | undefined>()
+let zenMode = writable<boolean>(false)
 
 const { subscribe: subscribeFilepath } = filepath
 const { subscribe: subscribeBuffer } = buffer
 const { subscribe: subscribeMatchedPageIndexes } = matchedPageIndexes
 const { subscribe: subscribeConfirmedSearchTerm } = confirmedSearchTerm
 const { subscribe: subscribeDisplayMatchedPages } = displayMatchedPages
+const { subscribe: subscribeZenMode } = zenMode
 
 const setFilepath = (value: string) => {
   filepath.set(value)
@@ -32,12 +34,17 @@ const setDisplayMatchedPages = (value: string | undefined) => {
   displayMatchedPages.set(value)
 }
 
+const setZenMode = (value: boolean) => {
+  zenMode.set(value)
+}
+
 const reset = () => {
   filepath.set(undefined)
   buffer.set(undefined)
   matchedPageIndexes.set([])
   confirmedSearchTerm.set(undefined)
   displayMatchedPages.set(undefined)
+  zenMode.set(false)
 }
 
 const reload = (currentFilepath: string) => {
@@ -56,6 +63,8 @@ export {
   subscribeConfirmedSearchTerm,
   setDisplayMatchedPages,
   subscribeDisplayMatchedPages,
+  setZenMode,
+  subscribeZenMode,
   reset,
   reload,
 }

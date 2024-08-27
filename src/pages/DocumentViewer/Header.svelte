@@ -5,8 +5,15 @@
   import { returnHome } from '../../utils/route'
   import { errorToast } from '../../stores/components/toast'
   import Tooltip from '../../components/Tooltip.svelte'
+  import { setZenMode, subscribeZenMode } from '../../stores/pages/documentViewer'
 
   export let filepath: string | undefined
+
+  let zenMode: boolean = false
+
+  $: {
+    subscribeZenMode((value) => (zenMode = value))
+  }
 
   function filenameClick() {
     invoke('open_file_manager', { filepath: filepath }).catch((e: string) => {
@@ -41,29 +48,43 @@
 </script>
 
 <header>
-  <h2>
-    <Tooltip messages="Click to open file manager" position="right">
-      <button on:click={filenameClick}>{filename(filepath || '')}</button>
-    </Tooltip>
-  </h2>
+  {#if !zenMode}
+    <h2>
+      <Tooltip messages="Click to open file manager" position="right">
+        <button on:click={filenameClick}>{filename(filepath || '')}</button>
+      </Tooltip>
+    </h2>
+  {/if}
 
   <nav>
-    <Search {filepath} />
+    {#if !zenMode}
+      <Search {filepath} />
+    {/if}
 
     <div class="footer">
-      <div class="logo">
-        <Tooltip messages="Double click" position="left">
-          <button on:dblclick={returnHome}>
-            <h1>Home</h1>
-          </button>
-        </Tooltip>
+      <div class="buttons">
+        {#if !zenMode}
+          <Tooltip messages="Double click" position="left">
+            <button class="home" on:dblclick={returnHome}>
+              <h1>Home</h1>
+            </button>
+          </Tooltip>
+        {/if}
+        <button
+          class="zen-mode auxiliary"
+          on:click={() => {
+            setZenMode(!zenMode)
+          }}>Zen{zenMode ? 'On' : 'Off'}</button
+        >
       </div>
-      <div class="scroll-to">
-        <button class="top" on:click={scrollToTop}>↑</button>
-        <button class="right" on:click={scrollToRight}>→</button>
-        <button class="bottom" on:click={scrollToBottom}>↓</button>
-        <button class="left" on:click={scrollToLeft}>←</button>
-      </div>
+      {#if !zenMode}
+        <div class="scroll-to">
+          <button class="top" on:click={scrollToTop}>↑</button>
+          <button class="right" on:click={scrollToRight}>→</button>
+          <button class="bottom" on:click={scrollToBottom}>↓</button>
+          <button class="left" on:click={scrollToLeft}>←</button>
+        </div>
+      {/if}
     </div>
   </nav>
 </header>
@@ -113,51 +134,65 @@
     flex-direction: row-reverse;
   }
 
-  nav .footer .logo button {
+  nav .buttons {
+    display: flex;
+    flex-direction: column;
+  }
+
+  nav button.home,
+  nav button.zen-mode {
     width: 3.2rem;
-    height: 3.2rem;
+  }
+
+  nav button.home {
     background-color: #efefef;
     font-size: 0.6rem;
     box-shadow: none;
     border: none;
   }
-  nav .footer .logo button:hover {
+  nav button.home:hover {
     opacity: 0.87;
   }
-  nav .footer .logo button:active {
+  nav button.home:active {
     box-shadow: unset;
     transform: unset;
   }
 
-  nav .footer .scroll-to {
+  nav button.zen-mode {
+    padding: 0.2rem 0;
+    margin-top: 0.4rem;
+    font-size: 0.7rem;
+  }
+
+  nav .scroll-to {
     position: relative;
     margin-right: 0.7rem;
   }
-  nav .footer .scroll-to button {
+  nav .scroll-to button {
     position: absolute;
     color: #252525;
     font-size: 0.8rem;
     font-weight: bold;
   }
-  nav .footer .scroll-to button:hover {
+  nav .scroll-to button:hover {
     color: #bbbbbb;
   }
-  nav .footer .scroll-to button:disabled {
+  nav .scroll-to button:disabled {
     visibility: hidden;
   }
-  nav .footer .scroll-to .top {
+  nav .scroll-to .top {
     right: 0.8rem;
     bottom: 1.5rem;
   }
-  nav .footer .scroll-to .right {
+  nav .scroll-to .right {
     right: 0;
     bottom: 0.75rem;
   }
-  nav .footer .scroll-to .bottom {
+  nav .scroll-to .bottom {
     right: 0.8rem;
     bottom: 0;
   }
-  nav .footer .scroll-to .left {
+  nav .scroll-to .left {
     right: 1.6rem;
     bottom: 0.75rem;
   }

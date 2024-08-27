@@ -12,8 +12,9 @@
   import {
     subscribeBuffer,
     subscribeMatchedPageIndexes,
-    reset,
     subscribeDisplayMatchedPages,
+    subscribeZenMode,
+    reset,
   } from '../../stores/pages/documentViewer'
   import PagesTileViewerAside from './PagesTileViewerAside.svelte'
   import Tooltip from '../../components/Tooltip.svelte'
@@ -33,6 +34,7 @@
   let buffer: ArrayBuffer | undefined
   let matchedPageIndexes: number[] = []
   let displayMatchedPages: string | undefined
+  let zenMode: boolean = false
 
   let scale: number = DEFAULT_SCALE
   let pdfDocument: PDFDocumentProxy
@@ -54,6 +56,10 @@
 
   $: {
     subscribeDisplayMatchedPages((value) => (displayMatchedPages = value))
+  }
+
+  $: {
+    subscribeZenMode((value) => (zenMode = value))
   }
 
   $: {
@@ -210,7 +216,7 @@
               class="tile"
               data-page-index={pageIndex}
               class:scrolled-into-view={scrollToPageIndex === pageIndex}
-              class:search-matched={matchedPageIndexes.includes(pageIndex)}
+              class:search-matched={!zenMode && matchedPageIndexes.includes(pageIndex)}
             >
               <div class="page">
                 <article>
@@ -245,7 +251,7 @@
 
 <ZoomedPageViewer pageIndex={zoomedPageIndex} {pdfDocument} />
 
-{#if pdfDocument}
+{#if pdfDocument && !zenMode}
   <PagesTileViewerAside
     {MIN_SCALE}
     {MAX_SCALE}
