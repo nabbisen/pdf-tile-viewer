@@ -20,11 +20,9 @@
   } from '../../stores/pages/documentViewer'
   import PagesTileViewerAside from './PagesTileViewerAside.svelte'
   import Tooltip from '../../components/Tooltip.svelte'
+  import { MIN_SCALE, MAX_SCALE, SCALE_UNIT } from './consts'
 
   const DEFAULT_SCALE: number = 1.0
-  const SCALE_UNIT: number = 0.2
-  const MIN_SCALE: number = SCALE_UNIT
-  const MAX_SCALE: number = 5.0
 
   const debounceUpdatePageIndexesRows = debounce(updatePageIndexesRows, 200)
   const debounceHandleWheel = debounce(handleWheel, 120)
@@ -256,9 +254,6 @@
 
 {#if pdfDocument && !zenMode}
   <PagesTileViewerAside
-    {MIN_SCALE}
-    {MAX_SCALE}
-    {SCALE_UNIT}
     {scale}
     numPages={pdfDocument.numPages}
     {pageNumVisible}
