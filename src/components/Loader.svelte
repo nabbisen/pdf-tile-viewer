@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { subscribeLoading } from '../stores/layouts/loader'
+  import { subscribeLoading } from '../stores/components/loader'
 
   let loading: boolean = false
 
@@ -38,25 +38,25 @@
       transform: translateY(0);
     }
     50% {
-      transform: translateY(-20px);
+      transform: translateY(-0.6rem);
     }
   }
   .circle {
-    width: 20px;
-    height: 20px;
-    margin: 0 5px;
+    width: 0.6rem;
+    height: 0.6rem;
+    margin: 0 0.15rem;
     border-radius: 50%;
     background-color: #2aabb7;
     animation: bounce 1.5s infinite ease-in-out;
   }
   .circle:nth-child(2) {
-    width: 30px;
-    height: 30px;
+    width: 0.9rem;
+    height: 0.9rem;
     animation-delay: 0.2s;
   }
   .circle:nth-child(3) {
-    width: 40px;
-    height: 40px;
+    width: 1.2rem;
+    height: 1.2rem;
     animation-delay: 0.4s;
   }
 </style>

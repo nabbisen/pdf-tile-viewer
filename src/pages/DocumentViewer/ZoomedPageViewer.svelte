@@ -1,12 +1,12 @@
 <script lang="ts">
-  import { onMount } from 'svelte'
+  import { onDestroy, onMount } from 'svelte'
   import type { PDFDocumentProxy } from 'pdfjs-dist'
   import PageViewer from './PageViewer.svelte'
 
   export let pageIndex: number | undefined
   export let pdfDocument: PDFDocumentProxy
 
-  let zoomViewScale: number = 3.0
+  let zoomViewScale: number = 2.7
   let zoomViewTransparency: number = 0.0
   let backgroundScrollable: boolean = true
 
@@ -18,14 +18,18 @@
     }
   }
 
-  onMount(ready)
+  onMount(() => {
+    window.addEventListener('keydown', windowOnKeydown)
+  })
 
-  function ready() {
-    window.addEventListener('keydown', (e: KeyboardEvent) => {
-      if (e.key === 'Escape' || e.key === 'Esc') {
-        pageIndex = undefined
-      }
-    })
+  onDestroy(() => {
+    window.removeEventListener('keydown', windowOnKeydown)
+  })
+
+  function windowOnKeydown(e: KeyboardEvent) {
+    if (e.key === 'Escape' || e.key === 'Esc') {
+      pageIndex = undefined
+    }
   }
 
   function close() {

@@ -1,9 +1,9 @@
 use tauri::{AppHandle, Manager, PhysicalPosition, PhysicalSize, Position, Size};
 
-mod internal;
-use internal::file::run_file_manager;
-use internal::pdf::{read, search, SearchResult};
-use internal::tauri::window_default_title;
+mod utils;
+use utils::file::run_file_manager;
+use utils::pdf::{read, search, SearchResult};
+use utils::tauri::window_default_title;
 
 const WIDTH_RESOLUTION_RATIO: f32 = 0.80;
 const HEIGHT_RESOLUTION_RATIO: f32 = 0.87;

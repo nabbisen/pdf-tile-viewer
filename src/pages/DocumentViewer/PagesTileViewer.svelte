@@ -1,10 +1,10 @@
 <script lang="ts">
-  import { onDestroy } from 'svelte'
+  import { onDestroy, onMount } from 'svelte'
   import { invoke } from '@tauri-apps/api/core'
   import { type PageViewport, type PDFDocumentProxy } from 'pdfjs-dist'
   import PageViewer from './PageViewer.svelte'
   import ZoomedPageViewer from './ZoomedPageViewer.svelte'
-  import { pushToLoadedHistory } from '../../stores/components/loadedHistory'
+  import { pushToLoadedHistory } from '../../stores/pages/loadedHistory'
   import { getDocumentProxy } from '../../utils/pdf'
   import { debounce } from '../../utils/event'
   import { handleInvokeError } from '../../utils/backend'
@@ -14,14 +14,17 @@
     subscribeMatchedPageIndexes,
     reset,
     subscribeDisplayMatchedPages,
-  } from '../../stores/components/documentViewer'
+  } from '../../stores/pages/documentViewer'
   import PagesTileViewerAside from './PagesTileViewerAside.svelte'
-  import Tooltip from '../@common/Tooltip.svelte'
+  import Tooltip from '../../components/Tooltip.svelte'
 
   const DEFAULT_SCALE: number = 1.0
   const SCALE_UNIT: number = 0.2
   const MIN_SCALE: number = SCALE_UNIT
   const MAX_SCALE: number = 5.0
+
+  const debounceUpdatePageIndexesRows = debounce(updatePageIndexesRows, 200)
+  const debounceHandleWheel = debounce(handleWheel, 120)
 
   export let filepath: string | undefined
 
@@ -57,7 +60,15 @@
     if (buffer) load()
   }
 
+  onMount(() => {
+    window.addEventListener('resize', debounceUpdatePageIndexesRows)
+    window.addEventListener('wheel', debounceHandleWheel)
+  })
+
   onDestroy(() => {
+    window.removeEventListener('resize', debounceUpdatePageIndexesRows)
+    window.removeEventListener('wheel', debounceHandleWheel)
+
     if (pdfDocument) pdfDocument.destroy()
     reset()
   })
@@ -83,9 +94,6 @@
 
   function initialize() {
     pushToLoadedHistory(filepath!)
-
-    window.addEventListener('resize', debounce(updatePageIndexesRows, 200))
-    window.addEventListener('wheel', debounce(handleWheel, 120))
 
     invoke('set_window_title', { filepath: filepath })
 

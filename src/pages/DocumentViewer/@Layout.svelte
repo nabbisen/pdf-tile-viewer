@@ -5,7 +5,7 @@
   import { getDocumentBuffer } from '../../utils/pdf'
   import { handleInvokeError } from '../../utils/backend'
   import { returnHome } from '../../utils/route'
-  import { subscribeFilepath, setBuffer } from '../../stores/components/documentViewer'
+  import { subscribeFilepath, setBuffer } from '../../stores/pages/documentViewer'
 
   let filepath: string | undefined
 

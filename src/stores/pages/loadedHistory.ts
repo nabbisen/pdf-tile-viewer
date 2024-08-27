@@ -1,5 +1,5 @@
 import { writable } from 'svelte/store'
-import type { LoadedHistoryItem } from '../../types/loadedHistory'
+import type { LoadedHistoryItem } from '../../types/pages/loadedHistory'
 import { filename } from '../../utils/file'
 
 let stored = writable<LoadedHistoryItem[]>([])

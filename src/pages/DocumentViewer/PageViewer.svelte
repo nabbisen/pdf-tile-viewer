@@ -3,7 +3,7 @@
   import { type PDFDocumentProxy } from 'pdfjs-dist'
   import { EventBus, PDFPageView, RenderingStates } from 'pdfjs-dist/web/pdf_viewer.mjs'
   import 'pdfjs-dist/web/pdf_viewer.css'
-  import type { PageViewerClass } from '../../types/components/documentViewer'
+  import type { PageViewerClass } from '../../types/pages/documentViewer'
 
   export let pdfDocument: PDFDocumentProxy
   export let pageIndex: number

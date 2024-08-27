@@ -1,10 +1,15 @@
 use std::process::Command;
 
 pub fn run_file_manager(filepath: &str) -> Result<(), String> {
+    let dirpath = std::path::Path::new(filepath)
+        .parent()
+        .map(|parent| parent.to_path_buf())
+        .expect("Failed to get parent directory");
+
     let command = file_manager_command();
 
     Command::new(command)
-        .arg(filepath)
+        .arg(dirpath)
         .spawn()
         .map_err(|e| e.to_string())?;
 

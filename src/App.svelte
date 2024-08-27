@@ -2,12 +2,12 @@
   import { GlobalWorkerOptions } from 'pdfjs-dist'
 
   // import Header from './Header.svelte'
-  import DragDrop from './DragDrop.svelte'
+  import DragDrop from './components/DragDrop.svelte'
   // import Footer from './Footer.svelte'
-  import Toast from './Toast.svelte'
-  import Loader from './Loader.svelte'
+  import Toast from './components/Toast.svelte'
+  import Loader from './components/Loader.svelte'
 
-  import '../app.css'
+  import './app.css'
 
   // initialize pdf.js worker
   GlobalWorkerOptions.workerSrc = new URL(

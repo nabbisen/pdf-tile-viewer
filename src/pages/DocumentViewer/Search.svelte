@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte'
+  import { onDestroy, onMount } from 'svelte'
   import { invoke } from '@tauri-apps/api/core'
   import { handleInvokeError } from '../../utils/backend'
   import {
@@ -8,14 +8,14 @@
     setConfirmedSearchTerm,
     setDisplayMatchedPages,
     reload,
-  } from '../../stores/components/documentViewer'
+  } from '../../stores/pages/documentViewer'
   import {
     subscribeConfirmedSearchTerm,
     subscribeDisplayMatchedPages,
-  } from '../../stores/components/documentViewer'
-  import { infoToast, successToast } from '../../stores/layouts/toast'
-  import { loaderStart, loaderStop } from '../../stores/layouts/loader'
-  import Tooltip from '../@common/Tooltip.svelte'
+  } from '../../stores/pages/documentViewer'
+  import { infoToast, successToast } from '../../stores/components/toast'
+  import { loaderStart, loaderStop } from '../../stores/components/loader'
+  import Tooltip from '../../components/Tooltip.svelte'
 
   export let filepath: string = ''
 
@@ -36,14 +36,18 @@
     subscribeDisplayMatchedPages((value) => (displayMatchedPages = value))
   }
 
-  onMount(ready)
+  onMount(() => {
+    window.addEventListener('keydown', windowOnKeydown)
+  })
 
-  function ready() {
-    window.addEventListener('keydown', (e: KeyboardEvent) => {
-      if (e.key === 'Escape' || e.key === 'Esc') {
-        searchFormVisible = false
-      }
-    })
+  onDestroy(() => {
+    window.removeEventListener('keydown', windowOnKeydown)
+  })
+
+  function windowOnKeydown(e: KeyboardEvent) {
+    if (e.key === 'Escape' || e.key === 'Esc') {
+      searchFormVisible = false
+    }
   }
 
   function searchPdf() {
