@@ -11,4 +11,4 @@ PDF viewer/reader displayed in tile layout. Number of pages in a row is dynamica
 
 The Latest executables on multiple platforms are in [Releases](https://github.com/nabbisen/pdf-tile-viewer/releases). No Installation is required. Just launch the executable to start.
 
-[Releases](https://github.com/nabbisen/pdf-tile-viewer/releases) ページ内に最新の実行ファイルがあります。インストール不要です。実行ファイルを起動すれば使えます。
+[Releases](https://github.com/nabbisen/pdf-tile-viewer/releases) ページ内に最新の実行ファイルがあります。インストールは不要です。実行ファイルを起動するだけで使えます。
