@@ -28,10 +28,6 @@
 
 <div class={`placeholder ${0 < loadedHistory.length ? 'shrink' : ''}`}>
   <h2>Drop PDF file</h2>
-  <p>
-    <b>Number of pages in a row</b> is dynamically calculated with <b>app window size</b>
-    and <b>zoom scale</b> modified with Ctrl key + mouse wheel.
-  </p>
   <button on:click={fileSelect}>Choose file</button>
 </div>
 
@@ -45,14 +41,6 @@
   .placeholder.shrink {
     padding-top: 1.1rem;
     padding-bottom: 1.1rem;
-  }
-  .placeholder p {
-    max-width: 16em;
-    margin: 1.1rem auto;
-    text-align: left;
-    font-size: 0.8rem;
-    font-family: serif;
-    color: #727272;
   }
   .placeholder button {
     padding: 0.2rem 0.6rem;
