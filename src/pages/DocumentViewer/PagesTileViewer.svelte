@@ -233,7 +233,9 @@
                 <nav>
                   <!-- left part (empty currently) -->
                   <div></div>
-                  <div class="pageNum" class:visible={pageNumVisible}>{pageIndex + 1}</div>
+                  <div class="page-num" class:visible={!zenMode && pageNumVisible}>
+                    {pageIndex + 1}
+                  </div>
                   <Tooltip messages="Zoom up" position="bottom">
                     <button class="zoom" on:click={() => zoomOnClick(pageIndex)} aria-label="zoom"
                     ></button></Tooltip
@@ -351,7 +353,7 @@
     align-items: flex-end;
   }
   .tile .page:hover nav,
-  .tile .page nav:has(.pageNum.visible) {
+  .tile .page nav:has(.page-num.visible) {
     display: flex;
   }
   .tile .page nav > * {
@@ -366,7 +368,7 @@
   .tile .page nav button.zoom::before {
     content: '🧐';
   }
-  .tile .page:not(:hover) nav .pageNum.visible ~ * button.zoom::before {
+  .tile .page:not(:hover) nav .page-num.visible ~ * button.zoom::before {
     content: '';
   }
 </style>
