@@ -15,6 +15,8 @@
     subscribeDisplayMatchedPages,
     subscribeZenMode,
     reset,
+    subscribeZoomedPageIndex,
+    setZoomedPageIndex,
   } from '../../stores/pages/documentViewer'
   import PagesTileViewerAside from './PagesTileViewerAside.svelte'
   import Tooltip from '../../components/Tooltip.svelte'
@@ -34,6 +36,7 @@
   let buffer: ArrayBuffer | undefined
   let matchedPageIndexes: number[] = []
   let displayMatchedPages: string | undefined
+  let zoomedPageIndex: number | undefined
   let zenMode: boolean = false
 
   let scale: number = DEFAULT_SCALE
@@ -41,10 +44,11 @@
   let pageViewport: PageViewport
   let pageIndexesRows: number[][] = []
   let pageViewerContainers: HTMLDivElement[] = []
-  let zoomedPageIndex: number | undefined
   let pageNumVisible: boolean = false
   let fixPagesPerRow: boolean = false
   let pagesPerRow: number
+  let scrollToPageIndex: number | undefined
+  let scrollEffectTimer: number | undefined
 
   $: {
     subscribeBuffer((value) => (buffer = value))
@@ -56,6 +60,10 @@
 
   $: {
     subscribeDisplayMatchedPages((value) => (displayMatchedPages = value))
+  }
+
+  $: {
+    subscribeZoomedPageIndex((value) => (zoomedPageIndex = value))
   }
 
   $: {
@@ -169,11 +177,8 @@
     }
   }
 
-  function showZoomedPage(pageIndex: number) {
-    // initialize
-    zoomedPageIndex = undefined
-
-    zoomedPageIndex = pageIndex
+  function zoomOnClick(pageIndex: number) {
+    setZoomedPageIndex(pageIndex)
   }
 
   function scaleChangeHandler(e: CustomEvent<number>) {
@@ -184,9 +189,6 @@
   function togglePageNum() {
     pageNumVisible = !pageNumVisible
   }
-
-  let scrollToPageIndex: number | undefined
-  let scrollEffectTimer: number | undefined
 
   function scrollToPage(e: CustomEvent<number>) {
     const scrollToPageNum = e.detail
@@ -233,10 +235,7 @@
                   <div></div>
                   <div class="pageNum" class:visible={pageNumVisible}>{pageIndex + 1}</div>
                   <Tooltip messages="Zoom up" position="bottom">
-                    <button
-                      class="zoom"
-                      on:click={() => showZoomedPage(pageIndex)}
-                      aria-label="zoom"
+                    <button class="zoom" on:click={() => zoomOnClick(pageIndex)} aria-label="zoom"
                     ></button></Tooltip
                   >
                 </nav>
@@ -249,7 +248,9 @@
   {/if}
 </div>
 
-<ZoomedPageViewer pageIndex={zoomedPageIndex} {pdfDocument} />
+{#if zoomedPageIndex !== undefined}
+  <ZoomedPageViewer {pdfDocument} />
+{/if}
 
 {#if pdfDocument && !zenMode}
   <PagesTileViewerAside

@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { onMount, createEventDispatcher } from 'svelte'
-  import { type PDFDocumentProxy } from 'pdfjs-dist'
+  import { onDestroy, onMount, createEventDispatcher } from 'svelte'
+  import { type PDFDocumentProxy, type PDFPageProxy } from 'pdfjs-dist'
   import { EventBus, PDFPageView, RenderingStates } from 'pdfjs-dist/web/pdf_viewer.mjs'
   import 'pdfjs-dist/web/pdf_viewer.css'
   import type { PageViewerClass } from '../../types/pages/documentViewer'
@@ -12,48 +12,69 @@
 
   const dispatch = createEventDispatcher()
 
+  let initialized: boolean = false
+
   let pageViewerContainer: HTMLDivElement
   let pdfPageView: PDFPageView
 
   $: {
-    if (pdfPageView) {
-      pdfPageView.update({
-        scale: scale,
-      })
-      dispatchPageViewport()
-      pdfPageView.draw()
-    }
+    if (pdfPageView) initialized = true
   }
 
   $: {
-    if (pdfDocument) {
-      draw()
-    }
+    if (initialized) scaleOnChange(scale)
   }
 
-  onMount(draw)
+  $: {
+    if (initialized) pageIndexOnChange(pageIndex)
+  }
 
-  async function draw() {
+  onMount(loadPage)
+
+  onDestroy(unloadPage)
+
+  async function loadPage() {
     const pdfPage = await pdfDocument.getPage(pageIndex + 1)
 
-    if (!pdfPageView) {
-      pdfPageView = new PDFPageView({
-        id: pageIndex,
-        container: pageViewerContainer,
-        defaultViewport: pdfPage.getViewport(),
-        eventBus: new EventBus(),
-      })
-    } else {
-      pdfPageView.destroy()
-    }
+    pdfPageView = new PDFPageView({
+      id: pageIndex,
+      container: pageViewerContainer,
+      defaultViewport: pdfPage.getViewport(),
+      scale: scale,
+      eventBus: new EventBus(),
+    })
     pdfPageView.setPdfPage(pdfPage)
-    pdfPageView.draw()
-
     dispatchPageViewport()
+
+    pdfPageView.draw()
+  }
+
+  function unloadPage() {
+    if (!pdfPageView) return
+    pdfPageView.destroy()
+  }
+
+  function pageIndexOnChange(pageIndex: number) {
+    pdfDocument.getPage(pageIndex + 1).then((pdfPage: PDFPageProxy) => {
+      pdfPageView.setPdfPage(pdfPage)
+      dispatchPageViewport()
+
+      pdfPageView.draw()
+    })
+  }
+
+  function scaleOnChange(scale: number) {
+    pdfPageView.update({
+      scale: scale,
+    })
+    dispatchPageViewport()
+
+    pdfPageView.draw()
   }
 
   function dispatchPageViewport() {
     if (pageIndex !== 0 || pdfPageView.renderingState === RenderingStates.RUNNING) return
+
     dispatch('pageViewport', pdfPageView.viewport)
   }
 </script>
