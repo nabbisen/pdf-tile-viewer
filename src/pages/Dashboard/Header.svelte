@@ -16,7 +16,7 @@
       width: 4.4rem;
     }
     to {
-      width: calc(100% + 0.6rem);
+      width: calc(100% - 3.6rem);
     }
   }
   .logo {
@@ -28,10 +28,10 @@
     content: '';
     position: absolute;
     width: 4.4rem;
-    left: 0;
-    bottom: -0.2rem;
-    height: 1.9rem;
-    background-color: #bdd4ff27;
+    left: 4.1rem;
+    bottom: 0.5rem;
+    height: 0.8rem;
+    background-color: #fff49132;
     animation: logo-bg 4.4s ease forwards;
   }
   img {
@@ -53,12 +53,12 @@
     margin-left: 0.3rem;
   }
   h1 span {
-    color: #002872;
+    color: #636363;
   }
   h1 span:nth-child(2) {
-    color: #00073e;
+    color: #878787;
   }
   h1 span:nth-child(3) {
-    color: #00031c;
+    color: #939393;
   }
 </style>
