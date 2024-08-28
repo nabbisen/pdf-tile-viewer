@@ -18,7 +18,7 @@
     setPageNumVisible,
     setFixPagesPerRow,
     setPagesPerRow,
-  } from '../../stores/pages/documentViewerSettings'
+  } from '../../stores/settings/documentViewer/pagesTileViewer'
   import Tooltip from '../../components/Tooltip.svelte'
 
   export let numPages: number

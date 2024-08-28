@@ -26,7 +26,7 @@
     subscribePageNumVisible,
     subscribeFixPagesPerRow,
     subscribePagesPerRow,
-  } from '../../stores/pages/documentViewerSettings'
+  } from '../../stores/settings/documentViewer/pagesTileViewer'
 
   const debounceUpdatePageIndexesRows = debounce(updatePageIndexesRows, 200)
   const debounceHandleWheel = debounce(handleWheel, 120)

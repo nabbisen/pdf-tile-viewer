@@ -2,31 +2,30 @@
   import { onDestroy, onMount } from 'svelte'
   import type { PDFDocumentProxy } from 'pdfjs-dist'
   import PageViewer from './PageViewer.svelte'
+  import { setZoomedPageIndex, subscribeZoomedPageIndex } from '../../stores/pages/documentViewer'
   import {
-    setZoomedPageIndex,
-    subscribeZoomedPageIndex,
     setZoomViewBackgroundLocked,
-    subscribeZoomViewBackgroundLocked,
-  } from '../../stores/pages/documentViewer'
+    loadZoomViewBackgroundLocked,
+    setZoomViewScale,
+    loadZoomViewScale,
+  } from '../../stores/settings/documentViewer/zoomedPageViewer'
+  import { DEFAULT_ZOOM_VIEW_BACKGROUND_LOCKED, DEFAULT_ZOOM_VIEW_SCALE } from './consts'
 
   export let pdfDocument: PDFDocumentProxy
 
+  let zoomViewBackgroundLocked: boolean
+  let zoomViewScale: number
+
   let pageIndex: number
 
-  let zoomViewScale: number = 2.7
   let zoomViewTransparency: number = 0.0
-  let backgroundLocked: boolean = false
 
   $: {
     subscribeZoomedPageIndex((value) => (pageIndex = value!))
   }
 
   $: {
-    subscribeZoomViewBackgroundLocked((value) => (backgroundLocked = value!))
-  }
-
-  $: {
-    if (backgroundLocked) {
+    if (zoomViewBackgroundLocked) {
       lockBackground()
     } else {
       unlockBackground()
@@ -34,6 +33,8 @@
   }
 
   onMount(() => {
+    loadSettings()
+
     window.addEventListener('keydown', windowOnKeydown)
   })
 
@@ -49,6 +50,13 @@
     }
   }
 
+  function loadSettings() {
+    loadZoomViewBackgroundLocked(DEFAULT_ZOOM_VIEW_BACKGROUND_LOCKED).then(
+      (ret) => (zoomViewBackgroundLocked = ret as boolean)
+    )
+    loadZoomViewScale(DEFAULT_ZOOM_VIEW_SCALE).then((ret) => (zoomViewScale = ret as number))
+  }
+
   function prevPage() {
     const _pageIndex = pageIndex - 1
     if (_pageIndex < 0) return
@@ -62,7 +70,12 @@
   }
 
   function lockBackgroundOnClick() {
-    setZoomViewBackgroundLocked(!backgroundLocked)
+    zoomViewBackgroundLocked = !zoomViewBackgroundLocked
+    setZoomViewBackgroundLocked(zoomViewBackgroundLocked)
+  }
+
+  function zoomViewScaleOnChange() {
+    setZoomViewScale(zoomViewScale)
   }
 
   function close() {
@@ -94,13 +107,21 @@
     </div>
     <div class="lock-background">
       Background:
-      <button class="auxiliary" on:click={lockBackgroundOnClick}>
-        {backgroundLocked ? 'locked' : 'free'}
-      </button>
+      <label class="button auxiliary">
+        {zoomViewBackgroundLocked ? 'Locked' : 'Free'}
+        <input type="checkbox" bind:checked={zoomViewBackgroundLocked} />
+      </label>
     </div>
     <label
       >Scale
-      <input type="range" step="0.1" min="0.1" max="10.0" bind:value={zoomViewScale} />
+      <input
+        type="range"
+        step="0.1"
+        min="0.1"
+        max="10.0"
+        bind:value={zoomViewScale}
+        on:change={zoomViewScaleOnChange}
+      />
     </label>
     <label
       >Transparency
@@ -146,6 +167,10 @@
     font-size: 1rem;
   }
 
+  nav label input[type='checkbox'] {
+    display: none;
+  }
+
   nav .page {
     margin-right: 0.4rem;
   }
@@ -164,10 +189,12 @@
     text-align: left;
     cursor: pointer;
   }
+
   nav .zoomView nav input[type='range'] {
     width: 5.7em;
     text-align: right;
   }
+
   nav .zoomView nav button.close {
     background-color: #ffffff;
     color: #252525;
