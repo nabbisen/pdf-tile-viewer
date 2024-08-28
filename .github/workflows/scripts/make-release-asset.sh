@@ -28,7 +28,7 @@ build_dist=src-tauri/target/$target/release
 
 mkdir $build_dist/$artifact
 
-cp ".github/workflows/artifact-assets/readme.txt" "$build_dist/$artifact/"
+cp ".github/workflows/artifact-assets/notes.txt" "$build_dist/$artifact/"
 
 workdir="$(pwd)"
 cd $build_dist
