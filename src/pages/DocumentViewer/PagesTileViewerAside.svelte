@@ -1,21 +1,31 @@
 <script lang="ts">
   import { onMount, createEventDispatcher } from 'svelte'
-  import { MIN_SCALE, MAX_SCALE, SCALE_UNIT } from './consts'
   import {
-    loadFixPagesPerRow,
+    DEFAULT_SCALE,
+    MIN_SCALE,
+    MAX_SCALE,
+    SCALE_UNIT,
+    DEFAULT_PAGE_NUM_VISIBLE,
+    DEFAULT_FIX_PAGES_PER_ROW,
+    DEFAULT_PAGES_PER_ROW,
+  } from './consts'
+  import {
+    loadScale,
     loadPageNumVisible,
+    loadFixPagesPerRow,
     loadPagesPerRow,
-    setFixPagesPerRow,
+    setScale,
     setPageNumVisible,
+    setFixPagesPerRow,
     setPagesPerRow,
   } from '../../stores/pages/documentViewerSettings'
   import Tooltip from '../../components/Tooltip.svelte'
 
-  export let scale: number
   export let numPages: number
 
   const dispatch = createEventDispatcher()
 
+  let scale: number
   let pageNumVisible: boolean
   let fixPagesPerRow: boolean
   let pagesPerRow: number
@@ -24,8 +34,8 @@
 
   onMount(loadSettings)
 
-  function scaleChange() {
-    dispatch('scaleChange', scale)
+  function scaleOnChange() {
+    setScale(scale)
   }
 
   function pageNumVisibleOnChange() {
@@ -45,9 +55,10 @@
   }
 
   function loadSettings() {
-    loadPageNumVisible(false).then((ret) => (pageNumVisible = ret as boolean))
-    loadFixPagesPerRow(false).then((ret) => (fixPagesPerRow = ret as boolean))
-    loadPagesPerRow(5).then((ret) => (pagesPerRow = ret as number))
+    loadScale(DEFAULT_SCALE).then((ret) => (scale = ret as number))
+    loadPageNumVisible(DEFAULT_PAGE_NUM_VISIBLE).then((ret) => (pageNumVisible = ret as boolean))
+    loadFixPagesPerRow(DEFAULT_FIX_PAGES_PER_ROW).then((ret) => (fixPagesPerRow = ret as boolean))
+    loadPagesPerRow(DEFAULT_PAGES_PER_ROW).then((ret) => (pagesPerRow = ret as number))
   }
 </script>
 
@@ -61,7 +72,7 @@
         max={MAX_SCALE}
         step={SCALE_UNIT}
         bind:value={scale}
-        on:change={scaleChange}
+        on:change={scaleOnChange}
       />
     </div>
   </div>

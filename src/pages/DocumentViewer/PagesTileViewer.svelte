@@ -22,12 +22,11 @@
   import Tooltip from '../../components/Tooltip.svelte'
   import { MIN_SCALE, MAX_SCALE, SCALE_UNIT } from './consts'
   import {
-    subscribeFixPagesPerRow,
+    subscribeScale,
     subscribePageNumVisible,
+    subscribeFixPagesPerRow,
     subscribePagesPerRow,
   } from '../../stores/pages/documentViewerSettings'
-
-  const DEFAULT_SCALE: number = 1.0
 
   const debounceUpdatePageIndexesRows = debounce(updatePageIndexesRows, 200)
   const debounceHandleWheel = debounce(handleWheel, 120)
@@ -36,9 +35,9 @@
 
   let initialized: boolean = false
 
-  let scale: number = DEFAULT_SCALE
-  let pageNumVisible: boolean = false
-  let fixPagesPerRow: boolean = false
+  let scale: number
+  let pageNumVisible: boolean
+  let fixPagesPerRow: boolean
   let pagesPerRow: number
 
   let buffer: ArrayBuffer | undefined
@@ -72,6 +71,10 @@
 
   $: {
     subscribeZenMode((value) => (zenMode = value))
+  }
+
+  $: {
+    subscribeScale((value) => (scale = value))
   }
 
   $: {
@@ -194,11 +197,6 @@
     setZoomedPageIndex(pageIndex)
   }
 
-  function scaleChangeHandler(e: CustomEvent<number>) {
-    if (!e.detail) return
-    scale = Number(e.detail)
-  }
-
   function scrollToPage(e: CustomEvent<number>) {
     const scrollToPageNum = e.detail
     if (!scrollToPageNum || !Number.isInteger(scrollToPageNum)) return
@@ -264,12 +262,7 @@
 {/if}
 
 {#if pdfDocument && !zenMode}
-  <PagesTileViewerAside
-    {scale}
-    numPages={pdfDocument.numPages}
-    on:scaleChange={scaleChangeHandler}
-    on:scrollToPage={scrollToPage}
-  />
+  <PagesTileViewerAside numPages={pdfDocument.numPages} on:scrollToPage={scrollToPage} />
 {/if}
 
 <style>

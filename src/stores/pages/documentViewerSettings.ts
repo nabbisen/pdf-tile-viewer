@@ -2,13 +2,23 @@ import { writable, type Writable } from 'svelte/store'
 import { invoke } from '@tauri-apps/api/core'
 import type { ReadByKeyResponse } from '../../types/stores/documentViewerSettings'
 
+let scale = writable<number>()
 let pageNumVisible = writable<boolean>()
 let fixPagesPerRow = writable<boolean>()
 let pagesPerRow = writable<number>()
 
+const { subscribe: subscribeScale } = scale
 const { subscribe: subscribePageNumVisible } = pageNumVisible
 const { subscribe: subscribeFixPagesPerRow } = fixPagesPerRow
 const { subscribe: subscribePagesPerRow } = pagesPerRow
+
+const setScale = (value: number) => {
+  _write('scale', value, scale)
+}
+
+const loadScale = (defaultValue: number): Promise<number> => {
+  return _load('scale', scale.set, defaultValue)
+}
 
 const setPageNumVisible = (value: boolean) => {
   _write('pageNumVisible', value, pageNumVisible)
@@ -56,6 +66,9 @@ function _load<T>(key: string, set: Function, defaultValue: T): Promise<T> {
 }
 
 export {
+  subscribeScale,
+  setScale,
+  loadScale,
   subscribePageNumVisible,
   setPageNumVisible,
   loadPageNumVisible,
