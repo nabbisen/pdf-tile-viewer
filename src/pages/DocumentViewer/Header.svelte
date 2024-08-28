@@ -16,7 +16,7 @@
   }
 
   function filenameClick() {
-    invoke('open_file_manager', { filepath: filepath }).catch((e: string) => {
+    invoke('file_manager_open', { filepath: filepath }).catch((e: string) => {
       errorToast(e)
     })
   }

@@ -107,7 +107,7 @@
   function initialize() {
     pushToLoadedHistory(filepath!)
 
-    invoke('set_window_title', { filepath: filepath })
+    invoke('window_title_set', { filepath: filepath })
 
     initialized = true
   }

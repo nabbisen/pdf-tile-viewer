@@ -9,22 +9,22 @@ const WIDTH_RESOLUTION_RATIO: f32 = 0.80;
 const HEIGHT_RESOLUTION_RATIO: f32 = 0.87;
 
 #[tauri::command]
-fn read_pdf(filepath: &str) -> Result<Vec<u8>, String> {
+fn pdf_read(filepath: &str) -> Result<Vec<u8>, String> {
     read(filepath)
 }
 
 #[tauri::command]
-fn search_pdf(search_term: &str, filepath: &str) -> Result<SearchResult, String> {
+fn pdf_search(search_term: &str, filepath: &str) -> Result<SearchResult, String> {
     search(search_term, filepath)
 }
 
 #[tauri::command]
-fn open_file_manager(filepath: &str) -> Result<(), String> {
+fn file_manager_open(filepath: &str) -> Result<(), String> {
     run_file_manager(filepath)
 }
 
 #[tauri::command]
-fn set_window_title(app: AppHandle, window: tauri::Window, filepath: &str) -> Result<(), String> {
+fn window_title_set(app: AppHandle, window: tauri::Window, filepath: &str) -> Result<(), String> {
     let default_title = window_default_title(&app);
     window
         .set_title(format!("{} [{}]", filepath, default_title).as_str())
@@ -33,7 +33,7 @@ fn set_window_title(app: AppHandle, window: tauri::Window, filepath: &str) -> Re
 }
 
 #[tauri::command]
-fn reset_window_title(app: AppHandle, window: tauri::Window) -> Result<(), String> {
+fn window_title_reset(app: AppHandle, window: tauri::Window) -> Result<(), String> {
     let default_title = window_default_title(&app);
     window
         .set_title(default_title.as_str())
@@ -75,11 +75,11 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
-            read_pdf,
-            search_pdf,
-            open_file_manager,
-            set_window_title,
-            reset_window_title
+            pdf_read,
+            pdf_search,
+            file_manager_open,
+            window_title_set,
+            window_title_reset,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

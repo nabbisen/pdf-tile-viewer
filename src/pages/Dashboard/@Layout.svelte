@@ -6,7 +6,7 @@
   import FileSelect from './FileSelect.svelte'
 
   onMount(() => {
-    invoke('reset_window_title')
+    invoke('window_title_reset')
   })
 </script>
 
