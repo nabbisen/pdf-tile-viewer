@@ -1,9 +1,11 @@
+use serde_json::Value;
 use tauri::{AppHandle, Manager, PhysicalPosition, PhysicalSize, Position, Size};
 
 mod utils;
 use utils::file::run_file_manager;
 use utils::pdf::{read, search, SearchResult};
 use utils::tauri::window_default_title;
+use utils::user_settings::{KeyValue, UserSettings};
 
 const WIDTH_RESOLUTION_RATIO: f32 = 0.80;
 const HEIGHT_RESOLUTION_RATIO: f32 = 0.87;
@@ -39,6 +41,16 @@ fn window_title_reset(app: AppHandle, window: tauri::Window) -> Result<(), Strin
         .set_title(default_title.as_str())
         .expect("Failed to set window title");
     Ok(())
+}
+
+#[tauri::command]
+fn settings_read_by_key(key: &str) -> Result<KeyValue, String> {
+    UserSettings::read_by_key(key).map_err(|err| err.to_string())
+}
+
+#[tauri::command]
+fn settings_write_by_key(key: &str, value: Value) -> Result<(), String> {
+    UserSettings::write_by_key(key, &value).map_err(|err| err.to_string())
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -80,6 +92,8 @@ pub fn run() {
             file_manager_open,
             window_title_set,
             window_title_reset,
+            settings_read_by_key,
+            settings_write_by_key,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
