@@ -1,9 +1,7 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte'
+  import { MIN_SCALE, MAX_SCALE, SCALE_UNIT } from './consts'
 
-  export let MIN_SCALE: number
-  export let MAX_SCALE: number
-  export let SCALE_UNIT: number
   export let scale: number
   export let numPages: number
   export let pageNumVisible: boolean

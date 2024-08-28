@@ -14,16 +14,11 @@ pub fn read(filepath: &str) -> Result<Vec<u8>, String> {
         Err(err) => return Err(err),
     };
 
-    let pdfium = match pdfium() {
-        Ok(x) => x,
-        Err(err) => return Err(err),
+    let mut buffer = Vec::new();
+    match file.read_to_end(&mut buffer) {
+        Ok(_) => {}
+        Err(err) => return Err(format!("Failed to read ({})", err)),
     };
-    // todo: password protected doc support
-    let document = match pdfium.load_pdf_from_file(filepath, None) {
-        Ok(x) => x,
-        Err(err) => return Err(err.to_string()),
-    };
-    let buffer = document.save_to_bytes().expect("Failed to save as buffer");
     Ok(buffer)
 }
 
@@ -121,9 +116,9 @@ fn pdfium_bind_to_library() -> Result<Box<dyn PdfiumLibraryBindings>, PdfiumErro
     const APP_LIBPDFIUM_DIR: &str = "lib/pdfium/lib";
     Pdfium::bind_to_library(Pdfium::pdfium_platform_library_name_at_path(
         std::env::current_exe()
-            .expect("Failed to get exec dir")
+            .expect("Failed to get exec path")
             .parent()
-            .expect("Failed to get exec parent dir")
+            .expect("Failed to get exec parent dir path")
             .join(APP_LIBPDFIUM_DIR)
             .as_path(),
     ))
