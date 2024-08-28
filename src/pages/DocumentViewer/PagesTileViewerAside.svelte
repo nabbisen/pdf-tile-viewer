@@ -1,31 +1,64 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte'
-  import { MIN_SCALE, MAX_SCALE, SCALE_UNIT } from './consts'
+  import { onMount, createEventDispatcher } from 'svelte'
+  import {
+    DEFAULT_SCALE,
+    MIN_SCALE,
+    MAX_SCALE,
+    SCALE_UNIT,
+    DEFAULT_PAGE_NUM_VISIBLE,
+    DEFAULT_FIX_PAGES_PER_ROW,
+    DEFAULT_PAGES_PER_ROW,
+  } from './consts'
+  import {
+    loadScale,
+    loadPageNumVisible,
+    loadFixPagesPerRow,
+    loadPagesPerRow,
+    setScale,
+    setPageNumVisible,
+    setFixPagesPerRow,
+    setPagesPerRow,
+  } from '../../stores/settings/documentViewer/pagesTileViewer'
+  import Tooltip from '../../components/Tooltip.svelte'
 
-  export let scale: number
   export let numPages: number
-  export let pageNumVisible: boolean
 
   const dispatch = createEventDispatcher()
 
-  let scrollToPageNum: number | undefined
+  let scale: number
+  let pageNumVisible: boolean
   let fixPagesPerRow: boolean
-  let pagesPerRow: number = 5
+  let pagesPerRow: number
 
-  function scaleChange() {
-    dispatch('scaleChange', scale)
+  let scrollToPageNum: number | undefined
+
+  onMount(loadSettings)
+
+  function scaleOnChange() {
+    setScale(scale)
   }
 
-  function togglePageNum() {
-    dispatch('togglePageNum')
+  function pageNumVisibleOnChange() {
+    setPageNumVisible(pageNumVisible)
+  }
+
+  function fixPagesPerRowOnChange() {
+    setFixPagesPerRow(fixPagesPerRow)
+  }
+
+  function pagesPerRowOnChange() {
+    setPagesPerRow(pagesPerRow)
   }
 
   function scrollToPage() {
     dispatch('scrollToPage', scrollToPageNum)
   }
 
-  function fixPagesPerRowChange() {
-    dispatch('fixPagesPerRowChange', { fixPagesPerRow, pagesPerRow })
+  function loadSettings() {
+    loadScale(DEFAULT_SCALE).then((ret) => (scale = ret as number))
+    loadPageNumVisible(DEFAULT_PAGE_NUM_VISIBLE).then((ret) => (pageNumVisible = ret as boolean))
+    loadFixPagesPerRow(DEFAULT_FIX_PAGES_PER_ROW).then((ret) => (fixPagesPerRow = ret as boolean))
+    loadPagesPerRow(DEFAULT_PAGES_PER_ROW).then((ret) => (pagesPerRow = ret as number))
   }
 </script>
 
@@ -39,36 +72,34 @@
         max={MAX_SCALE}
         step={SCALE_UNIT}
         bind:value={scale}
-        on:change={scaleChange}
+        on:change={scaleOnChange}
       />
     </div>
   </div>
   <div class="page-operations">
     <div class="page-nums">
       <div class="total"><strong>{numPages}</strong></div>
-      <button class="toggle-page-num" on:click={togglePageNum}
-        >🔢 <span class="button auxiliary">{pageNumVisible ? 'on' : 'off'}</span></button
-      >
-    </div>
-    <div class="scroll-to-page">
-      <h4>Jump</h4>
-      <span>p.</span>
-      <input type="number" bind:value={scrollToPageNum} min="1" max={numPages} step="1" />
-      <button class="auxiliary" on:click={scrollToPage}>Go</button>
+      <Tooltip messages="Number visible" position="left">
+        <label>
+          <input
+            type="checkbox"
+            class="toggle-page-num"
+            bind:checked={pageNumVisible}
+            on:change={pageNumVisibleOnChange}
+          />
+          <h4 aria-label="page-num-visible">🔢</h4>
+          <span class="button auxiliary">{pageNumVisible ? 'On' : 'Off'}</span>
+        </label>
+      </Tooltip>
     </div>
     <div class="pages-per-row">
-      <h4>Pages per row</h4>
-      <span>is: </span>
-      <button
-        class="auxiliary"
-        on:click={() => {
-          fixPagesPerRow = !fixPagesPerRow
-          fixPagesPerRowChange()
-        }}
-      >
-        {fixPagesPerRow ? 'fixed' : 'auto-determined'}
-      </button>
-      <input type="checkbox" bind:checked={fixPagesPerRow} on:change={fixPagesPerRowChange} />
+      <Tooltip messages="Pages per row" position="left">
+        <h4 aria-label="pages-per-row">📖</h4>
+        <label>
+          <input type="checkbox" bind:checked={fixPagesPerRow} on:change={fixPagesPerRowOnChange} />
+          <span class="button auxiliary">{fixPagesPerRow ? 'Fixed' : 'Auto-wrapped'}</span>
+        </label>
+      </Tooltip>
       {#if fixPagesPerRow}
         <span>at: </span>
         <input
@@ -77,9 +108,15 @@
           step="1"
           disabled={!fixPagesPerRow}
           bind:value={pagesPerRow}
-          on:change={fixPagesPerRowChange}
+          on:change={pagesPerRowOnChange}
         />
       {/if}
+    </div>
+    <div class="scroll-to-page">
+      <h4 aria-label="jump">📃</h4>
+      <span>p.</span>
+      <input type="number" bind:value={scrollToPageNum} min="1" max={numPages} step="1" />
+      <button class="auxiliary" on:click={scrollToPage}>Go</button>
     </div>
   </div>
 </aside>
@@ -103,15 +140,14 @@
   aside h4 {
     padding: 0;
     margin: 0;
+    display: inline-block;
   }
 
   aside .scale-operations,
-  aside .scale-operations > div,
-  aside .page-operations,
-  aside .page-operations > div {
+  aside .page-operations {
     display: flex;
     align-items: center;
-    gap: 1.2rem;
+    gap: 2.7rem;
   }
   aside .scale-operations > div,
   aside .page-operations > div {
@@ -121,10 +157,14 @@
     align-items: center;
     gap: 0.3rem;
   }
+  aside .page-operations button,
+  aside .page-operations .button {
+    padding: 0.2rem 0.5rem;
+  }
   aside .page-nums .total::after {
     content: ' pages';
   }
-  aside .page-nums button.toggle-page-num,
+  aside .page-nums label,
   aside input[type='number'] {
     font-size: 0.8rem;
   }
@@ -144,7 +184,7 @@
     padding-right: 0.3rem;
   }
 
-  aside .pages-per-row button + input[type='checkbox'] {
+  aside label input[type='checkbox'] {
     display: none;
   }
 </style>

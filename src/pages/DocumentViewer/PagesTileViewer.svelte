@@ -21,8 +21,12 @@
   import PagesTileViewerAside from './PagesTileViewerAside.svelte'
   import Tooltip from '../../components/Tooltip.svelte'
   import { MIN_SCALE, MAX_SCALE, SCALE_UNIT } from './consts'
-
-  const DEFAULT_SCALE: number = 1.0
+  import {
+    subscribeScale,
+    subscribePageNumVisible,
+    subscribeFixPagesPerRow,
+    subscribePagesPerRow,
+  } from '../../stores/settings/documentViewer/pagesTileViewer'
 
   const debounceUpdatePageIndexesRows = debounce(updatePageIndexesRows, 200)
   const debounceHandleWheel = debounce(handleWheel, 120)
@@ -31,20 +35,21 @@
 
   let initialized: boolean = false
 
+  let scale: number
+  let pageNumVisible: boolean
+  let fixPagesPerRow: boolean
+  let pagesPerRow: number
+
   let buffer: ArrayBuffer | undefined
   let matchedPageIndexes: number[] = []
   let displayMatchedPages: string | undefined
   let zoomedPageIndex: number | undefined
   let zenMode: boolean = false
 
-  let scale: number = DEFAULT_SCALE
   let pdfDocument: PDFDocumentProxy
   let pageViewport: PageViewport
   let pageIndexesRows: number[][] = []
   let pageViewerContainers: HTMLDivElement[] = []
-  let pageNumVisible: boolean = false
-  let fixPagesPerRow: boolean = false
-  let pagesPerRow: number
   let scrollToPageIndex: number | undefined
   let scrollEffectTimer: number | undefined
 
@@ -66,6 +71,28 @@
 
   $: {
     subscribeZenMode((value) => (zenMode = value))
+  }
+
+  $: {
+    subscribeScale((value) => (scale = value))
+  }
+
+  $: {
+    subscribePageNumVisible((value) => (pageNumVisible = value))
+  }
+
+  $: {
+    subscribeFixPagesPerRow((value) => {
+      fixPagesPerRow = value
+      if (pdfDocument) updatePageIndexesRows()
+    })
+  }
+
+  $: {
+    subscribePagesPerRow((value) => {
+      pagesPerRow = value
+      if (pdfDocument) updatePageIndexesRows()
+    })
   }
 
   $: {
@@ -107,7 +134,7 @@
   function initialize() {
     pushToLoadedHistory(filepath!)
 
-    invoke('set_window_title', { filepath: filepath })
+    invoke('window_title_set', { filepath: filepath })
 
     initialized = true
   }
@@ -153,15 +180,6 @@
     return Math.floor(window.innerWidth / pageViewport.width)
   }
 
-  function fixPagesPerRowChange(e: CustomEvent<{ fixPagesPerRow: boolean; pagesPerRow: number }>) {
-    const { fixPagesPerRow: _fixPagesPerRow, pagesPerRow: _pagesPerRow } = e.detail
-
-    fixPagesPerRow = _fixPagesPerRow
-    pagesPerRow = _pagesPerRow
-
-    updatePageIndexesRows()
-  }
-
   function increaseScale() {
     scale = scale + SCALE_UNIT
     if (MAX_SCALE < scale) {
@@ -177,15 +195,6 @@
 
   function zoomOnClick(pageIndex: number) {
     setZoomedPageIndex(pageIndex)
-  }
-
-  function scaleChangeHandler(e: CustomEvent<number>) {
-    if (!e.detail) return
-    scale = Number(e.detail)
-  }
-
-  function togglePageNum() {
-    pageNumVisible = !pageNumVisible
   }
 
   function scrollToPage(e: CustomEvent<number>) {
@@ -253,15 +262,7 @@
 {/if}
 
 {#if pdfDocument && !zenMode}
-  <PagesTileViewerAside
-    {scale}
-    numPages={pdfDocument.numPages}
-    {pageNumVisible}
-    on:scaleChange={scaleChangeHandler}
-    on:togglePageNum={togglePageNum}
-    on:scrollToPage={scrollToPage}
-    on:fixPagesPerRowChange={fixPagesPerRowChange}
-  />
+  <PagesTileViewerAside numPages={pdfDocument.numPages} on:scrollToPage={scrollToPage} />
 {/if}
 
 <style>

@@ -55,7 +55,7 @@
 
     loaderStart()
 
-    invoke('search_pdf', {
+    invoke('pdf_search', {
       searchTerm: searchTerm,
       filepath: filepath,
     })

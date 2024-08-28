@@ -1,30 +1,32 @@
+use serde_json::Value;
 use tauri::{AppHandle, Manager, PhysicalPosition, PhysicalSize, Position, Size};
 
 mod utils;
 use utils::file::run_file_manager;
 use utils::pdf::{read, search, SearchResult};
 use utils::tauri::window_default_title;
+use utils::user_settings::{KeyValue, UserSettings};
 
 const WIDTH_RESOLUTION_RATIO: f32 = 0.80;
 const HEIGHT_RESOLUTION_RATIO: f32 = 0.87;
 
 #[tauri::command]
-fn read_pdf(filepath: &str) -> Result<Vec<u8>, String> {
+fn pdf_read(filepath: &str) -> Result<Vec<u8>, String> {
     read(filepath)
 }
 
 #[tauri::command]
-fn search_pdf(search_term: &str, filepath: &str) -> Result<SearchResult, String> {
+fn pdf_search(search_term: &str, filepath: &str) -> Result<SearchResult, String> {
     search(search_term, filepath)
 }
 
 #[tauri::command]
-fn open_file_manager(filepath: &str) -> Result<(), String> {
+fn file_manager_open(filepath: &str) -> Result<(), String> {
     run_file_manager(filepath)
 }
 
 #[tauri::command]
-fn set_window_title(app: AppHandle, window: tauri::Window, filepath: &str) -> Result<(), String> {
+fn window_title_set(app: AppHandle, window: tauri::Window, filepath: &str) -> Result<(), String> {
     let default_title = window_default_title(&app);
     window
         .set_title(format!("{} [{}]", filepath, default_title).as_str())
@@ -33,12 +35,22 @@ fn set_window_title(app: AppHandle, window: tauri::Window, filepath: &str) -> Re
 }
 
 #[tauri::command]
-fn reset_window_title(app: AppHandle, window: tauri::Window) -> Result<(), String> {
+fn window_title_reset(app: AppHandle, window: tauri::Window) -> Result<(), String> {
     let default_title = window_default_title(&app);
     window
         .set_title(default_title.as_str())
         .expect("Failed to set window title");
     Ok(())
+}
+
+#[tauri::command]
+fn settings_read_by_key(key: &str) -> Result<KeyValue, String> {
+    UserSettings::read_by_key(key).map_err(|err| err.to_string())
+}
+
+#[tauri::command]
+fn settings_write_by_key(key: &str, value: Value) -> Result<(), String> {
+    UserSettings::write_by_key(key, &value).map_err(|err| err.to_string())
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -75,11 +87,13 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
-            read_pdf,
-            search_pdf,
-            open_file_manager,
-            set_window_title,
-            reset_window_title
+            pdf_read,
+            pdf_search,
+            file_manager_open,
+            window_title_set,
+            window_title_reset,
+            settings_read_by_key,
+            settings_write_by_key,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
