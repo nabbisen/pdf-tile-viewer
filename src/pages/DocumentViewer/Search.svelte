@@ -143,7 +143,7 @@
 
 <div class="search">
   <Tooltip messages="Search" position="left">
-    <button class="toggle" on:click={toggleSearchForm}>🔍</button>
+    <button class="toggle" on:click={toggleSearchForm}>🗺</button>
   </Tooltip>
   {#if searchFormVisible}
     <form>

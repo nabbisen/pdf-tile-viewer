@@ -362,7 +362,7 @@
     font-size: 1rem;
   }
   .tile .page nav button.zoom::before {
-    content: '🧐';
+    content: '🔍';
   }
   .tile .page:not(:hover) nav .page-num.visible ~ * button.zoom::before {
     content: '';

@@ -19,8 +19,8 @@ The Latest executables on multiple platforms are in [Releases](https://github.co
 
 - 🟨 Tile layout view on PDF pages | PDF ページのタイルレイアウト表示
 - 🔧 Scale / pages-per-row changers | 倍率 / 行あたりページ が変更可能
-- 🧐 Page zoom view | ページのズーム表示
-- 🔍 Text search | テキスト検索
+- 🔍 Page zoom view | ページのズーム表示
+- 🗺 Text search | テキスト検索
 - 🍵 Zen mode | 禅モード
 - 🗄 Preserve some settings | 一部設定の保存 (アプリ再起動後も有効)
 - 🚪 Files history with links to open again (Kept only while app running) | 再表示用リンク付きファイル履歴 (アプリ実行中のみ有効)
