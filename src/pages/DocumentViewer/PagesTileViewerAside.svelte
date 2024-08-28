@@ -1,23 +1,28 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte'
+  import { onMount, createEventDispatcher } from 'svelte'
   import { MIN_SCALE, MAX_SCALE, SCALE_UNIT } from './consts'
+  import { getPageNumVisible, setPageNumVisible } from '../../stores/pages/documentViewerSettings'
 
   export let scale: number
   export let numPages: number
-  export let pageNumVisible: boolean
 
   const dispatch = createEventDispatcher()
+
+  let pageNumVisible: boolean = false
 
   let scrollToPageNum: number | undefined
   let fixPagesPerRow: boolean
   let pagesPerRow: number = 5
 
+  onMount(loadSettings)
+
   function scaleChange() {
     dispatch('scaleChange', scale)
   }
 
-  function togglePageNum() {
-    dispatch('togglePageNum')
+  function togglePageNumVisible() {
+    pageNumVisible = !pageNumVisible
+    setPageNumVisible(pageNumVisible)
   }
 
   function scrollToPage() {
@@ -26,6 +31,15 @@
 
   function fixPagesPerRowChange() {
     dispatch('fixPagesPerRowChange', { fixPagesPerRow, pagesPerRow })
+  }
+
+  function loadSettings() {
+    getPageNumVisible().then((res) => {
+      if (res === undefined) return
+      const value = res as boolean
+      pageNumVisible = value
+      setPageNumVisible(value)
+    })
   }
 </script>
 
@@ -46,7 +60,7 @@
   <div class="page-operations">
     <div class="page-nums">
       <div class="total"><strong>{numPages}</strong></div>
-      <button class="toggle-page-num" on:click={togglePageNum}
+      <button class="toggle-page-num" on:click={togglePageNumVisible}
         >🔢 <span class="button auxiliary">{pageNumVisible ? 'on' : 'off'}</span></button
       >
     </div>
