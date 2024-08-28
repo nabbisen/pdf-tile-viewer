@@ -9,6 +9,7 @@
     setPageNumVisible,
     setPagesPerRow,
   } from '../../stores/pages/documentViewerSettings'
+  import Tooltip from '../../components/Tooltip.svelte'
 
   export let scale: number
   export let numPages: number
@@ -67,29 +68,27 @@
   <div class="page-operations">
     <div class="page-nums">
       <div class="total"><strong>{numPages}</strong></div>
-      <label>
-        <input
-          type="checkbox"
-          class="toggle-page-num"
-          bind:checked={pageNumVisible}
-          on:change={pageNumVisibleOnChange}
-        />
-        🔢 <span class="button auxiliary">{pageNumVisible ? 'on' : 'off'}</span>
-      </label>
-    </div>
-    <div class="scroll-to-page">
-      <h4>Jump</h4>
-      <span>p.</span>
-      <input type="number" bind:value={scrollToPageNum} min="1" max={numPages} step="1" />
-      <button class="auxiliary" on:click={scrollToPage}>Go</button>
+      <Tooltip messages="Number visible" position="left">
+        <label>
+          <input
+            type="checkbox"
+            class="toggle-page-num"
+            bind:checked={pageNumVisible}
+            on:change={pageNumVisibleOnChange}
+          />
+          <h4 aria-label="page-num-visible">🔢</h4>
+          <span class="button auxiliary">{pageNumVisible ? 'On' : 'Off'}</span>
+        </label>
+      </Tooltip>
     </div>
     <div class="pages-per-row">
-      <h4>Pages per row</h4>
-      <span>is: </span>
-      <label>
-        <input type="checkbox" bind:checked={fixPagesPerRow} on:change={fixPagesPerRowOnChange} />
-        <span class="button auxiliary">{fixPagesPerRow ? 'fixed' : 'auto-wrapped'}</span>
-      </label>
+      <Tooltip messages="Pages per row" position="left">
+        <h4 aria-label="pages-per-row">📖</h4>
+        <label>
+          <input type="checkbox" bind:checked={fixPagesPerRow} on:change={fixPagesPerRowOnChange} />
+          <span class="button auxiliary">{fixPagesPerRow ? 'Fixed' : 'Auto-wrapped'}</span>
+        </label>
+      </Tooltip>
       {#if fixPagesPerRow}
         <span>at: </span>
         <input
@@ -101,6 +100,12 @@
           on:change={pagesPerRowOnChange}
         />
       {/if}
+    </div>
+    <div class="scroll-to-page">
+      <h4 aria-label="jump">📃</h4>
+      <span>p.</span>
+      <input type="number" bind:value={scrollToPageNum} min="1" max={numPages} step="1" />
+      <button class="auxiliary" on:click={scrollToPage}>Go</button>
     </div>
   </div>
 </aside>
@@ -124,15 +129,14 @@
   aside h4 {
     padding: 0;
     margin: 0;
+    display: inline-block;
   }
 
   aside .scale-operations,
-  aside .scale-operations > div,
-  aside .page-operations,
-  aside .page-operations > div {
+  aside .page-operations {
     display: flex;
     align-items: center;
-    gap: 1.2rem;
+    gap: 2.7rem;
   }
   aside .scale-operations > div,
   aside .page-operations > div {
@@ -141,6 +145,10 @@
     flex-direction: row;
     align-items: center;
     gap: 0.3rem;
+  }
+  aside .page-operations button,
+  aside .page-operations .button {
+    padding: 0.2rem 0.5rem;
   }
   aside .page-nums .total::after {
     content: ' pages';
