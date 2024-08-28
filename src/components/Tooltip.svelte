@@ -19,8 +19,8 @@
   .tooltip {
     position: absolute;
     padding: 0.44rem;
-    background-color: #ffffffce;
-    color: #636363;
+    background-color: #636363ce;
+    color: #ffffff;
     font-size: 0.63rem;
     text-align: center;
     opacity: 0.2;
@@ -40,24 +40,24 @@
     bottom: 100%;
     left: 50%;
     transform: translateX(-50%);
-    margin-bottom: 5px;
+    margin-bottom: 0.3rem;
   }
   .tooltip.right {
     left: 100%;
     top: 50%;
     transform: translateY(-50%);
-    margin-left: 5px;
+    margin-left: 0.3rem;
   }
   .tooltip.bottom {
     top: 100%;
     left: 50%;
     transform: translateX(-50%);
-    margin-top: 5px;
+    margin-top: 0.3rem;
   }
   .tooltip.left {
     right: 100%;
     top: 50%;
     transform: translateY(-50%);
-    margin-right: 5px;
+    margin-right: 0.3rem;
   }
 </style>
