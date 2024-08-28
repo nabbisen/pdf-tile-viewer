@@ -22,12 +22,16 @@ bin_name=pdf-tile-viewer
 # todo: to mitigate webview failure NO_STRIP is required
 env NO_STRIP=1 npm run tauri build --locked -- --target $target
 
-cd src-tauri/target/$target/release
-
 artifact=$bin_name@$TAG
-mkdir $artifact
 
-cp ../../../../artifacts/$readme $artifact
+build_dist=src-tauri/target/$target/release
+
+mkdir $build_dist/$artifact
+
+cp ".github/workflows/artifact-assets/readme.txt" "$build_dist/$artifact/"
+
+workdir="$(pwd)"
+cd $build_dist
 
 # todo: is not single executable but depends on libpdfium.so now
 mkdir -p $artifact/lib/pdfium
@@ -76,7 +80,7 @@ case $1 in
     ;;
 esac
 
-cd ../..
+cd $workdir
 
 if [[ -z "$GITHUB_ENV" ]]
 then
