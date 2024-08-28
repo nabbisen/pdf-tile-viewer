@@ -1,18 +1,25 @@
 <script lang="ts">
   import { onMount, createEventDispatcher } from 'svelte'
   import { MIN_SCALE, MAX_SCALE, SCALE_UNIT } from './consts'
-  import { getPageNumVisible, setPageNumVisible } from '../../stores/pages/documentViewerSettings'
+  import {
+    loadFixPagesPerRow,
+    loadPageNumVisible,
+    loadPagesPerRow,
+    setFixPagesPerRow,
+    setPageNumVisible,
+    setPagesPerRow,
+  } from '../../stores/pages/documentViewerSettings'
 
   export let scale: number
   export let numPages: number
 
   const dispatch = createEventDispatcher()
 
-  let pageNumVisible: boolean = false
+  let pageNumVisible: boolean
+  let fixPagesPerRow: boolean
+  let pagesPerRow: number
 
   let scrollToPageNum: number | undefined
-  let fixPagesPerRow: boolean
-  let pagesPerRow: number = 5
 
   onMount(loadSettings)
 
@@ -20,26 +27,26 @@
     dispatch('scaleChange', scale)
   }
 
-  function togglePageNumVisible() {
-    pageNumVisible = !pageNumVisible
+  function pageNumVisibleOnChange() {
     setPageNumVisible(pageNumVisible)
+  }
+
+  function fixPagesPerRowOnChange() {
+    setFixPagesPerRow(fixPagesPerRow)
+  }
+
+  function pagesPerRowOnChange() {
+    setPagesPerRow(pagesPerRow)
   }
 
   function scrollToPage() {
     dispatch('scrollToPage', scrollToPageNum)
   }
 
-  function fixPagesPerRowChange() {
-    dispatch('fixPagesPerRowChange', { fixPagesPerRow, pagesPerRow })
-  }
-
   function loadSettings() {
-    getPageNumVisible().then((res) => {
-      if (res === undefined) return
-      const value = res as boolean
-      pageNumVisible = value
-      setPageNumVisible(value)
-    })
+    loadPageNumVisible(false).then((ret) => (pageNumVisible = ret as boolean))
+    loadFixPagesPerRow(false).then((ret) => (fixPagesPerRow = ret as boolean))
+    loadPagesPerRow(5).then((ret) => (pagesPerRow = ret as number))
   }
 </script>
 
@@ -60,9 +67,15 @@
   <div class="page-operations">
     <div class="page-nums">
       <div class="total"><strong>{numPages}</strong></div>
-      <button class="toggle-page-num" on:click={togglePageNumVisible}
-        >🔢 <span class="button auxiliary">{pageNumVisible ? 'on' : 'off'}</span></button
-      >
+      <label>
+        <input
+          type="checkbox"
+          class="toggle-page-num"
+          bind:checked={pageNumVisible}
+          on:change={pageNumVisibleOnChange}
+        />
+        🔢 <span class="button auxiliary">{pageNumVisible ? 'on' : 'off'}</span>
+      </label>
     </div>
     <div class="scroll-to-page">
       <h4>Jump</h4>
@@ -73,16 +86,10 @@
     <div class="pages-per-row">
       <h4>Pages per row</h4>
       <span>is: </span>
-      <button
-        class="auxiliary"
-        on:click={() => {
-          fixPagesPerRow = !fixPagesPerRow
-          fixPagesPerRowChange()
-        }}
-      >
-        {fixPagesPerRow ? 'fixed' : 'auto-determined'}
-      </button>
-      <input type="checkbox" bind:checked={fixPagesPerRow} on:change={fixPagesPerRowChange} />
+      <label>
+        <input type="checkbox" bind:checked={fixPagesPerRow} on:change={fixPagesPerRowOnChange} />
+        <span class="button auxiliary">{fixPagesPerRow ? 'fixed' : 'auto-wrapped'}</span>
+      </label>
       {#if fixPagesPerRow}
         <span>at: </span>
         <input
@@ -91,7 +98,7 @@
           step="1"
           disabled={!fixPagesPerRow}
           bind:value={pagesPerRow}
-          on:change={fixPagesPerRowChange}
+          on:change={pagesPerRowOnChange}
         />
       {/if}
     </div>
@@ -138,7 +145,7 @@
   aside .page-nums .total::after {
     content: ' pages';
   }
-  aside .page-nums button.toggle-page-num,
+  aside .page-nums label,
   aside input[type='number'] {
     font-size: 0.8rem;
   }
@@ -158,7 +165,7 @@
     padding-right: 0.3rem;
   }
 
-  aside .pages-per-row button + input[type='checkbox'] {
+  aside label input[type='checkbox'] {
     display: none;
   }
 </style>

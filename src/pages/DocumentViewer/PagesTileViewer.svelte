@@ -21,7 +21,11 @@
   import PagesTileViewerAside from './PagesTileViewerAside.svelte'
   import Tooltip from '../../components/Tooltip.svelte'
   import { MIN_SCALE, MAX_SCALE, SCALE_UNIT } from './consts'
-  import { subscribePageNumVisible } from '../../stores/pages/documentViewerSettings'
+  import {
+    subscribeFixPagesPerRow,
+    subscribePageNumVisible,
+    subscribePagesPerRow,
+  } from '../../stores/pages/documentViewerSettings'
 
   const DEFAULT_SCALE: number = 1.0
 
@@ -72,6 +76,20 @@
 
   $: {
     subscribePageNumVisible((value) => (pageNumVisible = value))
+  }
+
+  $: {
+    subscribeFixPagesPerRow((value) => {
+      fixPagesPerRow = value
+      if (pdfDocument) updatePageIndexesRows()
+    })
+  }
+
+  $: {
+    subscribePagesPerRow((value) => {
+      pagesPerRow = value
+      if (pdfDocument) updatePageIndexesRows()
+    })
   }
 
   $: {
@@ -157,15 +175,6 @@
 
     if (!pageViewport) return pdfDocument.numPages
     return Math.floor(window.innerWidth / pageViewport.width)
-  }
-
-  function fixPagesPerRowChange(e: CustomEvent<{ fixPagesPerRow: boolean; pagesPerRow: number }>) {
-    const { fixPagesPerRow: _fixPagesPerRow, pagesPerRow: _pagesPerRow } = e.detail
-
-    fixPagesPerRow = _fixPagesPerRow
-    pagesPerRow = _pagesPerRow
-
-    updatePageIndexesRows()
   }
 
   function increaseScale() {
@@ -260,7 +269,6 @@
     numPages={pdfDocument.numPages}
     on:scaleChange={scaleChangeHandler}
     on:scrollToPage={scrollToPage}
-    on:fixPagesPerRowChange={fixPagesPerRowChange}
   />
 {/if}
 
