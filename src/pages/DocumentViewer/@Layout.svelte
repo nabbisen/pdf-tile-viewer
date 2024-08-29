@@ -6,6 +6,7 @@
   import { handleInvokeError } from '../../utils/backend'
   import { returnHome } from '../../utils/route'
   import { subscribeFilepath, setBuffer } from '../../stores/pages/documentViewer'
+  import MouseDragMove from './MouseDragMove.svelte'
 
   let filepath: string | undefined
 
@@ -32,3 +33,5 @@
 
 <Header {filepath} />
 <PagesTileViewer {filepath} />
+
+<MouseDragMove />

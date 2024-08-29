@@ -29,6 +29,9 @@
 <div class={`placeholder ${0 < loadedHistory.length ? 'shrink' : ''}`}>
   <h2>Drop PDF file</h2>
   <button on:click={fileSelect}>Choose file</button>
+  <p>
+    Mouse drag move is available with <strong>Ctrl key + mouse click</strong> after file opened.
+  </p>
 </div>
 
 <style>
