@@ -2,13 +2,13 @@ use serde_json::Value;
 use tauri::{AppHandle, Manager, PhysicalPosition, PhysicalSize, Position, Size};
 
 mod utils;
+use utils::app_window::{window_default_title, window_width_height};
 use utils::file::run_file_manager;
 use utils::pdf::{read, search, SearchResult};
-use utils::tauri::window_default_title;
 use utils::user_settings::{KeyValue, UserSettings};
 
 const WIDTH_RESOLUTION_RATIO: f32 = 0.80;
-const HEIGHT_RESOLUTION_RATIO: f32 = 0.87;
+const HEIGHT_RESOLUTION_RATIO: f32 = 0.84;
 
 #[tauri::command]
 fn pdf_read(filepath: &str) -> Result<Vec<u8>, String> {
@@ -63,14 +63,32 @@ pub fn run() {
             match window.current_monitor() {
                 Ok(Some(current_monitor)) => {
                     let resolution = current_monitor.size();
-                    let width = (resolution.width as f32 * WIDTH_RESOLUTION_RATIO).round() as u32;
-                    let height =
-                        (resolution.height as f32 * HEIGHT_RESOLUTION_RATIO).round() as u32;
+
+                    let width = if let Some(x) = window_width_height("windowWidth") {
+                        if resolution.width < x {
+                            resolution.width
+                        } else {
+                            x
+                        }
+                    } else {
+                        (resolution.width as f32 * WIDTH_RESOLUTION_RATIO).round() as u32
+                    };
+                    let height = if let Some(x) = window_width_height("windowHeight") {
+                        if resolution.height < x {
+                            resolution.height
+                        } else {
+                            x
+                        }
+                    } else {
+                        (resolution.height as f32 * HEIGHT_RESOLUTION_RATIO).round() as u32
+                    };
+
                     let size = Size::Physical(PhysicalSize { width, height });
                     let position = Position::Physical(PhysicalPosition {
                         x: ((resolution.width - width) / 2) as i32,
                         y: ((resolution.height - height) / 2) as i32,
                     });
+
                     window.set_size(size).unwrap();
                     window.set_position(position).unwrap();
                 }
