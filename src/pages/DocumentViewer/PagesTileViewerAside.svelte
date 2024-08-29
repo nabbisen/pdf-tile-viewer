@@ -170,7 +170,7 @@
   }
 
   aside .scale input[type='range'] {
-    width: 5.7rem;
+    width: 16.3rem;
     margin: 0 0.6rem;
   }
 
