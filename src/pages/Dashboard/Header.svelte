@@ -21,10 +21,9 @@
     <h1><span>PDF</span> <span>Tile</span> <span>Viewer</span></h1>
   </div>
   <div class="share-this-app">
-    <Tooltip messages="App info is copied to clipboard" position="right">
+    <Tooltip messages="App info to clipboard" position="right">
       <button on:click={shareThisAppOnClick}>
-        <div>Share</div>
-        <span>this app</span>
+        <span></span>
       </button>
     </Tooltip>
   </div>
@@ -89,27 +88,49 @@
   }
 
   .share-this-app {
-    margin-left: 1.5rem;
+    margin-left: 1.1rem;
     margin-top: 0.3rem;
   }
   .share-this-app button {
     display: flex;
     flex-direction: column;
-    align-items: center;
-  }
-  .share-this-app button div {
-    width: 2.2rem;
-    height: 2.2rem;
-    background-color: hsl(185, 63%, 93%);
-    color: hsl(185, 87%, 33%);
-    border-radius: 50%;
-    font-size: 0.7rem;
-    display: flex;
     justify-content: center;
     align-items: center;
   }
   .share-this-app button span {
+    height: 1.2rem;
+    width: 1.2rem;
+    margin: auto;
+    display: flex;
+    flex-direction: column;
+    background-color: #0b919d;
+    border-radius: 50%;
+  }
+  .share-this-app button:hover span {
+    height: auto;
+    width: auto;
+    background-color: transparent;
+  }
+  .share-this-app button span::before {
+    content: '';
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #e2f7f8;
+    color: #0b919d;
+    border-radius: 50%;
+    font-size: 0.7rem;
+  }
+  .share-this-app button:hover span::before {
+    content: 'Share';
+    height: 2.4rem;
+    width: 2.4rem;
+  }
+  .share-this-app button span::after {
     color: #878787;
     font-size: 0.57rem;
+  }
+  .share-this-app button:hover span::after {
+    content: 'this app';
   }
 </style>
