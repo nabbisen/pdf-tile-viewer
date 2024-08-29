@@ -22,5 +22,5 @@ The Latest executables on multiple platforms are in [Releases](https://github.co
 - 🔍 Page zoom view | ページのズーム表示
 - 🗺 Text search | テキスト検索
 - 🍵 Zen mode | 禅モード
-- 🗄 Preserve some settings | 一部設定の保存 (アプリ再起動後も有効)
-- 🚪 Files history with links to open again (Kept only while app running) | 再表示用リンク付きファイル履歴 (アプリ実行中のみ有効)
+- 🗄 Preserve some settings (even when app's quitted) | 一部設定の保存 (アプリ再起動後も有効)
+- 🚪 Files history with links to open again (Kept only while app's running) | 再表示用リンク付きファイル履歴 (アプリ実行中のみ有効)
