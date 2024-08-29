@@ -14,24 +14,23 @@ pub struct KeyValue {
 
 #[derive(Serialize, Deserialize)]
 pub struct UserSettings {
-    pages_tile_viewer: PagesTileViewer,
-    zoomed_page_viewer: ZoomedPageViewer,
+    // pages_tile_viewer: PagesTileViewer,
+    // zoomed_page_viewer: ZoomedPageViewer,
 }
 
-#[derive(Serialize, Deserialize)]
-struct PagesTileViewer {
-    scale: f32,
-    page_num_visible: bool,
-    fix_pages_per_row: bool,
-    pages_per_row: u16,
-}
+// #[derive(Serialize, Deserialize)]
+// struct PagesTileViewer {
+//     scale: f32,
+//     page_num_visible: bool,
+//     fix_pages_per_row: bool,
+//     pages_per_row: u16,
+// }
 
-#[derive(Serialize, Deserialize)]
-struct ZoomedPageViewer {
-    zoom_view_background_locked: bool,
-    zoom_view_scale: f32,
-    zoom_view_transparency: f32,
-}
+// #[derive(Serialize, Deserialize)]
+// struct ZoomedPageViewer {
+//     zoom_view_background_locked: bool,
+//     zoom_view_scale: f32,
+// }
 
 impl UserSettings {
     pub fn read_by_key(key: &str) -> Result<KeyValue, Box<dyn std::error::Error>> {
