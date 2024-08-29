@@ -18,6 +18,7 @@ The Latest executables on multiple platforms are in [Releases](https://github.co
 ## Features
 
 - 🟨 Tile layout view on PDF pages | PDF ページのタイルレイアウト表示
+- ✊ Mouse drag move with Ctrl key pushed | Ctrl キーを押しながらマウスドラッグして移動
 - 🔧 Scale / pages-per-row changers | 倍率 / 行あたりページ が変更可能
 - 🔍 Page zoom view | ページのズーム表示
 - 🗺 Text search | テキスト検索
