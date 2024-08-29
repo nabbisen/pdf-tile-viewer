@@ -7,7 +7,7 @@ use std::path::PathBuf;
 #[derive(Serialize, Deserialize)]
 pub struct KeyValue {
     key: Option<String>,
-    value: Option<Value>,
+    pub value: Option<Value>,
     file_exists: bool,
     key_exists: bool,
 }
