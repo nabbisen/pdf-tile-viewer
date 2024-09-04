@@ -63,8 +63,9 @@ case $1 in
       security create-keychain -p "password" build.keychain
       security default-keychain -s build.keychain
       security unlock-keychain -p "password" build.keychain
-      security import certificate.p12 -k build.keychain -P "$APPLE_CERTIFICATE_PASSWORD" -A
-      codesign --deep --force --verify --sign "$APPLE_CERTIFICATE_NAME" $artifact/$bin_name
+      security import certificate.p12 -k build.keychain -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+      security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "password" ci.keychain
+      codesign --deep --verify --sign "$APPLE_CERTIFICATE_NAME" $artifact/$bin_name
       security delete-keychain build.keychain
       rm certificate.p12
     fi
