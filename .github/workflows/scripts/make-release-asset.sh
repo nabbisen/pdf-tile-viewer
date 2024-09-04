@@ -60,10 +60,10 @@ case $1 in
 
     if [[ -n "${{ $APPLE_CERTIFICATE }}" ]]; then
       echo "$APPLE_CERTIFICATE" | base64 --decode > certificate.p12
-      security create-keychain build.keychain
+      security create-keychain -p "password" build.keychain
       security default-keychain -s build.keychain
-      security unlock-keychain build.keychain
-      security import certificate.p12 -k build.keychain -P $APPLE_CERTIFICATE_PASSWORD -A
+      security unlock-keychain -p "password" build.keychain
+      security import certificate.p12 -k build.keychain -P "$APPLE_CERTIFICATE_PASSWORD" -A
       codesign --deep --force --verify --sign "$APPLE_CERTIFICATE_NAME" $artifact/$bin_name
       security delete-keychain build.keychain
       rm certificate.p12
