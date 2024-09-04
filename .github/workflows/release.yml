@@ -72,6 +72,7 @@ jobs:
         env:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_CERTIFICATE_IDENTIFIER: nabbisen, Scqr Inc.
         run: bash .github/workflows/scripts/make-release-asset.sh ${{ matrix.os }} ${{ matrix.target }} ${{ matrix.tag }}
       - name: Build asset
         if: matrix.target != 'aarch64-apple-darwin'
