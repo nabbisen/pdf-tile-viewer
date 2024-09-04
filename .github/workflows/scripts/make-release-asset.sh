@@ -59,11 +59,11 @@ case $1 in
     cp -r libpdfium/lib $artifact/lib/pdfium/
 
     if [[ -n "${{ $APPLE_CERTIFICATE }}" ]]; then
-      echo "$APPLE_CERTIFICATE" | base64 --decode > certificate.p12
+      echo $APPLE_CERTIFICATE | base64 --decode > certificate.p12
       security create-keychain -p "password" build.keychain
       security default-keychain -s build.keychain
       security unlock-keychain -p "password" build.keychain
-      security import certificate.p12 -k build.keychain -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+      security import certificate.p12 -f pkcs12 -k build.keychain -P $APPLE_CERTIFICATE_PASSWORD -T /usr/bin/codesign
       security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "password" ci.keychain
       codesign --deep --verify --sign "$APPLE_CERTIFICATE_NAME" $artifact/$bin_name
       security delete-keychain build.keychain
