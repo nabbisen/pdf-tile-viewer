@@ -66,8 +66,18 @@ jobs:
             librsvg2-dev
       - name: Install Rust
         run: bash .github/workflows/scripts/install-rust.sh stable ${{ matrix.target }}
+
       - name: Build asset
+        if: matrix.target == 'aarch64-apple-darwin'
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_CERTIFICATE_NAME: ${{ secrets.APPLE_CERTIFICATE_NAME }}
         run: bash .github/workflows/scripts/make-release-asset.sh ${{ matrix.os }} ${{ matrix.target }} ${{ matrix.tag }}
+      - name: Build asset
+        if: matrix.target != 'aarch64-apple-darwin'
+        run: bash .github/workflows/scripts/make-release-asset.sh ${{ matrix.os }} ${{ matrix.target }} ${{ matrix.tag }}
+
       - name: Update release with new asset
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

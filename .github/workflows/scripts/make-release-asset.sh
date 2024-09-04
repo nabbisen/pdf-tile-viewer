@@ -58,8 +58,19 @@ case $1 in
     tar xzf pdfium-mac-arm64.tgz -C libpdfium
     cp -r libpdfium/lib $artifact/lib/pdfium/
 
-    asset="$bin_name@$os_tag.tar.gz"
-    tar czf ../../$asset $artifact
+    if [[ -n "${{ $APPLE_CERTIFICATE }}" ]]; then
+      echo "$APPLE_CERTIFICATE" | base64 --decode > certificate.p12
+      security import certificate.p12 -k ~/Library/Keychains/login.keychain -P "$APPLE_CERTIFICATE_PASSWORD" -A
+      codesign --deep --force --verify --sign "$APPLE_CERTIFICATE_NAME" $artifact/$bin_name
+      rm certificate.p12
+    fi
+
+    asset="$bin_name@$os_tag.dmg"
+    hdiutil create -volname "$bin_name" \
+            -srcfolder $artifact \
+            -ov \
+            -format UDZO \
+            $asset
     ;;
   windows*)
     cp $bin_name.exe $artifact/
