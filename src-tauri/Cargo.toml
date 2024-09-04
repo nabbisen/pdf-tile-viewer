@@ -1,6 +1,6 @@
 [package]
 name = "pdf-tile-viewer"
-version = "1.0.2"
+version = "1.1.1"
 description = "PDF Tile Viewer - app bundle and backend developed as Tauri app supporting cross-platform"
 authors = ["nabbisen"]
 edition = "2021"
