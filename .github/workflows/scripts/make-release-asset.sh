@@ -2,8 +2,7 @@
 # Builds the release and creates an archive and optionally deploys to GitHub.
 set -ex
 
-if [[ -z "$GITHUB_REF" ]]
-then
+if [[ -z "$GITHUB_REF" ]]; then
   echo "GITHUB_REF must be set"
   exit 1
 fi
@@ -12,8 +11,7 @@ TAG=${GITHUB_REF#*/tags/}
 
 host=$(rustc -Vv | grep ^host: | sed -e "s/host: //g")
 target=$2
-if [ "$host" != "$target" ]
-then
+if [ "$host" != "$target" ]; then
   export "CARGO_TARGET_$(echo $target | tr a-z- A-Z_)_LINKER"=rust-lld
 fi
 export CARGO_PROFILE_RELEASE_LTO=true
@@ -58,13 +56,14 @@ case $1 in
     tar xzf pdfium-mac-arm64.tgz -C libpdfium
     cp -r libpdfium/lib $artifact/lib/pdfium/
 
-    if [[ -n "${{ $APPLE_CERTIFICATE }}" ]]; then
+    if [ -n "$APPLE_CERTIFICATE" ]; then
       echo $APPLE_CERTIFICATE | base64 --decode > certificate.p12
       security create-keychain -p "password" build.keychain
       security default-keychain -s build.keychain
       security unlock-keychain -p "password" build.keychain
       security import certificate.p12 -f pkcs12 -k build.keychain -P $APPLE_CERTIFICATE_PASSWORD -T /usr/bin/codesign
       security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "password" build.keychain
+      APPLE_CERTIFICATE_NAME=$(security find-identity -v -p codesigning | grep "Developer ID Application" | awk -F'"' '{print $2}')
       codesign --deep --force --verify --sign "$APPLE_CERTIFICATE_NAME" $artifact/$bin_name
       security delete-keychain build.keychain
       rm certificate.p12
@@ -98,8 +97,7 @@ esac
 
 cd $workdir
 
-if [[ -z "$GITHUB_ENV" ]]
-then
+if [[ -z "$GITHUB_ENV" ]]; then
   echo "GITHUB_ENV not set, run: gh release upload $TAG src-tauri/target/$asset"
 else
   echo "APP_TAG=$TAG" >> $GITHUB_ENV
