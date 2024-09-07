@@ -75,6 +75,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b3d1d046238990b9cf5bcde22a3fb3584ee5cf65fb2765f454ed428c7a0063da"
 
 [[package]]
+name = "app-json-settings"
+version = "1.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "90f3c35ccd8219c453fffc88398f97f34d5dc231e1d4fe9944cee549a9ce66e0"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "arbitrary"
 version = "1.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2816,6 +2826,7 @@ checksum = "8835116a5c179084a830efb3adc117ab007512b535bc1a21c991d3b32a6b44dd"
 name = "pdf-tile-viewer"
 version = "1.1.1"
 dependencies = [
+ "app-json-settings",
  "pdfium-render",
  "serde",
  "serde_json",

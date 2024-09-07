@@ -1,8 +1,8 @@
-use crate::utils::user_settings::UserSettings;
+use app_json_settings::JsonSettings;
 use tauri::AppHandle;
 
 pub fn window_width_height(key: &str) -> Option<u32> {
-    let read = if let Ok(x) = UserSettings::read_by_key(key) {
+    let read = if let Ok(x) = JsonSettings::exe_dir().read_by_key(key) {
         x
     } else {
         return None;

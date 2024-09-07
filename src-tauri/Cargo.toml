@@ -1,15 +1,15 @@
 [package]
 name = "pdf-tile-viewer"
 version = "1.1.1"
+edition = "2021"
+
 description = "PDF Tile Viewer - app bundle and backend developed as Tauri app supporting cross-platform"
 authors = ["nabbisen"]
-edition = "2021"
+license-file = "../LICENSE"
 
 categories = ["gui", "visualization", "value-formatting", "text-processing"]
 keywords = ["pdf", "gui", "text", "graphics"]
 rust-version = "1.78.0"
-
-license-file = "../LICENSE"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -27,3 +27,4 @@ tauri-plugin-dialog = "2.0.0-rc"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 pdfium-render = "0.8.24"
+app-json-settings = "1"

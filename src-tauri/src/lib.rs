@@ -1,3 +1,4 @@
+use app_json_settings::{JsonSettings, KeyValue};
 use serde_json::Value;
 use tauri::{AppHandle, Manager, PhysicalPosition, PhysicalSize, Position, Size};
 
@@ -5,7 +6,6 @@ mod utils;
 use utils::app_window::{window_default_title, window_width_height};
 use utils::file::run_file_manager;
 use utils::pdf::{read, search, SearchResult};
-use utils::user_settings::{KeyValue, UserSettings};
 
 const WIDTH_RESOLUTION_RATIO: f32 = 0.80;
 const HEIGHT_RESOLUTION_RATIO: f32 = 0.84;
@@ -45,12 +45,16 @@ fn window_title_reset(app: AppHandle, window: tauri::Window) -> Result<(), Strin
 
 #[tauri::command]
 fn settings_read_by_key(key: &str) -> Result<KeyValue, String> {
-    UserSettings::read_by_key(key).map_err(|err| err.to_string())
+    JsonSettings::exe_dir()
+        .read_by_key(key)
+        .map_err(|err| err.to_string())
 }
 
 #[tauri::command]
 fn settings_write_by_key(key: &str, value: Value) -> Result<(), String> {
-    UserSettings::write_by_key(key, &value).map_err(|err| err.to_string())
+    JsonSettings::exe_dir()
+        .write_by_key(key, &value)
+        .map_err(|err| err.to_string())
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
