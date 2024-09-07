@@ -1,6 +1,6 @@
 {
   "name": "pdf-tile-viewer",
-  "version": "1.0.2",
+  "version": "1.1.1",
   "description": "PDF Tile Viewer - frontend",
   "type": "module",
   "scripts": {
@@ -16,20 +16,20 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@tauri-apps/api": "^2.0.0-rc.4",
-    "@tauri-apps/plugin-dialog": "^2.0.0-rc.0",
-    "@tauri-apps/plugin-shell": "^2.0.0-rc.0",
-    "pdfjs-dist": "^4.5.136"
+    "@tauri-apps/plugin-dialog": "^2.0.0-rc.1",
+    "@tauri-apps/plugin-shell": "^2.0.0-rc.1",
+    "pdfjs-dist": "^4.6.82"
   },
   "devDependencies": {
     "@sveltejs/adapter-static": "^3.0.4",
-    "@sveltejs/kit": "^2.5.25",
+    "@sveltejs/kit": "^2.5.26",
     "@sveltejs/vite-plugin-svelte": "^3.1.2",
-    "@tauri-apps/cli": "^2.0.0-rc.8",
+    "@tauri-apps/cli": "^2.0.0-rc.12",
     "prettier": "^3.3.3",
     "svelte": "^4.2.19",
     "svelte-check": "^3.8.6",
     "tslib": "^2.7.0",
     "typescript": "^5.5.4",
-    "vite": "^5.4.2"
+    "vite": "^5.4.3"
   }
 }
