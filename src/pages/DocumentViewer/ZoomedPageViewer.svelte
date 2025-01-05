@@ -190,12 +190,12 @@
     cursor: pointer;
   }
 
-  nav .zoom-view nav input[type='range'] {
+  nav input[type='range'] {
     width: 5.7em;
     text-align: right;
   }
 
-  nav .zoom-view nav button.close {
+  nav button.close {
     background-color: #ffffff;
     color: #252525;
   }
