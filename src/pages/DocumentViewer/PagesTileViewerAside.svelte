@@ -179,7 +179,7 @@
     color: #444444;
     text-align: right;
   }
-  aside .toggle-page-num span {
+  aside .toggle-page-num ~ span {
     padding-left: 0.3rem;
     padding-right: 0.3rem;
   }

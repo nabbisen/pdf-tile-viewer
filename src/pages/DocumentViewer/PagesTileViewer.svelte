@@ -364,7 +364,7 @@
   .tile .page nav button.zoom::before {
     content: '🔍';
   }
-  .tile .page:not(:hover) nav .page-num.visible ~ * button.zoom::before {
+  .tile .page:not(:hover) nav .page-num.visible ~ :global(* button.zoom::before) {
     content: '';
   }
 </style>
