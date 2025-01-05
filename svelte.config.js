@@ -9,11 +9,6 @@ const config = {
   preprocess: vitePreprocess(),
   kit: {
     adapter: adapter(),
-    // todo: add prerender.entries temporarily
-    //       should route parameter `filepath` be as either path parameter, store or query parameter (ssr required...) ?
-    prerender: {
-      entries: ['/dashboard'],
-    },
   },
 };
 
