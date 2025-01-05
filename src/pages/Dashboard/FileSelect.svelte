@@ -11,18 +11,18 @@
   }
 
   async function fileSelect() {
-    const fileResponse = await open({
-      multiple: false, // todo
+    const selected = await open({
+      multiple: false, // todo multiple selection support
       directory: false,
       filters: [
         { name: 'PDF', extensions: ['pdf'] },
         { name: 'All files', extensions: ['*'] },
       ],
     })
-    if (fileResponse) {
-      const filepath = fileResponse.path
-      openDocumentViewer(filepath)
-    }
+    // canceled
+    if (selected === null) return
+    // todo: multiple selection support: if (Array.isArray(selected)) { } else { }
+    openDocumentViewer(selected)
   }
 </script>
 

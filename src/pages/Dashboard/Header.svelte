@@ -22,7 +22,7 @@
   </div>
   <div class="share-this-app">
     <Tooltip messages="App info to clipboard" position="right">
-      <button on:click={shareThisAppOnClick}>
+      <button on:click={shareThisAppOnClick} aria-label="share-this-app">
         <span></span>
       </button>
     </Tooltip>
