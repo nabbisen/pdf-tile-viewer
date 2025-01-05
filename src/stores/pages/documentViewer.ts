@@ -1,5 +1,6 @@
-import { writable } from 'svelte/store'
+import { get, writable } from 'svelte/store'
 
+let filepath = writable<string | undefined>()
 let buffer = writable<ArrayBuffer | undefined>()
 let matchedPageIndexes = writable<number[]>([])
 let confirmedSearchTerm = writable<string | undefined>()
@@ -13,6 +14,14 @@ const { subscribe: subscribeConfirmedSearchTerm } = confirmedSearchTerm
 const { subscribe: subscribeDisplayMatchedPages } = displayMatchedPages
 const { subscribe: subscribeZoomedPageIndex } = zoomedPageIndex
 const { subscribe: subscribeZenMode } = zenMode
+
+const setFilepath = (value: string) => {
+  filepath.set(value)
+}
+
+const getFilepath = (): string | undefined => {
+  return get(filepath)
+}
 
 const setBuffer = (value: ArrayBuffer) => {
   buffer.set(value)
@@ -52,6 +61,8 @@ const reload = (currentFilepath: string) => {
 }
 
 export {
+  setFilepath,
+  getFilepath,
   subscribeBuffer,
   setBuffer,
   subscribeMatchedPageIndexes,
