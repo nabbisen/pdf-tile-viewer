@@ -1,25 +1,21 @@
 <script lang="ts">
+  import { onMount } from 'svelte'
   import 'pdfjs-dist/web/pdf_viewer.css'
+
   import Header from './Header.svelte'
   import PagesTileViewer from './PagesTileViewer.svelte'
   import { getDocumentBuffer } from '../../utils/pdf'
   import { handleInvokeError } from '../../utils/backend'
   import { returnHome } from '../../utils/route'
-  import { subscribeFilepath, setBuffer } from '../../stores/pages/documentViewer'
+  import { setBuffer } from '../../stores/pages/documentViewer'
   import MouseDragMove from './MouseDragMove.svelte'
 
-  let filepath: string | undefined
+  export let filepath: string
 
-  $: {
-    subscribeFilepath((value) => (filepath = value))
-  }
-
-  $: {
-    if (filepath) load()
-  }
+  onMount(load)
 
   function load() {
-    getDocumentBuffer(filepath!)
+    getDocumentBuffer(filepath)
       .then((res) => {
         const buffer = new Uint8Array(res).buffer as ArrayBuffer
         setBuffer(buffer)

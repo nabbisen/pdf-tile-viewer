@@ -1,13 +1,11 @@
 import { goto } from '$app/navigation'
-import { setFilepath } from '../stores/pages/documentViewer'
 
 const returnHome = () => {
   goto('/dashboard')
 }
 
 const openDocumentViewer = (filepath: string) => {
-  setFilepath(filepath)
-  goto('/document-viewer')
+  goto(`/document-viewer/${encodeURIComponent(filepath)}`)
 }
 
 export { returnHome, openDocumentViewer }
