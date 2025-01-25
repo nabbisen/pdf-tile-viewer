@@ -9,6 +9,8 @@ defaults:
 
 permissions:
   contents: write
+env:
+  PRODUCT_BASENAME: pdf-tile-viewer
 
 jobs:
   release:
@@ -47,7 +49,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
       - name: Install Node.js packages
         run: npm install
       - name: Install tauri requirements on Linux
@@ -67,7 +69,7 @@ jobs:
       - name: Install Rust
         run: bash .github/workflows/scripts/install-rust.sh stable ${{ matrix.target }}
       - name: Build asset
-        run: bash .github/workflows/scripts/make-release-asset.sh ${{ matrix.os }} ${{ matrix.target }} ${{ matrix.tag }}
+        run: bash .github/workflows/scripts/make-release-asset.sh ${{ matrix.os }} ${{ matrix.target }} ${{ matrix.tag }} $PRODUCT_BASENAME
       - name: Update release with new asset
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

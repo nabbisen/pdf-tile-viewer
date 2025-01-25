@@ -17,8 +17,7 @@ then
   export "CARGO_TARGET_$(echo $target | tr a-z- A-Z_)_LINKER"=rust-lld
 fi
 export CARGO_PROFILE_RELEASE_LTO=true
-
-bin_name=pdf-tile-viewer
+bin_name=$4
 # todo: to mitigate webview failure NO_STRIP is required
 env NO_STRIP=1 npm run tauri build --locked -- --target $target
 
