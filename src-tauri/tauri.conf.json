@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "pdf-tile-viewer",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "identifier": "com.pdf-tile-viewer.app",
   "build": {
     "beforeDevCommand": "bun run dev || npm run dev",
@@ -13,8 +13,8 @@
     "windows": [
       {
         "title": "PDF Tile Viewer",
-        "width": 0,
-        "height": 0
+        "width": 1000,
+        "height": 750
       }
     ],
     "security": {
