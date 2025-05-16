@@ -17,6 +17,14 @@ The Latest executables on multiple platforms are in [Releases](https://github.co
 
 ## Features
 
+![manga-intro](docs/.docs-assets/manga-intro.png)
+
+**Woman:** Hmm...  
+**Shark:** What's up?  
+**Woman:** PDFs are document files, so they always end up long and vertical... I just want to see the whole thing at a glance.  
+**Shark:** In that case—try this out!!  
+**Woman:** Oh, what’s this?
+
 - 🟨 Tile layout view on PDF pages | PDF ページのタイルレイアウト表示
 - ✊ Mouse drag move with Ctrl key pushed | Ctrl キーを押しながらマウスドラッグして移動
 - 🔧 Scale / pages-per-row changers | 倍率 / 行あたりページ が変更可能
