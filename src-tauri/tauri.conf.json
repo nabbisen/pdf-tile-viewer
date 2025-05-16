@@ -1,6 +1,6 @@
 {
   "productName": "pdf-tile-viewer",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "identifier": "com.pdf-tile-viewer.app",
   "build": {
     "beforeDevCommand": "bun run dev || npm run dev",

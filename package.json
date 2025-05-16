@@ -1,6 +1,6 @@
 {
   "name": "pdf-tile-viewer",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "PDF Tile Viewer - frontend",
   "type": "module",
   "scripts": {
@@ -11,8 +11,12 @@
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "tauri": "tauri"
   },
-  "author": { "name": "nabbisen" },
-  "contributors": ["nabbisen"],
+  "author": {
+    "name": "nabbisen"
+  },
+  "contributors": [
+    "nabbisen"
+  ],
   "license": "Apache-2.0",
   "dependencies": {
     "@tauri-apps/api": "^2.0.0-rc.4",
