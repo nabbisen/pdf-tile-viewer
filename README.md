@@ -15,6 +15,16 @@ The Latest executables on multiple platforms are in [Releases](https://github.co
 
 [Releases](https://github.com/nabbisen/pdf-tile-viewer/releases) ページ内に最新の実行ファイルがあります。インストールは不要です。実行ファイルを起動するだけで使えます。
 
+### Note: This app is not code-signed. | アプリにはコード署名がありません。
+
+Your OS (Windows / macOS) may show a security warning.
+If you trust this app, you can follow OS-specific steps to allow it.    
+Sorry for inconvenience, but we are volunteers and the certificates are expensive.
+
+お使いの OS (Windows / macOS) によっては、セキュリティ警告が表示される場合があります。
+このアプリを信頼できる場合は、OS 固有の手順に従って許可してください。    
+不便であり恐縮ですが、私たちはボランティアであり、証明書は高額なのです。
+
 ## Features
 
 ![manga-intro](docs/.docs-assets/manga-intro.png)
@@ -24,6 +34,8 @@ The Latest executables on multiple platforms are in [Releases](https://github.co
 **Woman:** PDFs are document files, so they always end up long and vertical... I just want to see the whole thing at a glance.  
 **Shark:** In that case—try this out!!  
 **Woman:** Oh, what’s this?
+
+_(manga by m. thanks)_
 
 - 🟨 Tile layout view on PDF pages | PDF ページのタイルレイアウト表示
 - ✊ Mouse drag move with Ctrl key pushed | Ctrl キーを押しながらマウスドラッグして移動
