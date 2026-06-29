@@ -72,6 +72,12 @@ pub enum MessageKey {
     ErrRenderFailed,
     DropZoneHint,
     RevealInFileManager,
+    SearchButton,
+    SearchClear,
+    SearchPlaceholder,
+    SearchSummaryMatches, // "{n} matches on {p} pages"
+    SearchNoMatches,
+    Searching,
     ZenModeEnter,
     ZenModeExit,
 }
@@ -106,6 +112,12 @@ impl MessageKey {
         MessageKey::ErrMultipleFilesDropped,
         MessageKey::DropZoneHint,
         MessageKey::RevealInFileManager,
+        MessageKey::SearchButton,
+        MessageKey::SearchClear,
+        MessageKey::SearchPlaceholder,
+        MessageKey::SearchSummaryMatches,
+        MessageKey::SearchNoMatches,
+        MessageKey::Searching,
         MessageKey::ZenModeEnter,
         MessageKey::ZenModeExit,
     ];

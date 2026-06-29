@@ -232,3 +232,52 @@ pub fn scroll_target_for_page(layout: &TileLayout, page: PageIndex) -> Option<f3
         .find(|t| t.page_index == page)
         .map(|t| t.y_px)
 }
+
+// ── RFC 011: Coordinate transforms ───────────────────────────────────────────
+
+use crate::search::{PageCoordinateSpace, PageRect};
+
+/// Transform a page-space rect to rendered-image-space pixels (RFC 011 §7).
+///
+/// `page` gives the logical page dimensions (PDF points).
+/// `rendered_w/h` give the actual bitmap dimensions in pixels.
+/// The output rect is in image-space (origin top-left, y down).
+pub fn page_rect_to_image_rect(
+    page: &PageDescriptor,
+    rect: PageRect,
+    rendered_width_px: u32,
+    rendered_height_px: u32,
+) -> RectPx {
+    // Work in effective (rotation-aware) page dimensions for scale factors.
+    let rot = page.rotation_degrees.rem_euclid(360);
+    let (page_w, page_h) = if rot == 90 || rot == 270 {
+        (page.height_points, page.width_points)
+    } else {
+        (page.width_points, page.height_points)
+    };
+
+    // Normalise to top-left space first.
+    let tl = rect.to_top_left(page_h);
+    debug_assert_eq!(tl.space, PageCoordinateSpace::NormalizedTopLeft);
+
+    let scale_x = rendered_width_px as f32 / page_w;
+    let scale_y = rendered_height_px as f32 / page_h;
+
+    RectPx {
+        x: tl.x * scale_x,
+        y: tl.y * scale_y,
+        width: tl.width * scale_x,
+        height: tl.height * scale_y,
+    }
+}
+
+/// Translate an image-space rect to viewport (tile-grid) coordinates
+/// by adding the tile's image origin offset (RFC 011 §7).
+pub fn image_rect_to_tile_rect(image_rect: RectPx, tile: &PageTileLayout) -> RectPx {
+    RectPx {
+        x: tile.image_rect_px.x + image_rect.x,
+        y: tile.image_rect_px.y + image_rect.y,
+        width: image_rect.width,
+        height: image_rect.height,
+    }
+}

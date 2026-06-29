@@ -35,6 +35,12 @@ pub fn message(key: MessageKey) -> Option<&'static str> {
         MessageKey::ErrMultipleFilesDropped => "一度に開けるのは 1 つの PDF のみです。",
         MessageKey::DropZoneHint => "PDF をここにドロップするか「PDF を開く…」をクリック",
         MessageKey::RevealInFileManager => "ファイルマネージャーで表示",
+        MessageKey::SearchButton => "検索",
+        MessageKey::SearchClear => "クリア",
+        MessageKey::SearchPlaceholder => "テキストを検索…",
+        MessageKey::SearchSummaryMatches => "件一致",
+        MessageKey::SearchNoMatches => "一致するテキストが見つかりません。",
+        MessageKey::Searching => "検索中…",
         MessageKey::ZenModeEnter => "禅",
         MessageKey::ZenModeExit => "禅モードを終了 (Esc)",
     })

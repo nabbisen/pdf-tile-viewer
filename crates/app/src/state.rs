@@ -64,3 +64,23 @@ pub enum Phase {
     Opening,
     Viewer(OpenDocumentView),
 }
+
+// ── Search state (RFC 010/011) ────────────────────────────────────────────────
+
+use domain::search::{SearchHighlightSet, SearchQuery, SearchResultSet};
+
+/// Top-level search lifecycle (RFC 010 §8).
+#[derive(Clone, Debug, Default)]
+pub enum SearchState {
+    #[default]
+    Idle,
+    Searching,
+    Results {
+        results: SearchResultSet,
+        highlights: SearchHighlightSet,
+    },
+    NoResults {
+        query: SearchQuery,
+    },
+    Failed(String),
+}

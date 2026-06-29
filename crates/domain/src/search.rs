@@ -87,3 +87,67 @@ pub fn format_matched_pages(pages: &[PageIndex]) -> String {
     }
     parts.join(", ")
 }
+
+// ── RFC 011: Highlight coordinates ───────────────────────────────────────────
+
+/// Coordinate space used by a [`PageRect`].
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum PageCoordinateSpace {
+    /// PDF native: origin bottom-left, y increases upward (PDFium default).
+    PdfPointsBottomLeft,
+    /// Normalized: origin top-left, y increases downward (image-aligned).
+    NormalizedTopLeft,
+}
+
+/// A rectangle in page-local coordinates (RFC 011 §5).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct PageRect {
+    pub x: f32,
+    pub y: f32,
+    pub width: f32,
+    pub height: f32,
+    pub space: PageCoordinateSpace,
+}
+
+impl PageRect {
+    /// Convert from PDF bottom-left space to normalized top-left space.
+    /// `page_height_points` is the page's logical height in PDF points.
+    pub fn to_top_left(self, page_height_points: f32) -> Self {
+        match self.space {
+            PageCoordinateSpace::NormalizedTopLeft => self,
+            PageCoordinateSpace::PdfPointsBottomLeft => PageRect {
+                x: self.x,
+                y: page_height_points - (self.y + self.height),
+                width: self.width,
+                height: self.height,
+                space: PageCoordinateSpace::NormalizedTopLeft,
+            },
+        }
+    }
+}
+
+/// All highlight rectangles for one search match (may span multiple lines).
+#[derive(Clone, Debug, PartialEq)]
+pub struct TextHighlight {
+    pub match_index: usize,
+    pub page_rects: Vec<PageRect>,
+}
+
+/// Highlight rectangles for a single page.
+#[derive(Clone, Debug, PartialEq)]
+pub struct PageHighlightSet {
+    pub page_index: PageIndex,
+    pub highlights: Vec<TextHighlight>,
+}
+
+/// Complete highlight overlay for one search (RFC 011 §5).
+///
+/// This is separate from [`SearchResultSet`] so the UI can show page markers
+/// immediately (RFC 010) and load highlight coordinates incrementally.
+#[derive(Clone, Debug)]
+pub struct SearchHighlightSet {
+    pub document_id: DocumentId,
+    pub generation: DocumentGeneration,
+    pub query: SearchQuery,
+    pub pages: Vec<PageHighlightSet>,
+}

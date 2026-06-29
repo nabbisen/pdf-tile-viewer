@@ -36,6 +36,12 @@ pub fn message(key: MessageKey) -> &'static str {
         }
         MessageKey::DropZoneHint => "Drop a PDF here or click \"Open PDF\u{2026}\"",
         MessageKey::RevealInFileManager => "Show in File Manager",
+        MessageKey::SearchButton => "Search",
+        MessageKey::SearchClear => "Clear",
+        MessageKey::SearchPlaceholder => "Find text…",
+        MessageKey::SearchSummaryMatches => "matches found",
+        MessageKey::SearchNoMatches => "No matches found.",
+        MessageKey::Searching => "Searching…",
         MessageKey::ZenModeEnter => "Zen",
         MessageKey::ZenModeExit => "Exit Zen (Esc)",
     }

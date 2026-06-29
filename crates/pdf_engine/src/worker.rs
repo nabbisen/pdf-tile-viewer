@@ -16,7 +16,7 @@ use std::thread::JoinHandle;
 
 use domain::document::{DocumentError, DocumentId, DocumentSession};
 use domain::render::{RenderError, RenderPageRequest, RenderedPageImage};
-use domain::search::{SearchError, SearchRequest, SearchResultSet};
+use domain::search::{SearchError, SearchHighlightSet, SearchRequest, SearchResultSet};
 use futures_channel::oneshot;
 
 use crate::engine::PdfEngine;
@@ -41,6 +41,10 @@ enum Command {
     SearchDocument {
         request: SearchRequest,
         reply: oneshot::Sender<Result<SearchResultSet, SearchError>>,
+    },
+    SearchDocumentWithHighlights {
+        request: SearchRequest,
+        reply: oneshot::Sender<Result<(SearchResultSet, SearchHighlightSet), SearchError>>,
     },
     Shutdown,
 }
@@ -68,6 +72,15 @@ impl std::error::Error for EngineGone {}
 pub struct EngineHandle {
     sender: mpsc::Sender<Command>,
     pub load_report: PdfiumLoadReport,
+    /// Identity token — two clones of the same handle share this Arc.
+    identity: std::sync::Arc<()>,
+}
+
+impl PartialEq for EngineHandle {
+    /// Two handles are equal when they share the same identity Arc.
+    fn eq(&self, other: &Self) -> bool {
+        std::sync::Arc::ptr_eq(&self.identity, &other.identity)
+    }
 }
 
 impl EngineHandle {
@@ -103,6 +116,7 @@ impl EngineHandle {
             EngineHandle {
                 sender,
                 load_report,
+                identity: std::sync::Arc::new(()),
             },
             EngineThread { join },
         ))
@@ -161,6 +175,22 @@ impl EngineHandle {
         }
     }
 
+    pub fn search_document_with_highlights(
+        &self,
+        request: SearchRequest,
+    ) -> impl std::future::Future<
+        Output = Result<Result<(SearchResultSet, SearchHighlightSet), SearchError>, EngineGone>,
+    > + use<> {
+        let (reply, rx) = oneshot::channel();
+        let sent = self
+            .sender
+            .send(Command::SearchDocumentWithHighlights { request, reply });
+        async move {
+            sent.map_err(|_| EngineGone)?;
+            rx.await.map_err(|_| EngineGone)
+        }
+    }
+
     /// Ask the worker to exit after draining queued commands.
     pub fn shutdown(&self) {
         let _ = self.sender.send(Command::Shutdown);
@@ -192,6 +222,9 @@ fn run_loop(mut engine: PdfEngine, receiver: mpsc::Receiver<Command>) {
             }
             Command::SearchDocument { request, reply } => {
                 let _ = reply.send(search::search_document(&engine, &request));
+            }
+            Command::SearchDocumentWithHighlights { request, reply } => {
+                let _ = reply.send(search::search_document_with_highlights(&engine, &request));
             }
             Command::Shutdown => break,
         }

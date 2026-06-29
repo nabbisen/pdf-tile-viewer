@@ -14,7 +14,7 @@ pub enum PdfiumLoadError {
     BindFailed(String),
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct PdfiumLoadReport {
     pub resolved_dir: PathBuf,
     pub version: Option<String>,

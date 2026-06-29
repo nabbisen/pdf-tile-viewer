@@ -187,3 +187,40 @@ button.ghost.active { background: color-mix(in srgb, var(--accent) 15%, transpar
 button:focus-visible, input:focus-visible {
   outline: 2px solid var(--accent); outline-offset: 2px;
 }
+
+/* ── Search panel ─────────────────────────────────────────── */
+.search-panel {
+  padding: 0.6rem 1rem; border-bottom: 1px solid color-mix(in srgb, var(--muted) 30%, transparent);
+  background: var(--panel); flex-shrink: 0; display: flex; flex-direction: column; gap: 0.3rem;
+}
+.search-input-row { display: flex; align-items: center; gap: 0.4rem; }
+.search-input {
+  flex: 1; padding: 0.35rem 0.6rem; border: 1px solid var(--muted); border-radius: 6px;
+  background: var(--bg); color: var(--fg); font-size: 0.95rem;
+}
+.search-input:focus { outline: 2px solid var(--accent); border-color: transparent; }
+.search-btn { padding: 0.35rem 0.8rem; font-size: 0.85rem; }
+.search-summary { margin: 0; font-size: 0.85rem; }
+.search-summary.no-results { color: var(--muted); }
+.search-pages { margin: 0; font-size: 0.8rem; }
+
+/* ── Tile search match marker ─────────────────────────────── */
+.page-tile.search-match .tile-image-area {
+  box-shadow: 0 0 0 2px var(--accent), 0 2px 8px rgba(0,0,0,0.2);
+}
+.search-match-badge {
+  position: absolute; bottom: 4px; right: 4px;
+  background: var(--accent); color: #fff;
+  font-size: 0.65rem; font-weight: 600;
+  padding: 1px 5px; border-radius: 10px; line-height: 1.6;
+  min-width: 1.2rem; text-align: center;
+  pointer-events: none;
+}
+
+/* ── RFC 011 highlight overlay ────────────────────────────── */
+.highlight-overlay {
+  position: absolute; pointer-events: none;
+  background: rgba(255, 220, 0, 0.38);
+  border: 1px solid rgba(200, 160, 0, 0.55);
+  border-radius: 1px;
+}

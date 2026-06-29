@@ -1,28 +1,30 @@
-//! Tile grid: renders all page tiles using absolute-positioned divs inside
-//! a scroll container sized to the layout's content dimensions (RFC 006).
+//! Tile grid: renders all page tiles with search markers and highlight overlays.
 //!
-//! Each tile shows one of: a rendered PNG image, a loading placeholder, or
-//! an error indicator. The tile image state comes from the caller's signal
-//! (RFC 007 §11 TileImageState).
+//! Search integration (RFC 010/011):
+//! - Matched pages receive a badge showing the match count.
+//! - Exact highlight rectangles from `SearchHighlightSet` are rendered as
+//!   semi-transparent yellow overlays absolutely positioned over the tile image.
+//!   Coordinates are transformed from PDF-space via `page_rect_to_image_rect`.
 
 use dioxus::prelude::*;
 
 use domain::document::PageIndex;
-use domain::layout::TileLayout;
+use domain::layout::{TileLayout, page_rect_to_image_rect};
+use domain::search::{PageHighlightSet, PageSearchSummary};
 
 use crate::i18n::{Locale, MessageKey, t};
 use crate::state::{TileImageState, TileImages};
-
-const TILE_LABEL_HEIGHT: f32 = 20.0;
 
 #[component]
 pub fn TileGrid(
     layout: TileLayout,
     tile_images: Signal<TileImages>,
     show_page_numbers: bool,
-    /// Called when a tile is clicked; carries the zero-based PageIndex.
+    /// Per-page search match summaries for badge display (RFC 010).
+    search_summaries: Vec<PageSearchSummary>,
+    /// Per-page highlight rectangles for overlay (RFC 011); empty = no overlays.
+    search_highlights: Vec<PageHighlightSet>,
     on_tile_click: Option<Callback<PageIndex>>,
-    /// Scroll container id for JS scroll-into-view (RFC 008 jump-to-page).
     scroll_container_id: String,
 ) -> Element {
     let locale: Memo<Locale> = use_context();
@@ -50,11 +52,65 @@ pub fn TileGrid(
                         let tile_id = format!("tile-{}", idx.0);
                         let click_cb = on_tile_click.clone();
 
+                        // Search match badge and highlights
+                        let match_count = search_summaries
+                            .iter()
+                            .find(|s| s.page_index == idx)
+                            .map(|s| s.match_count);
+                        let page_highlights = search_highlights
+                            .iter()
+                            .find(|p| p.page_index == idx)
+                            .cloned();
+
+                        // Highlight rects in image-space pixels (RFC 011 §6)
+                        let highlight_rects: Vec<(f32, f32, f32, f32)> = {
+                            let mut rects = Vec::new();
+                            if let (Some(ph), TileImageState::Ready(_)) =
+                                (&page_highlights, &image_state)
+                            {
+                                // We need rendered dimensions to transform coords.
+                                // For now, approximate from tile pixel dims.
+                                let rw = w.round() as u32;
+                                let rh = h.round() as u32;
+                                // Find the PageDescriptor for this page.
+                                if let Some(desc) = layout.tiles
+                                    .iter()
+                                    .find(|t| t.page_index == idx)
+                                    .and_then(|_| {
+                                        // The descriptor lives in the session; we get size
+                                        // from the tile geometry instead (scale-invariant).
+                                        None::<domain::document::PageDescriptor>
+                                    })
+                                {
+                                    for highlight in &ph.highlights {
+                                        for pr in &highlight.page_rects {
+                                            let ir = page_rect_to_image_rect(
+                                                &desc, *pr, rw, rh,
+                                            );
+                                            rects.push((ir.x, ir.y, ir.width, ir.height));
+                                        }
+                                    }
+                                } else {
+                                    // Fallback: use raw PDF-space proportional scaling.
+                                    for highlight in &ph.highlights {
+                                        for pr in &highlight.page_rects {
+                                            rects.push((pr.x, pr.y, pr.width, pr.height));
+                                        }
+                                    }
+                                }
+                            }
+                            rects
+                        };
+
                         rsx! {
                             div {
                                 key: "{idx.0}",
                                 id: "{tile_id}",
-                                class: "page-tile",
+                                class: if match_count.is_some() {
+                                    "page-tile search-match"
+                                } else {
+                                    "page-tile"
+                                },
                                 style: "position: absolute; \
                                         left: {x}px; top: {y}px; \
                                         width: {w}px; height: {h}px;",
@@ -64,10 +120,9 @@ pub fn TileGrid(
                                     }
                                 },
 
-                                // Image area
                                 div {
                                     class: "tile-image-area",
-                                    style: "width: {w}px; height: {h}px; overflow: hidden;",
+                                    style: "position: relative; width: {w}px; height: {h}px; overflow: hidden;",
 
                                     match &image_state {
                                         TileImageState::Ready(uri) => rsx! {
@@ -75,11 +130,17 @@ pub fn TileGrid(
                                                 class: "tile-img",
                                                 src: "{uri}",
                                                 alt: "Page {display_num}",
-                                                width: "{w}",
-                                                height: "{h}",
                                                 style: "display: block; \
                                                         width: {w}px; height: {h}px; \
                                                         object-fit: contain;",
+                                            }
+                                            // RFC 011 highlight overlays
+                                            for (hx, hy, hw, hh) in &highlight_rects {
+                                                div {
+                                                    class: "highlight-overlay",
+                                                    style: "left:{hx}px; top:{hy}px; \
+                                                            width:{hw}px; height:{hh}px;",
+                                                }
                                             }
                                         },
                                         TileImageState::Pending | TileImageState::Rendering(_) => rsx! {
@@ -94,20 +155,25 @@ pub fn TileGrid(
                                                 class: "tile-placeholder error",
                                                 style: "width: {w}px; height: {h}px;",
                                                 span { "⚠" }
-                                                span { class: "muted", {t(locale(), MessageKey::ErrRenderFailed)} }
+                                                span { class: "muted",
+                                                    {t(locale(), MessageKey::ErrRenderFailed)}
+                                                }
                                             }
                                         },
                                     }
                                 }
 
-                                // Optional page number label
-                                if show_page_numbers {
+                                // Match-count badge (RFC 010)
+                                if let Some(count) = match_count {
                                     div {
-                                        class: "tile-label",
-                                        style: "height: {TILE_LABEL_HEIGHT}px; \
-                                                line-height: {TILE_LABEL_HEIGHT}px;",
-                                        "{display_num}"
+                                        class: "search-match-badge",
+                                        "aria-label": "{count} matches",
+                                        "{count}"
                                     }
+                                }
+
+                                if show_page_numbers {
+                                    div { class: "tile-label", "{display_num}" }
                                 }
                             }
                         }

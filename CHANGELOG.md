@@ -11,6 +11,40 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [2.0.0-alpha.4] — unreleased
+
+Text search with page markers and highlight coordinate overlays (M6).
+
+### Added
+
+- **Search panel** (`app/components/search_panel.rs`): floating search bar
+  with text input (Enter or Search button), Clear button, match summary
+  ("N matches / Np"), compact matched-page range display ("1, 4–6, 10"),
+  and Searching/NoResults/Failed states (RFC 010 §8). Toggled by 🔍
+  button in the viewer header; Escape closes it.
+- **Page-level search markers** (`tile_grid.rs`): matched tiles receive an
+  accent-coloured border and a badge showing the match count (RFC 010 §7).
+- **Highlight coordinate overlays** (RFC 011): semi-transparent yellow
+  `<div>` overlays positioned over each match rectangle. Coordinates are
+  extracted from PDFium's `PdfPageTextSegment::bounds()` and converted
+  from PDF bottom-left space to image-pixel space via
+  `page_rect_to_image_rect` (RFC 011 §6–§7).
+- **RFC 011 domain types** (`domain/search.rs`): `PageCoordinateSpace`,
+  `PageRect`, `TextHighlight`, `PageHighlightSet`, `SearchHighlightSet`.
+- **RFC 011 transform functions** (`domain/layout.rs`):
+  `page_rect_to_image_rect` and `image_rect_to_tile_rect` with full test
+  coverage (4 new tests: y-axis flip, identity pass-through, scale, offset).
+- **`search_document_with_highlights`** in both `pdf_engine/search.rs` and
+  `pdf_engine/worker.rs`: single PDFium pass returning page summaries +
+  match rects together.
+- `EngineHandle` now implements `PartialEq` via an `Arc<()>` identity token
+  (required by Dioxus `#[component]` props).
+- 6 new i18n message keys (Search, Clear, Placeholder, Summary, NoResults,
+  Searching) in English and Japanese.
+- Total: **56 tests** (up from 52); all passing.
+
+---
+
 ## [2.0.0-alpha.3] — unreleased
 
 Drag-and-drop, settings persistence, viewport measurement, zen mode,

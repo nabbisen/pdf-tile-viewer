@@ -1,22 +1,4 @@
-//! Document viewer screen (M5: zen mode, keyboard shortcuts, viewport
-//! measurement, settings persistence, reveal-in-file-manager).
-//!
-//! Zen mode (RFC 013): Z key toggles; Escape exits; a floating exit
-//! button is always visible in zen mode.
-//!
-//! Keyboard shortcuts (RFC 013 §8):
-//!   Z          — toggle zen mode
-//!   +/=        — scale up 0.2
-//!   -          — scale down 0.2
-//!   0          — reset scale to default
-//!   Escape     — exit zen, or back to dashboard
-//!
-//! Settings persistence (RFC 008 §8): scale, pages-per-row, and
-//! show-page-numbers are written back to AppSettingsV1 on every change
-//! and saved asynchronously (immediate save — debounce deferred to M6+).
-//!
-//! Viewport width (RFC 005 stub → M5): measured once on mount via
-//! `eval("return window.innerWidth")` and updated on resize.
+//! Document viewer screen (M6: search panel, page markers, highlight overlays).
 
 use base64::Engine as _;
 use dioxus::document::eval;
@@ -29,12 +11,14 @@ use domain::layout::{
     LayoutGeneration, PagesPerRowMode, TileLayoutInput, ViewerScale, compute_layout,
 };
 use domain::render::{RenderFlags, RenderOutputFormat, RenderPageRequest, ScaleBucket};
+use domain::search::{PageHighlightSet, PageSearchSummary};
 use domain::settings::{AppSettingsV1, PagesPerRowPreference};
 
+use crate::components::search_panel::SearchPanel;
 use crate::components::tile_grid::TileGrid;
 use crate::components::viewer_controls::ViewerControls;
 use crate::i18n::{Locale, MessageKey, t};
-use crate::state::{OpenDocumentView, Phase, TileImageState, TileImages};
+use crate::state::{OpenDocumentView, Phase, SearchState, TileImageState, TileImages};
 
 const TILE_GAP_PX: f32 = 12.0;
 const TILE_PADDING_PX: f32 = 16.0;
@@ -63,6 +47,7 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
     });
     let show_page_numbers = use_signal(|| settings.read().viewer.show_page_numbers);
     let mut zen_mode: Signal<bool> = use_signal(|| false);
+    let mut show_search: Signal<bool> = use_signal(|| false);
     let mut viewport_width: Signal<f32> = use_signal(|| DEFAULT_VIEWPORT_PX);
     let mut tile_images: Signal<TileImages> = use_signal(|| {
         session
@@ -73,8 +58,9 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
     });
     let mut render_gen: Signal<u64> = use_signal(|| 0u64);
     let mut reveal_error: Signal<Option<String>> = use_signal(|| None);
+    let search_state: Signal<SearchState> = use_signal(SearchState::default);
 
-    // ── Viewport width measurement (RFC 005 stub → M5) ───────────────────
+    // ── Viewport measurement ──────────────────────────────────────────────
     use_effect(move || {
         spawn(async move {
             if let Ok(w) = eval("return window.innerWidth").join::<f64>().await {
@@ -105,6 +91,9 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
             LayoutGeneration(0),
         )
     });
+
+    // Pre-clone for SearchPanel (used after render scheduling)
+    let rs_for_search = render_service.clone();
 
     // ── Render scheduling ─────────────────────────────────────────────────
     let session_eff = view.session.clone();
@@ -160,8 +149,7 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
         }
     });
 
-    // ── Settings persistence (RFC 008 §8) ─────────────────────────────────
-    // Runs whenever scale, mode, or show_page_numbers change.
+    // ── Settings persistence ──────────────────────────────────────────────
     let store_clone = settings_store.clone();
     use_effect(move || {
         let new_scale = *scale.read();
@@ -180,7 +168,7 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
         });
     });
 
-    // ── Scale/render helpers ──────────────────────────────────────────────
+    // ── Helpers ────────────────────────────────────────────────────────────
     let mut invalidate = move || {
         let mut images = tile_images.write();
         for state in images.values_mut() {
@@ -203,16 +191,13 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
 
     let default_scale = settings.read().viewer.default_scale;
 
-    // ── Jump-to-page ──────────────────────────────────────────────────────
     let on_jump = Callback::new(move |idx: usize| {
         let js = format!(
-            "document.getElementById('tile-{idx}')?.scrollIntoView(\
-             {{behavior:'smooth',block:'start'}})"
+            "document.getElementById('tile-{idx}')?.scrollIntoView({{behavior:'smooth',block:'start'}})"
         );
         let _ = eval(&js);
     });
 
-    // ── Reveal in file manager ────────────────────────────────────────────
     let reveal_path = doc_path.clone();
     let on_reveal = Callback::new(move |_| {
         if let Some(ref p) = reveal_path {
@@ -222,15 +207,23 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
         }
     });
 
+    // Search state derived values
+    let search_summaries: Vec<PageSearchSummary> = match &*search_state.read() {
+        SearchState::Results { results, .. } => results.pages.clone(),
+        _ => Vec::new(),
+    };
+    let search_highlights: Vec<PageHighlightSet> = match &*search_state.read() {
+        SearchState::Results { highlights, .. } => highlights.pages.clone(),
+        _ => Vec::new(),
+    };
+
     let in_zen = *zen_mode.read();
 
     rsx! {
         div {
             class: if in_zen { "viewer zen" } else { "viewer" },
-            // Global key handler (RFC 013 §8)
             tabindex: "0",
             onkeydown: move |evt: Event<KeyboardData>| {
-                // Don't fire shortcuts when typing in inputs
                 match evt.key() {
                     Key::Character(ref s) => match s.as_str() {
                         "z" | "Z" => zen_mode.toggle(),
@@ -240,11 +233,9 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
                         _ => {}
                     },
                     Key::Escape => {
-                        if in_zen {
-                            zen_mode.set(false);
-                        } else {
-                            phase.set(Phase::Dashboard);
-                        }
+                        if in_zen { zen_mode.set(false); }
+                        else if *show_search.peek() { show_search.set(false); }
+                        else { phase.set(Phase::Dashboard); }
                     }
                     _ => {}
                 }
@@ -257,7 +248,6 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
                 }
             },
 
-            // ── Normal header (hidden in zen) ──────────────────────────
             if !in_zen {
                 header { class: "viewer-header",
                     button {
@@ -269,6 +259,14 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
                     span { class: "muted",
                         {t(locale(), MessageKey::ViewerPageCountLabel)}
                         ": {page_count}"
+                    }
+                    // Search toggle
+                    button {
+                        class: if *show_search.read() { "ghost icon-btn active" } else { "ghost icon-btn" },
+                        title: t(locale(), MessageKey::SearchButton),
+                        "aria-label": t(locale(), MessageKey::SearchButton),
+                        onclick: move |_| show_search.toggle(),
+                        "🔍"
                     }
                     if doc_path.is_some() {
                         button {
@@ -285,14 +283,23 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
                     button {
                         class: "ghost icon-btn",
                         title: t(locale(), MessageKey::ZenModeEnter),
-                        "aria-label": t(locale(), MessageKey::ZenModeEnter),
                         onclick: move |_| zen_mode.set(true),
                         "⊞"
                     }
                 }
             }
 
-            // ── Controls (hidden in zen) ───────────────────────────────
+            // Search panel (RFC 010/011)
+            if !in_zen && *show_search.read() {
+                SearchPanel {
+                    engine: rs_for_search.engine.clone(),
+                    session_id: view.session.id,
+                    generation: view.session.generation,
+                    search_state,
+                    on_close: Callback::new(move |_| show_search.set(false)),
+                }
+            }
+
             if !in_zen {
                 ViewerControls {
                     page_count,
@@ -303,21 +310,20 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
                 }
             }
 
-            // ── Tile grid ────────────────────────────────────────────
             TileGrid {
                 layout: layout.read().clone(),
                 tile_images,
                 show_page_numbers: *show_page_numbers.read(),
+                search_summaries,
+                search_highlights,
                 on_tile_click: None,
                 scroll_container_id: "viewer-scroll".to_string(),
             }
 
-            // ── Zen mode exit affordance (RFC 013 §5) ─────────────────
             if in_zen {
                 button {
                     class: "zen-exit-btn",
                     title: t(locale(), MessageKey::ZenModeExit),
-                    "aria-label": t(locale(), MessageKey::ZenModeExit),
                     onclick: move |_| zen_mode.set(false),
                     "×"
                 }
