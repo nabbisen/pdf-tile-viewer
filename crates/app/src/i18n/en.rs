@@ -31,5 +31,12 @@ pub fn message(key: MessageKey) -> &'static str {
         MessageKey::ErrTooLarge => "This document exceeds the size limit.",
         MessageKey::ErrUnknown => "An unexpected error occurred.",
         MessageKey::ErrRenderFailed => "The page could not be rendered.",
+        MessageKey::ErrMultipleFilesDropped => {
+            "Only one PDF can be opened at a time. Drop a single file."
+        }
+        MessageKey::DropZoneHint => "Drop a PDF here or click \"Open PDF\u{2026}\"",
+        MessageKey::RevealInFileManager => "Show in File Manager",
+        MessageKey::ZenModeEnter => "Zen",
+        MessageKey::ZenModeExit => "Exit Zen (Esc)",
     }
 }

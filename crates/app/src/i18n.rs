@@ -68,7 +68,12 @@ pub enum MessageKey {
     ErrPdfParseFailed,
     ErrTooLarge,
     ErrUnknown,
+    ErrMultipleFilesDropped,
     ErrRenderFailed,
+    DropZoneHint,
+    RevealInFileManager,
+    ZenModeEnter,
+    ZenModeExit,
 }
 
 impl MessageKey {
@@ -98,6 +103,11 @@ impl MessageKey {
         MessageKey::ErrTooLarge,
         MessageKey::ErrUnknown,
         MessageKey::ErrRenderFailed,
+        MessageKey::ErrMultipleFilesDropped,
+        MessageKey::DropZoneHint,
+        MessageKey::RevealInFileManager,
+        MessageKey::ZenModeEnter,
+        MessageKey::ZenModeExit,
     ];
 }
 

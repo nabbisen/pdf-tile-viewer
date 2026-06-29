@@ -32,5 +32,10 @@ pub fn message(key: MessageKey) -> Option<&'static str> {
         MessageKey::ErrTooLarge => "このドキュメントはサイズ制限を超えています。",
         MessageKey::ErrUnknown => "予期しないエラーが発生しました。",
         MessageKey::ErrRenderFailed => "ページを描画できませんでした。",
+        MessageKey::ErrMultipleFilesDropped => "一度に開けるのは 1 つの PDF のみです。",
+        MessageKey::DropZoneHint => "PDF をここにドロップするか「PDF を開く…」をクリック",
+        MessageKey::RevealInFileManager => "ファイルマネージャーで表示",
+        MessageKey::ZenModeEnter => "禅",
+        MessageKey::ZenModeExit => "禅モードを終了 (Esc)",
     })
 }

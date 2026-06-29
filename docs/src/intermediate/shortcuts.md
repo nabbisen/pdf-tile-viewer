@@ -1,9 +1,16 @@
 # Keyboard Shortcuts
 
-> Full shortcut support arrives in 2.0.0-beta.1 (RFC 013).
+| Key | Action | Context |
+|-----|--------|---------|
+| `Z` | Toggle zen mode | Viewer focused |
+| `+` or `=` | Scale up (0.2 step) | Viewer focused |
+| `-` | Scale down (0.2 step) | Viewer focused |
+| `0` | Reset scale to default | Viewer focused |
+| `Escape` | Exit zen mode | Zen mode |
+| `Escape` | Back to dashboard | Normal mode |
+| `Ctrl + Scroll` | Scale tile grid | Viewer |
+| `Ctrl + O` | Open PDF | Planned (M7) |
+| `Ctrl + F` | Focus search | Planned (M6) |
+| `G` | Jump-to-page | Planned (M7) |
 
-| Key | Action |
-|-----|--------|
-| `Ctrl + Scroll` | Zoom tile scale in/out |
-| `Ctrl + Drag` | Pan the document |
-| `Esc` | Close search form or zoom overlay |
+> **Note:** Shortcuts are disabled when focus is inside a text input.

@@ -1,16 +1,13 @@
-//! Root component (RFC 001 shell + RFC 005/M4 tile viewer).
-//!
-//! Boot order: engine is already bound by `main`; we create the
-//! `RenderService` (RFC 007) here and provide it via context so every
-//! nested component can request renders without threading handles through
-//! props.
+//! Root component (RFC 001 shell, M5: settings persistence + drag-drop).
+
+use std::path::PathBuf;
 
 use base64::Engine as _;
 use dioxus::prelude::*;
 
 use app_services::document_service;
 use app_services::history_service::SessionHistory;
-use app_services::render_service::{DEFAULT_CACHE_BUDGET_BYTES, RenderService};
+use app_services::render_service::RenderService;
 use app_services::settings_service::SettingsStore;
 use domain::document::PageIndex;
 use domain::render::{
@@ -33,30 +30,39 @@ pub fn App() -> Element {
     let locale = use_memo(move || Locale::resolve(settings.read().ui.locale.as_deref()));
     let phase = use_signal(Phase::default);
     let history = use_signal(SessionHistory::default);
-    let last_error = use_signal(|| Option::<MessageKey>::None);
+    let last_error: Signal<Option<MessageKey>> = use_signal(|| None);
 
     use_context_provider(|| settings);
     use_context_provider(|| locale);
 
-    // Provide the render service; all descendant components share it.
     if let Some(engine) = state::engine() {
-        let budget = settings
-            .peek()
-            .advanced
-            .render_cache_budget_mb
-            .map(|mb| (mb as usize).saturating_mul(1024 * 1024))
-            .unwrap_or(DEFAULT_CACHE_BUDGET_BYTES);
         use_context_provider(|| RenderService::with_default_budget(engine));
-        let _ = budget; // will be plumbed in RFC 008 settings panel
     }
 
+    // Provide settings store for downstream save callbacks.
+    use_context_provider(|| settings_store);
+
     let body = match &*phase.read() {
-        Phase::Dashboard => rsx! {
-            Dashboard {
-                history,
-                on_open: open_document_action(settings, phase, history, last_error),
+        Phase::Dashboard => {
+            let open_picker = open_action(settings, phase, history, last_error, None);
+            let last_error_clone = last_error;
+            rsx! {
+                Dashboard {
+                    history,
+                    last_error: last_error_clone,
+                    on_open: open_picker,
+                    on_open_path: {
+                        let settings2 = settings;
+                        let phase2 = phase;
+                        let history2 = history;
+                        let last_error2 = last_error;
+                        Callback::new(move |path: PathBuf| {
+                            open_action(settings2, phase2, history2, last_error2, Some(path)).call(());
+                        })
+                    },
+                }
             }
-        },
+        }
         Phase::Opening => rsx! {
             main { class: "centered",
                 p { class: "muted", {t(locale(), MessageKey::OpeningDocument)} }
@@ -73,28 +79,35 @@ pub fn App() -> Element {
             if let Some(boot_error) = state::engine_boot_error() {
                 ErrorPanel {
                     title: t(locale(), MessageKey::EngineUnavailableTitle).to_string(),
-                    body: format!("{} ({boot_error})", t(locale(), MessageKey::EngineUnavailableBody)),
+                    body: format!(
+                        "{} ({boot_error})",
+                        t(locale(), MessageKey::EngineUnavailableBody)
+                    ),
                 }
-            }
-            if let Some(key) = *last_error.read() {
-                p { class: "toast-error", {t(locale(), key)} }
             }
             {body}
         }
     }
 }
 
-fn open_document_action(
+/// Build an open-document action.  If `path` is given, skip the picker.
+fn open_action(
     settings: Signal<AppSettingsV1>,
     mut phase: Signal<Phase>,
     mut history: Signal<SessionHistory>,
     mut last_error: Signal<Option<MessageKey>>,
+    path: Option<PathBuf>,
 ) -> Callback<()> {
     Callback::new(move |_| {
         let default_scale = settings.read().viewer.default_scale;
+        let path_opt = path.clone();
         spawn(async move {
-            let Some(path) = app_services::platform::pick_pdf_file().await else {
-                return;
+            let resolved = match path_opt {
+                Some(p) => Some(p),
+                None => app_services::platform::pick_pdf_file().await,
+            };
+            let Some(resolved_path) = resolved else {
+                return; // cancelled
             };
             let Some(engine) = state::engine() else {
                 last_error.set(Some(MessageKey::EngineUnavailableTitle));
@@ -104,8 +117,8 @@ fn open_document_action(
             last_error.set(None);
             phase.set(Phase::Opening);
 
-            let session = match document_service::open_document(&engine, &path).await {
-                Ok(session) => session,
+            let session = match document_service::open_document(&engine, &resolved_path).await {
+                Ok(s) => s,
                 Err(e) => {
                     last_error.set(Some(i18n::open_error_key(&e)));
                     phase.set(Phase::Dashboard);
@@ -120,8 +133,7 @@ fn open_document_action(
                 render_error: None,
             };
 
-            // Render page 1 preview for the Viewer initial header image
-            // (superseded by the tile grid in M4, but retained as fallback).
+            // Render page 1 as preview (used while tile grid initialises).
             let request = RenderPageRequest {
                 document_id: session.id,
                 generation: session.generation,
@@ -138,7 +150,7 @@ fn open_document_action(
                     }
                 }
                 Ok(Err(e)) => view.render_error = Some(format!("{e:?}")),
-                Err(_) => view.render_error = Some("engine unavailable".to_string()),
+                Err(_) => {} // engine gone
             }
 
             phase.set(Phase::Viewer(view));

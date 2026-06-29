@@ -18,9 +18,17 @@
 - Page-number labels toggle.
 - Jump-to-page with one-based input validation.
 
+## Current (alpha.3)
+
+- Drag-and-drop to open PDFs.
+- Zen mode (Z key: full-screen tile grid, Escape to exit).
+- Settings persist across sessions (scale, pages-per-row, page numbers).
+- Reveal-in-file-manager button.
+- Keyboard shortcuts: +/-, 0 reset scale, Z zen, Escape navigate.
+
 ## Coming in upcoming milestones
 
-- Search with text highlights.
+- Search with text highlights (M6).
 - Text search with page markers.
 - Zoom overlay for detailed page inspection.
 - Zen mode (minimal controls).

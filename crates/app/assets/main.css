@@ -141,3 +141,49 @@ button.ghost.active { background: color-mix(in srgb, var(--accent) 15%, transpar
   text-align: center; font-size: 0.7rem; color: var(--muted);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
+
+/* ── Drop zone ────────────────────────────────────────────── */
+.drop-zone {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 0.75rem;
+  border: 2px dashed color-mix(in srgb, var(--muted) 50%, transparent);
+  border-radius: 12px; padding: 2rem 2.5rem;
+  transition: border-color 0.15s, background 0.15s;
+  width: min(36rem, 90vw);
+}
+.drop-zone.drag-over {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+.drop-hint { font-size: 0.8rem; margin: 0; }
+
+/* History items as buttons */
+.history-btn {
+  display: flex; align-items: baseline; gap: 0.4rem;
+  border: none; background: transparent; text-align: left;
+  cursor: pointer; padding: 0.4rem 0.2rem; width: 100%;
+  border-radius: 4px; color: var(--fg);
+}
+.history-btn:hover { background: color-mix(in srgb, var(--muted) 10%, transparent); }
+.history-name { font-weight: 500; }
+.history-pages { font-size: 0.8rem; }
+
+/* ── Zen mode ────────────────────────────────────────────── */
+.viewer.zen .tile-grid-scroll { height: 100vh; }
+.viewer.zen { position: fixed; inset: 0; z-index: 100; background: var(--bg); }
+
+.zen-exit-btn {
+  position: fixed; top: 0.75rem; right: 0.75rem; z-index: 200;
+  width: 2rem; height: 2rem; border-radius: 50%;
+  border: 1px solid var(--muted); background: var(--panel);
+  color: var(--fg); font-size: 1rem; cursor: pointer;
+  opacity: 0.4; transition: opacity 0.2s;
+  display: flex; align-items: center; justify-content: center;
+}
+.zen-exit-btn:hover { opacity: 1; }
+
+/* Keyboard focus ring (RFC 013 §9) */
+.viewer:focus { outline: 2px solid var(--accent); outline-offset: -2px; }
+button:focus-visible, input:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px;
+}

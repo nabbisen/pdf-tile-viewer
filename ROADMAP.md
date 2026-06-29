@@ -15,7 +15,7 @@ RFC designs live in `rfcs/proposed/`; the ADR and detailed roadmap are in
 | M2 | Dioxus shell + settings | RFC 001, 008, 009 | ✅ Done (this release) |
 | M3 | RFC 005 vertical slice (page-1 preview) | RFC 005 | ✅ Done (this release) |
 | M4 | Tile grid + lazy render queue | RFC 006, 007 | ✅ Done (alpha.2) |
-| M5 | Viewer controls, navigation, drag-and-drop | RFC 002, 008, 013 | Planned |
+| M5 | Viewer controls, navigation, drag-and-drop | RFC 002, 008, 013 | ✅ Done (alpha.3) |
 | M6 | Search and page markers | RFC 010, 011 | Planned |
 | M7 | Zoom overlay, zen mode, accessibility | RFC 012, 013 | Planned |
 | M8 | Bundled PDFium packaging + CI release artifacts | RFC 014, 003 | Planned |
@@ -29,7 +29,7 @@ RFC designs live in `rfcs/proposed/`; the ADR and detailed roadmap are in
 | Version | Gate |
 |---------|------|
 | `2.0.0-alpha.1` | Vertical slice: open PDF, render page 1 |
-| `2.0.0-alpha.2` | Tile rendering, scale controls, settings persistence |
+| `2.0.0-alpha.2` | Tile rendering, scale controls (done) |
 | `2.0.0-beta.1` | Search, highlights, zoomed page viewer, file history |
 | `2.0.0-rc.1` | Full v1.x feature parity, bundled PDFium, CI artifacts |
 | `2.0.0` | Production release, Tauri/Svelte removed |

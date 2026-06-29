@@ -11,6 +11,53 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [2.0.0-alpha.3] — unreleased
+
+Drag-and-drop, settings persistence, viewport measurement, zen mode,
+keyboard shortcuts, reveal-in-file-manager (M5).
+
+### Added
+
+- **Drag-and-drop** (`app/components/drop_zone.rs`): reusable `DropZone`
+  component accepting a single dropped PDF via HTML5 ondrop with Wry
+  native path injection (RFC 002 §5.2). Rejects multiple files with a
+  clear error toast; shows visual `drag-over` highlight.
+- **Settings persistence** (RFC 008 §8): scale, pages-per-row, and
+  show-page-numbers are written back to `AppSettingsV1` and saved on
+  every viewer-control change (immediate save; debounce deferred to M6).
+- **Viewport width measurement** (RFC 005→M5): `eval("return window.innerWidth")`
+  called on viewer mount; result feeds the layout engine so tile columns
+  adapt to the actual window width instead of the 1200 px placeholder.
+- **Reveal in file manager** (RFC 002 §9): "📂" button in the viewer
+  header calls `app_services::platform::reveal_in_file_manager`. Shows
+  inline error if the OS command fails.
+- **Zen mode** (RFC 013 §5–§7): `Z` key toggles full-screen tile view;
+  controls and header are hidden; a floating `×` exit button stays
+  visible. `Escape` exits zen mode (or navigates to dashboard when not
+  in zen).
+- **Keyboard shortcuts** (RFC 013 §8): `+`/`=` scale up, `-` scale
+  down, `0` reset scale to default, `Z` toggle zen, `Escape` exit zen /
+  back to dashboard. Viewer container is focusable (`tabindex="0"`) with
+  a visible focus ring.
+- `SettingsStore` provided via Dioxus context so the viewer can save
+  without prop-drilling.
+- 5 new i18n message keys (`ErrMultipleFilesDropped`, `DropZoneHint`,
+  `RevealInFileManager`, `ZenModeEnter`, `ZenModeExit`) in both English
+  and Japanese catalogs.
+- `HasFileData` trait import resolved for `DragData::files()` in Dioxus
+  desktop drop events.
+
+### Changed
+
+- `Dashboard` component gains `on_open_path` callback and `last_error`
+  signal for drop-zone error display and history-item re-open.
+- `app.rs` refactored: `open_action` handles both picker (no path) and
+  direct path (drag/drop, history re-open) in a single function.
+- Drop zone visual polish: dashed border, `drag-over` highlight, focus
+  rings on all interactive elements (RFC 013 §9).
+
+---
+
 ## [2.0.0-alpha.2] — unreleased
 
 Tile grid renderer, lazy page rendering, and viewer controls (M4).
