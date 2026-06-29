@@ -44,7 +44,6 @@ pub struct RenderCacheKey {
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
 pub enum RenderOutputFormat {
     Png,
-    RawRgba,
 }
 
 #[derive(Clone, Debug)]
@@ -59,10 +58,8 @@ pub struct RenderPageRequest {
 
 #[derive(Clone, Debug)]
 pub enum RenderedImagePayload {
-    /// Provisional transport for the RFC 005 vertical slice only.
-    /// Must be replaced by a registry/cache URI before large-PDF support
-    /// (RFC 005 §7, RFC 007).
-    DataUri(String),
+    /// PNG bytes from `pdf_engine`; decoded from a base64 data URI for
+    /// display in the Dioxus WebView (RFC 005 §7, RFC 007).
     Bytes(Vec<u8>),
 }
 
@@ -84,13 +81,4 @@ pub enum RenderError {
     RenderFailed(String),
     EncodingFailed(String),
     EngineUnavailable,
-}
-
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
-pub enum RenderPriority {
-    Visible,
-    NearVisible,
-    SearchRelevant,
-    Predictive,
-    Background,
 }

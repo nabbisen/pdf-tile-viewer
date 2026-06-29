@@ -1,16 +1,18 @@
 [package]
-name = "pdf_engine"
-version.workspace = true
-edition.workspace = true
-license.workspace = true
-authors.workspace = true
+name        = "pdf_engine"
 description = "PDFium binding, document sessions, page rendering, and text search behind a serialized engine worker."
+version.workspace       = true
+edition.workspace       = true
+license.workspace       = true
+authors.workspace       = true
 
 [dependencies]
-domain = { workspace = true }
-pdfium-render = { workspace = true }
-png = { workspace = true }
-futures-channel = { workspace = true }
+domain                      = { workspace = true }
+
+pdfium-render               = { workspace = true }
+png                         = { workspace = true }
+
+futures-channel             = { workspace = true }
 
 [dev-dependencies]
-futures-executor = "0.3"
+futures-executor            = "0.3"

@@ -144,10 +144,6 @@ impl RenderService {
         }
     }
 
-    pub fn with_default_budget(engine: EngineHandle) -> Self {
-        Self::new(engine, DEFAULT_CACHE_BUDGET_BYTES)
-    }
-
     /// Check cache; render and cache on miss. Returns raw PNG bytes.
     pub async fn get_or_render(
         &self,
@@ -178,13 +174,6 @@ impl RenderService {
 
         let bytes: Arc<[u8]> = match image.payload {
             RenderedImagePayload::Bytes(v) => v.into(),
-            // DataUri is a provisional vertical-slice variant; not expected
-            // here since we request RenderOutputFormat::Png (raw bytes).
-            RenderedImagePayload::DataUri(_) => {
-                return Err(RenderError::RenderFailed(
-                    "unexpected DataUri payload from engine".into(),
-                ));
-            }
         };
 
         {

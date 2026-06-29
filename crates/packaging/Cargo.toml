@@ -1,10 +1,10 @@
 [package]
-name = "packaging"
-version.workspace = true
-edition.workspace = true
-license.workspace = true
-authors.workspace = true
+name        = "packaging"
 description = "Locating, verifying, and resolving the bundled PDFium library and app directories. No PDF document behavior."
+version.workspace       = true
+edition.workspace       = true
+license.workspace       = true
+authors.workspace       = true
 
 [dependencies]
-dirs = { workspace = true }
+dirs                        = { workspace = true }

@@ -49,10 +49,6 @@ pub type TileImages = HashMap<PageIndex, TileImageState>;
 #[derive(Clone, Debug, PartialEq)]
 pub struct OpenDocumentView {
     pub session: DocumentSession,
-    /// `data:image/png;base64,…` — provisional transport, replaced by the
-    /// render cache registry in RFC 007.
-    pub page_one_data_uri: Option<String>,
-    pub render_error: Option<String>,
 }
 
 /// Top-level UI phase: dashboard or viewer (router deferred; the vertical

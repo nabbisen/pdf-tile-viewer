@@ -51,3 +51,35 @@ without PDFium.
 ```sh
 cargo fmt --check
 ```
+
+## Why Dioxus-specific test kinds are not used
+
+The Dioxus 0.7 testing guide describes three additional approaches.
+They were evaluated and deliberately not adopted for this project.
+
+**Component testing (dioxus-ssr rsx equality)**
+Renders two rsx snippets to HTML strings and compares them. For this app,
+components are thin wrappers that wire signals to PDFium-backed services.
+An SSR snapshot would mostly verify that the strings written in the source
+file are reproduced in the output — tautological and brittle against routine
+CSS-class or label changes. The logic worth asserting (layout geometry,
+coordinate transforms, search formatting) is already extracted into pure
+functions in `domain` and tested directly there.
+
+**Hook testing (manual VirtualDom driving)**
+The guide's own example is ~60 lines of `MockProxy` scaffolding per test
+suite. This project uses only Dioxus's stock hooks (`use_signal`,
+`use_memo`, `use_effect`). Testing those would be testing Dioxus, not
+project code. No custom hooks exist that would justify the infrastructure.
+
+**End-to-end testing (Playwright)**
+The Dioxus guide targets the **web** renderer. This app is a
+**Dioxus Desktop** application backed by a native PDFium library — there
+is no browser to drive. The 7 PDFium engine smoke tests already exercise
+the real open → render → search path end-to-end at the layer where the
+actual integration risk lives.
+
+The current strategy — pure logic in library crates with unit tests,
+one genuine integration boundary (PDFium) with smoke tests, a thin GUI
+layer that requires little testing — is the right fit for a project this
+size. Revisit if a custom hook with non-trivial logic is introduced.

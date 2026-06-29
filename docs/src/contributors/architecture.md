@@ -30,6 +30,5 @@ app  (Dioxus Desktop binary)
 
 ## Known technical debt
 
-- `app/components/zoom_overlay.rs` is ~323 ELOC (just over the 300 ELOC soft
-  limit). A future split into `zoom_overlay/render.rs` is noted for the next
-  maintenance pass.
+- `app/components/zoom_overlay.rs` was 323 ELOC; split into `zoom_overlay/util.rs`
+  (PNG dimensions + highlight-rect helpers), now 295 ELOC — within the 300 soft limit.

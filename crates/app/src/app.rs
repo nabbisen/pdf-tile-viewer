@@ -2,7 +2,6 @@
 
 use std::path::PathBuf;
 
-use base64::Engine as _;
 use dioxus::document::Title;
 use dioxus::prelude::*;
 
@@ -10,10 +9,6 @@ use app_services::document_service;
 use app_services::history_service::SessionHistory;
 use app_services::render_service::RenderService;
 use app_services::settings_service::SettingsStore;
-use domain::document::PageIndex;
-use domain::render::{
-    RenderFlags, RenderOutputFormat, RenderPageRequest, RenderedImagePayload, ScaleBucket,
-};
 use domain::settings::AppSettingsV1;
 
 use crate::components::error_panel::ErrorPanel;
@@ -122,7 +117,6 @@ fn open_action(
     path: Option<PathBuf>,
 ) -> Callback<()> {
     Callback::new(move |_| {
-        let default_scale = settings.read().viewer.default_scale;
         let path_opt = path.clone();
         spawn(async move {
             let resolved = match path_opt {
@@ -150,33 +144,7 @@ fn open_action(
             };
             history.write().record_opened(&session);
 
-            let mut view = OpenDocumentView {
-                session: session.clone(),
-                page_one_data_uri: None,
-                render_error: None,
-            };
-
-            // Render page 1 as preview (used while tile grid initialises).
-            let request = RenderPageRequest {
-                document_id: session.id,
-                generation: session.generation,
-                page_index: PageIndex(0),
-                scale_bucket: ScaleBucket::from_scale(default_scale),
-                flags: RenderFlags::default(),
-                format: RenderOutputFormat::Png,
-            };
-            match engine.render_page(request).await {
-                Ok(Ok(image)) => {
-                    if let RenderedImagePayload::Bytes(png) = image.payload {
-                        let b64 = base64::engine::general_purpose::STANDARD.encode(&png);
-                        view.page_one_data_uri = Some(format!("data:image/png;base64,{b64}"));
-                    }
-                }
-                Ok(Err(e)) => view.render_error = Some(format!("{e:?}")),
-                Err(_) => {} // engine gone
-            }
-
-            phase.set(Phase::Viewer(view));
+            phase.set(Phase::Viewer(OpenDocumentView { session }));
         });
     })
 }

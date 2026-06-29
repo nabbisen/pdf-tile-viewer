@@ -1,19 +1,21 @@
 [package]
-name = "app"
-version.workspace = true
-edition.workspace = true
-license.workspace = true
-authors.workspace = true
+name        = "app"
 description = "PDF Tile Viewer Dioxus Desktop application."
+version.workspace       = true
+edition.workspace       = true
+license.workspace       = true
+authors.workspace       = true
 
 [[bin]]
-name = "pdf-tile-viewer"
-path = "src/main.rs"
+name    = "pdf-tile-viewer"
+path    = "src/main.rs"
 
 [dependencies]
-domain = { workspace = true }
-app_services = { workspace = true, features = ["native-dialogs"] }
-pdf_engine = { workspace = true }
-packaging = { workspace = true }
-dioxus = { workspace = true, features = ["desktop", "document"] }
-base64 = { workspace = true }
+domain                      = { workspace = true }
+app_services                = { workspace = true, features = ["native-dialogs"] }
+pdf_engine                  = { workspace = true }
+packaging                   = { workspace = true }
+
+dioxus                      = { workspace = true, features = ["desktop", "document"] }
+
+base64                      = { workspace = true }

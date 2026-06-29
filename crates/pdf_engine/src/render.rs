@@ -56,7 +56,6 @@ pub fn render_page(
     let rgba = bitmap.as_rgba_bytes();
 
     let payload = match request.format {
-        RenderOutputFormat::RawRgba => RenderedImagePayload::Bytes(rgba),
         RenderOutputFormat::Png => RenderedImagePayload::Bytes(encode_png(&rgba, width, height)?),
     };
 

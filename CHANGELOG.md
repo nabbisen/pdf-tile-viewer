@@ -9,6 +9,25 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+---
+
+## [2.0.0-beta.5]
+
+* Codebase housekeeping.
+* `packaging/windows`: App manifest and assets for Microsoft Store publish.
+
+---
+
+## [2.0.0-beta.4]
+
+Codebase housekeeping.
+
+---
+
+## [2.0.0-beta.3]
+
+Source archive format.
+
 ### Changed
 
 - **Source archive format** (takes effect from this release onward):
@@ -22,7 +41,7 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
-## [2.0.0-beta.2] — unreleased
+## [2.0.0-beta.2]
 
 Performance hardening (M9), RFC lifecycle completion (M10),
 documentation audit, window title/size persistence, and code-quality fixes.
@@ -78,50 +97,7 @@ settings clearly, updated test counts (58).
 
 ---
 
-## [2.0.0-rc.2] — unreleased
-
-Complete v2 Dioxus + PDFium candidate release.
-
-### Summary
-
-PDF Tile Viewer 2.0.0 is the complete Rust-first rewrite of the original
-Tauri + SvelteKit + PDF.js + external PDFium application. The product
-delivers feature parity with v1.x while replacing the entire frontend stack
-with a single Rust codebase.
-
-### New in 2.0.0 (over rc.1)
-
-- **Window title privacy**: the title bar shows `<filename> — PDF Tile Viewer`
-  by default. Set `privacy.show_full_path_in_title: true` in settings to
-  show the full file path (RFC 016 §7).
-- **Window size persistence**: the viewer measures `window.innerWidth/Height`
-  via JS eval on document open and saves to `window.width/height` in settings.
-  `main.rs` restores the last-used size at launch via `LaunchBuilder` +
-  `Config::new().with_window(WindowBuilder::new().with_inner_size(...))`.
-- **`zoom_overlay/util.rs`** split out: `png_dimensions` and
-  `zoom_highlight_rects` moved to a sub-module, bringing `zoom_overlay.rs`
-  from 323 to 310 ELOC (toward the 300 soft limit).
-- Documentation audit pass: all stale version references, "coming soon"
-  items that are done, unimplemented settings, and missing shortcuts
-  corrected across `README.md`, `features.md`, `settings.md`,
-  `shortcuts.md`, `faq.md`, `testing.md`, `installation.md`,
-  `tile-grid.md`, `search.md`, and `opening.md`.
-
-### Technical summary (full v2 over v1.x)
-
-| Dimension | v1.x | v2.0.0 |
-|-----------|------|--------|
-| Frontend | SvelteKit + TypeScript | Rust + Dioxus |
-| PDF rendering | PDF.js (JavaScript) | PDFium (Rust/native) |
-| PDF search | PDFium (external proc) | PDFium (same worker) |
-| Search model | Modified PDF bytes | Non-mutating overlays |
-| Shell | Tauri v2 | Dioxus Desktop |
-| External lib | Visible lib/ directory | resources/ bundled |
-| Test coverage | Minimal | 58 tests + 7 smoke |
-
----
-
-## [2.0.0-beta.1] — unreleased
+## [2.0.0-beta.1]
 
 Zoom overlay (M7) and release packaging infrastructure (M8).
 This milestone achieves feature parity with the original v1.1.x
@@ -159,7 +135,7 @@ Tauri + SvelteKit application (minus multi-tab and per-document state).
 
 ---
 
-## [2.0.0-alpha.4] — unreleased
+## [2.0.0-alpha.4]
 
 Text search with page markers and highlight coordinate overlays (M6).
 
@@ -193,7 +169,7 @@ Text search with page markers and highlight coordinate overlays (M6).
 
 ---
 
-## [2.0.0-alpha.3] — unreleased
+## [2.0.0-alpha.3]
 
 Drag-and-drop, settings persistence, viewport measurement, zen mode,
 keyboard shortcuts, reveal-in-file-manager (M5).
@@ -240,7 +216,7 @@ keyboard shortcuts, reveal-in-file-manager (M5).
 
 ---
 
-## [2.0.0-alpha.2] — unreleased
+## [2.0.0-alpha.2]
 
 Tile grid renderer, lazy page rendering, and viewer controls (M4).
 
@@ -275,7 +251,7 @@ Tile grid renderer, lazy page rendering, and viewer controls (M4).
 
 ---
 
-## [2.0.0-alpha.1] — unreleased
+## [2.0.0-alpha.1]
 
 Complete architectural migration from the Tauri + SvelteKit + PDF.js stack
 to a Rust-first Dioxus Desktop application backed by a serialized PDFium
