@@ -10,15 +10,17 @@
 #   - PDF_TILE_VIEWER_PDFIUM_DIR=ci/.pdfium (set for build smoke-test)
 #
 # Produces:
-#   <output_dir>/pdf-tile-viewer-<version>-linux-x64.tar.gz
+#   <output_dir>/pdf-tile-viewer-vX.X.X-linux-x64.tar.gz
 #
-# The artifact contains:
-#   bin/pdf-tile-viewer
-#   resources/pdfium/linux-x86_64/libpdfium.so
-#   LICENSE
-#   NOTICE
-#   CHANGELOG.md
-#   README.md
+# Archive layout:
+#   pdf-tile-viewer-vX.X.X-linux-x64/
+#     bin/pdf-tile-viewer
+#     resources/pdfium/linux-x86_64/libpdfium.so
+#     LICENSE
+#     NOTICE
+#     CHANGELOG.md
+#     README.md
+#     notes.txt
 
 set -euo pipefail
 
@@ -40,7 +42,7 @@ if [[ ! -f "${PDFIUM_DIR}/libpdfium.so" ]]; then
 fi
 
 APP_VERSION=$(grep '^version' Cargo.toml | head -1 | sed 's/.*= "//;s/"//')
-echo "Packaging pdf-tile-viewer ${APP_VERSION} (linux-x64)"
+echo "Packaging pdf-tile-viewer v${APP_VERSION} (linux-x64)"
 
 # ── 1. Build ──────────────────────────────────────────────────────────────────
 
@@ -51,7 +53,8 @@ env NO_STRIP=1 \
 
 # ── 2. Stage ──────────────────────────────────────────────────────────────────
 
-ARTIFACT_NAME="pdf-tile-viewer-${APP_VERSION}-linux-x64"
+# Archive root dir uses a "v" prefix: pdf-tile-viewer-vX.X.X-linux-x64
+ARTIFACT_NAME="pdf-tile-viewer-v${APP_VERSION}-linux-x64"
 STAGE="${REPO_ROOT}/target/stage/${ARTIFACT_NAME}"
 
 rm -rf "${STAGE}"
@@ -65,9 +68,8 @@ cp NOTICE                           "${STAGE}/"
 cp CHANGELOG.md                     "${STAGE}/"
 cp README.md                        "${STAGE}/"
 
-# Write a concise notes.txt
 cat > "${STAGE}/notes.txt" << NOTES
-PDF Tile Viewer ${APP_VERSION} — Linux x86-64
+PDF Tile Viewer v${APP_VERSION} — Linux x86-64
 
 This is an unsigned development build.
 PDFium: ${PDFIUM_RELEASE_TAG} (dynamic, bundled in resources/)
@@ -95,6 +97,11 @@ PDF_TILE_VIEWER_PDFIUM_DIR="${PDFIUM_DIR}" \
 echo "Smoke tests passed."
 
 # ── 4. Archive ───────────────────────────────────────────────────────────────
+#
+# The staged directory is already named pdf-tile-viewer-vX.X.X-linux-x64,
+# so archiving it directly gives the correct root:
+#   pdf-tile-viewer-vX.X.X-linux-x64/bin/...
+#   pdf-tile-viewer-vX.X.X-linux-x64/resources/...
 
 mkdir -p "${OUTPUT_DIR}"
 (

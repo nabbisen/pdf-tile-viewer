@@ -8,6 +8,7 @@ members = [
     "crates/packaging",
 ]
 default-members = [
+    "crates/app",
     "crates/domain",
     "crates/pdf_engine",
     "crates/app_services",
@@ -15,7 +16,7 @@ default-members = [
 ]
 
 [workspace.package]
-version = "2.0.0-beta.2"
+version = "2.0.0-beta.3"
 edition = "2024"
 license = "Apache-2.0"
 authors = ["nabbisen"]
@@ -33,7 +34,7 @@ png = "0.18"
 futures-channel = "0.3"
 pdfium-render = "0.9"
 dioxus = { version = "0.7.9", features = ["document"] }
-rfd = "0.15"
+rfd = { version = "0.17", features = ["xdg-portal"] }
 base64 = "0.22"
 
 [profile.release]

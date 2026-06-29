@@ -9,6 +9,17 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- **Source archive format** (takes effect from this release onward):
+  - Archive name: `pdf-tile-viewer-vX.X.X.tar.gz` (added `v` prefix).
+  - Archive root: `pdf-tile-viewer-vX.X.X/` containing files directly —
+    no more nested `pdf-tile-viewer/` subdirectory.
+  - `ci/archive-source.sh` added as the canonical source-archive builder;
+    uses GNU tar `--transform` to rename the top-level directory.
+  - `ci/package-linux.sh` updated with the same naming convention for
+    binary release artifacts.
+
 ---
 
 ## [2.0.0-beta.2] — unreleased

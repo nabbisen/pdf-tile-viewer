@@ -15,7 +15,7 @@ sudo apt-get install libwebkit2gtk-4.1-dev libgtk-3-dev libxdo-dev libssl-dev pk
 
 # Fetch PDFium (development) and run
 bash ci/fetch-pdfium.sh
-PDF_TILE_VIEWER_PDFIUM_DIR="$(pwd)/ci/.pdfium" cargo run -p app
+PDF_TILE_VIEWER_PDFIUM_DIR="$(pwd)/ci/.pdfium" cargo run
 ```
 
 ## Package for Linux (x86-64)

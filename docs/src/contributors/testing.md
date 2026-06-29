@@ -1,5 +1,13 @@
 # Running Tests
 
+## Default build set
+
+`crates/app` is in `default-members`, so `cargo test` without flags
+includes the app crate and requires the WebKit/GTK system packages
+(see [Local Development](dev.md#default-build-set-and-the-gui-dependency-tradeoff)).
+
+Use `--exclude app` to run only the library crates on any machine:
+
 ## Unit tests (no PDFium required)
 
 ```sh
