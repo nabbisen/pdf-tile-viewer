@@ -5,8 +5,8 @@ PDF viewer/reader displayed in tile layout. Number of pages in a row is dynamica
 タイル形式の PDF ビュアー / リーダー です。行あたりページ数を、アプリ Window サイズと、Ctrl + マウスホイールで変更可能なズーム倍率から、動的計算します。手動設定も可能です。
 
 <p style="display: flex; gap: 0.8rem; flex-wrap: wrap;">
-  <img style="flex: 1; max-width: calc(40.0% - 0.4rem);" src="docs/.docs-assets/demo-01.png" alt="demo screenshot 01">
-  <img style="flex: 1; max-width: calc(60.0% - 0.4rem);" src="docs/.docs-assets/demo-02.png" alt="demo screenshot 02">
+  <img style="flex: 1; max-width: calc(40.0% - 0.4rem);" src="docs/assets/demo-01.png" alt="demo screenshot 01">
+  <img style="flex: 1; max-width: calc(60.0% - 0.4rem);" src="docs/assets/demo-02.png" alt="demo screenshot 02">
 </p>
 
 ## Usage
@@ -27,7 +27,7 @@ Sorry for inconvenience, but we are volunteers and the certificates are expensiv
 
 ## Features
 
-![manga-intro](docs/.docs-assets/manga-intro.png)
+![manga-intro](docs/assets/manga-intro.png)
 
 **Woman:** Hmm...  
 **Shark:** What's up?  

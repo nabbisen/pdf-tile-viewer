@@ -1,0 +1,85 @@
+:root {
+  color-scheme: light dark;
+  --fg: #1d232a;
+  --muted: #6b7480;
+  --bg: #f6f7f9;
+  --panel: #ffffff;
+  --accent: #2563eb;
+  --danger: #b91c1c;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fg: #e6e8eb;
+    --muted: #9aa3ad;
+    --bg: #14181d;
+    --panel: #1d232a;
+    --accent: #60a5fa;
+    --danger: #f87171;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, "Segoe UI", "Hiragino Sans", "Noto Sans JP", sans-serif;
+  color: var(--fg);
+  background: var(--bg);
+}
+
+.app-shell { min-height: 100vh; display: flex; flex-direction: column; }
+.centered { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.6rem; padding: 2rem; text-align: center; }
+.muted { color: var(--muted); }
+
+button.primary {
+  font-size: 1rem;
+  padding: 0.6rem 1.4rem;
+  border: none;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+}
+button.ghost {
+  background: transparent;
+  border: 1px solid var(--muted);
+  border-radius: 8px;
+  padding: 0.3rem 0.8rem;
+  color: var(--fg);
+  cursor: pointer;
+}
+
+.history { margin-top: 2rem; min-width: 20rem; }
+.history ul { list-style: none; padding: 0; margin: 0; }
+.history li { padding: 0.4rem 0; border-bottom: 1px solid color-mix(in srgb, var(--muted) 30%, transparent); }
+
+.viewer { padding: 1rem 1.5rem; }
+.viewer-header { display: flex; align-items: baseline; gap: 1rem; flex-wrap: wrap; }
+.viewer-header h1 { font-size: 1.2rem; margin: 0; }
+
+.page-preview { margin-top: 1rem; }
+.page-image {
+  max-width: min(90vw, 48rem);
+  height: auto;
+  background: #fff;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
+  border-radius: 4px;
+}
+
+.error-panel {
+  margin: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--danger);
+  border-radius: 8px;
+  background: var(--panel);
+}
+.error-panel h2 { margin-top: 0; color: var(--danger); }
+
+.toast-error {
+  margin: 0.5rem 1rem;
+  padding: 0.5rem 0.8rem;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--danger) 12%, var(--panel));
+  color: var(--danger);
+}

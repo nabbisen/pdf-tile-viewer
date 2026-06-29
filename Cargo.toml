@@ -1,0 +1,41 @@
+[workspace]
+resolver = "3"
+members = [
+    "crates/app",
+    "crates/domain",
+    "crates/pdf_engine",
+    "crates/app_services",
+    "crates/packaging",
+]
+default-members = [
+    "crates/domain",
+    "crates/pdf_engine",
+    "crates/app_services",
+    "crates/packaging",
+]
+
+[workspace.package]
+version = "2.0.0-alpha.1"
+edition = "2024"
+license = "Apache-2.0"
+authors = ["nabbisen"]
+repository = "https://github.com/nabbisen/pdf-tile-viewer"
+
+[workspace.dependencies]
+domain = { path = "crates/domain" }
+pdf_engine = { path = "crates/pdf_engine" }
+app_services = { path = "crates/app_services" }
+packaging = { path = "crates/packaging" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+dirs = "6"
+png = "0.18"
+futures-channel = "0.3"
+pdfium-render = "0.9"
+dioxus = { version = "0.7.9" }
+rfd = "0.15"
+base64 = "0.22"
+
+[profile.release]
+lto = "thin"
+strip = "symbols"
