@@ -17,8 +17,8 @@ RFC designs live in `rfcs/proposed/`; the ADR and detailed roadmap are in
 | M4 | Tile grid + lazy render queue | RFC 006, 007 | ✅ Done (alpha.2) |
 | M5 | Viewer controls, navigation, drag-and-drop | RFC 002, 008, 013 | ✅ Done (alpha.3) |
 | M6 | Search and page markers | RFC 010, 011 | ✅ Done (alpha.4) |
-| M7 | Zoom overlay, zen mode, accessibility | RFC 012, 013 | Planned |
-| M8 | Bundled PDFium packaging + CI release artifacts | RFC 014, 003 | Planned |
+| M7 | Zoom overlay, zen mode, accessibility | RFC 012, 013 | ✅ Done (beta.1) |
+| M8 | Bundled PDFium packaging + CI release artifacts | RFC 014, 003 | ✅ Done (beta.1) |
 | M9 | Performance and large-document hardening | RFC 015 (extended), 016 | Planned |
 | M10 | Decommission old Tauri/Svelte/PDF.js stack | RFC 010 (old) | Planned |
 

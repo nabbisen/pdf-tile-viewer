@@ -17,6 +17,7 @@ use domain::settings::{AppSettingsV1, PagesPerRowPreference};
 use crate::components::search_panel::SearchPanel;
 use crate::components::tile_grid::TileGrid;
 use crate::components::viewer_controls::ViewerControls;
+use crate::components::zoom_overlay::ZoomOverlay;
 use crate::i18n::{Locale, MessageKey, t};
 use crate::state::{OpenDocumentView, Phase, SearchState, TileImageState, TileImages};
 
@@ -47,6 +48,7 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
     });
     let show_page_numbers = use_signal(|| settings.read().viewer.show_page_numbers);
     let mut zen_mode: Signal<bool> = use_signal(|| false);
+    let zoom_page: Signal<Option<domain::document::PageIndex>> = use_signal(|| None);
     let mut show_search: Signal<bool> = use_signal(|| false);
     let mut viewport_width: Signal<f32> = use_signal(|| DEFAULT_VIEWPORT_PX);
     let mut tile_images: Signal<TileImages> = use_signal(|| {
@@ -91,6 +93,8 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
             LayoutGeneration(0),
         )
     });
+
+    let page_descriptors = session.pages.clone();
 
     // Pre-clone for SearchPanel (used after render scheduling)
     let rs_for_search = render_service.clone();
@@ -233,7 +237,8 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
                         _ => {}
                     },
                     Key::Escape => {
-                        if in_zen { zen_mode.set(false); }
+                        if zoom_page.peek().is_some() { zoom_page.clone().set(None); }
+                        else if in_zen { zen_mode.set(false); }
                         else if *show_search.peek() { show_search.set(false); }
                         else { phase.set(Phase::Dashboard); }
                     }
@@ -315,9 +320,26 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
                 tile_images,
                 show_page_numbers: *show_page_numbers.read(),
                 search_summaries,
-                search_highlights,
-                on_tile_click: None,
+                search_highlights: search_highlights.clone(),
+                on_tile_click: Some(Callback::new(move |idx: domain::document::PageIndex| {
+                    zoom_page.clone().set(Some(idx));
+                })),
                 scroll_container_id: "viewer-scroll".to_string(),
+            }
+
+            // RFC 012 zoom overlay
+            if zoom_page.read().is_some() {
+                ZoomOverlay {
+                    document_id: view.session.id,
+                    generation: view.session.generation,
+                    page_index: zoom_page,
+                    page_count,
+                    search_highlights: search_highlights.clone(),
+                    page_descriptors: page_descriptors.clone(),
+                    on_close: Callback::new(move |_| {
+                        zoom_page.clone().set(None);
+                    }),
+                }
             }
 
             if in_zen {

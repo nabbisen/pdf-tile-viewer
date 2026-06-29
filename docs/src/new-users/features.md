@@ -25,6 +25,7 @@
 - Settings persist across sessions (scale, pages-per-row, page numbers).
 - Reveal-in-file-manager button.
 - Keyboard shortcuts: +/-, 0 reset scale, Z zen, Escape navigate.
+- Click any tile to open it in a zoom overlay for detailed inspection.
 
 ## Coming in upcoming milestones
 

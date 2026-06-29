@@ -4,6 +4,7 @@
 //! data may live; it never decides PDF document behavior.
 
 pub mod app_dirs;
+pub mod build_info;
 pub mod pdfium_bundle;
 
 #[cfg(test)]

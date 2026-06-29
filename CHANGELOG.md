@@ -11,6 +11,44 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [2.0.0-beta.1] — unreleased
+
+Zoom overlay (M7) and release packaging infrastructure (M8).
+This milestone achieves feature parity with the original v1.1.x
+Tauri + SvelteKit application (minus multi-tab and per-document state).
+
+### Added — Zoom Overlay (RFC 012)
+
+- **`app/components/zoom_overlay.rs`**: click any tile → full overlay with
+  dimmed backdrop, high-resolution page render at `viewer.zoom_overlay_scale`
+  (default 2.7×), scale ±, prev/next/first/last navigation, RFC 011 highlight
+  overlays, `autofocus` on close button, stop-propagation on panel click.
+- **Keyboard shortcuts** (RFC 012 §9 / RFC 013 §8): Escape close,
+  ←/→/PageUp/PageDown navigate, Home/End, +/- scale.
+- Escape key priority order in viewer: zoom overlay → search panel →
+  zen mode → back to dashboard.
+- `png_dimensions()` helper reads the IHDR chunk without full decode for
+  correct coordinate transform scaling.
+
+### Added — Release Packaging (RFC 014)
+
+- **`packaging/src/build_info.rs`**: `BuildInfo` struct populated at
+  compile-time (`env!("CARGO_PKG_VERSION")`, `option_env!("VERGEN_GIT_SHA")`,
+  `env!("TARGET")`); short_version() for diagnostics display (RFC 014 §8).
+- **`crates/packaging/build.rs`**: re-exports the `TARGET` triple as
+  `CARGO_ENV_TARGET` for use in `BuildInfo`.
+- **`ci/package-linux.sh`**: full packaging pipeline — release build,
+  staging directory with binary + bundled PDFium + docs, engine smoke test,
+  `.tar.gz` archive output (RFC 014 §7).
+
+### Changed
+
+- `zoom_page: Signal<Option<PageIndex>>` in viewer drives overlay open/close.
+- Tile click callback wired: `on_tile_click: Some(Callback::new(…))`.
+- Search highlights passed into zoom overlay for RFC 011 alignment in zoomed view.
+
+---
+
 ## [2.0.0-alpha.4] — unreleased
 
 Text search with page markers and highlight coordinate overlays (M6).
