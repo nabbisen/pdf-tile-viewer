@@ -11,6 +11,41 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [2.0.0-alpha.2] — unreleased
+
+Tile grid renderer, lazy page rendering, and viewer controls (M4).
+
+### Added
+
+- **Tile grid** (`app/components/tile_grid.rs`): all document pages rendered
+  as absolute-positioned tiles in a scroll container, sized by the layout
+  engine (RFC 006). Shows a loading pulse animation while rendering, an error
+  state on failure, and optional per-tile page-number labels.
+- **Render service** (`app_services/render_service.rs`): `RenderCache` (LRU,
+  budget-aware, generation-eviction, 6 new unit tests) and `RenderService`
+  wrapping `EngineHandle`. Cache is provided via Dioxus context and shared
+  across all spawned render tasks (RFC 007).
+- **Lazy render scheduling** (RFC 007 §8): on viewer mount and scale/mode
+  change, `render_gen` is bumped; `use_effect` spawns one async task per tile.
+  Tasks guard-check the generation on completion to silently discard stale
+  results (Appendix A §8).
+- **Viewer controls** (`app/components/viewer_controls.rs`): scale slider with
+  ± buttons (RFC 008 §9.1), auto/fixed pages-per-row toggle (RFC 008 §9.2),
+  page-number visibility checkbox, jump-to-page with one-based validation and
+  JS `scrollIntoView` (RFC 008 §9.3).
+- **Ctrl+scroll** wheel binding on the tile grid container rescales tiles.
+- **`dioxus::document` feature** enabled for JS `eval` support (jump-to-page).
+- `PartialEq` added to layout domain types (`TileLayout`, `TileRow`,
+  `PageTileLayout`, `TileLayoutInput`, `ViewerScale`) required by Dioxus
+  `#[component]` props and `use_memo`.
+
+### Changed
+
+- Viewer screen (`app/screens/viewer.rs`) fully rewritten to use the tile grid;
+  page-1 data-URI preview retained as fallback only.
+
+---
+
 ## [2.0.0-alpha.1] — unreleased
 
 Complete architectural migration from the Tauri + SvelteKit + PDF.js stack

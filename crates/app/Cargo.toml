@@ -15,5 +15,5 @@ domain = { workspace = true }
 app_services = { workspace = true, features = ["native-dialogs"] }
 pdf_engine = { workspace = true }
 packaging = { workspace = true }
-dioxus = { workspace = true, features = ["desktop"] }
+dioxus = { workspace = true, features = ["desktop", "document"] }
 base64 = { workspace = true }

@@ -10,9 +10,17 @@
 - English and Japanese interface (system locale auto-detected).
 - Privacy safe by default: no telemetry, no cloud upload.
 
+## Current (alpha.2)
+
+- Tile grid — all pages rendered as a scaleable tile overview.
+- Scale control (slider, ± buttons, Ctrl+scroll wheel).
+- Auto / fixed pages-per-row toggle.
+- Page-number labels toggle.
+- Jump-to-page with one-based input validation.
+
 ## Coming in upcoming milestones
 
-- Tile grid — all pages visible at once, scaleable.
+- Search with text highlights.
 - Text search with page markers.
 - Zoom overlay for detailed page inspection.
 - Zen mode (minimal controls).

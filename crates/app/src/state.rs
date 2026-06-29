@@ -4,9 +4,10 @@
 //! handed over through a `OnceLock`; reactive state lives in signals owned
 //! by the root component.
 
+use std::collections::HashMap;
 use std::sync::OnceLock;
 
-use domain::document::DocumentSession;
+use domain::document::{DocumentSession, PageIndex};
 use pdf_engine::worker::EngineHandle;
 
 /// Result of pre-UI engine boot. `Err` carries a user-presentable
@@ -27,6 +28,22 @@ pub fn engine_boot_error() -> Option<String> {
     BOOT.get().and_then(|b| b.as_ref().err()).cloned()
 }
 
+/// Render state of a single page tile (RFC 007 §11).
+///
+/// `Rendering(gen)` carries the layout-generation at the time the render was
+/// requested; stale completions (wrong gen) are silently dropped.
+#[derive(Clone, Debug, PartialEq)]
+pub enum TileImageState {
+    Pending,
+    Rendering(u64),
+    /// `data:image/png;base64,…` — provisional M4 transport (RFC 005 §7).
+    Ready(String),
+    Failed(String),
+}
+
+/// Per-document tile-image map: page index → render state.
+pub type TileImages = HashMap<PageIndex, TileImageState>;
+
 /// What the viewer screen shows for the vertical slice (RFC 005 §6):
 /// the opened session plus the provisional page-1 preview.
 #[derive(Clone, Debug, PartialEq)]
@@ -40,7 +57,7 @@ pub struct OpenDocumentView {
 
 /// Top-level UI phase: dashboard or viewer (router deferred; the vertical
 /// slice switches on state per RFC 005 §5 "minimal shell").
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub enum Phase {
     #[default]
     Dashboard,

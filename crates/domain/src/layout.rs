@@ -7,7 +7,7 @@
 use crate::document::{PageDescriptor, PageIndex};
 
 /// Pixels-per-point multiplier applied to page geometry.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct ViewerScale(pub f32);
 
 impl ViewerScale {
@@ -40,7 +40,7 @@ pub struct RectPx {
     pub height: f32,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct TileLayoutInput {
     pub pages: Vec<PageDescriptor>,
     pub viewport_width_px: f32,
@@ -51,7 +51,7 @@ pub struct TileLayoutInput {
     pub label_height_px: f32,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct TileRow {
     pub row_index: usize,
     pub y_px: f32,
@@ -59,7 +59,7 @@ pub struct TileRow {
     pub tile_indices: Vec<PageIndex>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct PageTileLayout {
     pub page_index: PageIndex,
     pub row_index: usize,
@@ -71,7 +71,7 @@ pub struct PageTileLayout {
     pub label_rect_px: Option<RectPx>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct TileLayout {
     pub generation: LayoutGeneration,
     pub content_width_px: f32,

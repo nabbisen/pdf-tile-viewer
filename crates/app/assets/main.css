@@ -83,3 +83,61 @@ button.ghost {
   background: color-mix(in srgb, var(--danger) 12%, var(--panel));
   color: var(--danger);
 }
+
+/* ── Viewer layout ─────────────────────────────────────────── */
+.viewer { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+.viewer-title { font-size: 1rem; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 40vw; }
+
+/* ── Viewer controls toolbar ──────────────────────────────── */
+.viewer-controls {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem;
+  padding: 0.5rem 1rem; border-bottom: 1px solid color-mix(in srgb, var(--muted) 30%, transparent);
+  background: var(--panel); flex-shrink: 0;
+}
+.control-group { display: flex; align-items: center; gap: 0.25rem; }
+.control-label { font-size: 0.75rem; color: var(--muted); white-space: nowrap; }
+.scale-slider { width: 80px; accent-color: var(--accent); }
+.scale-label { font-size: 0.75rem; min-width: 2.8rem; text-align: right; }
+.icon-btn { width: 1.6rem; height: 1.6rem; padding: 0; font-size: 1rem; line-height: 1; }
+.pages-per-row-input { width: 3rem; padding: 0.2rem 0.3rem; border: 1px solid var(--muted); border-radius: 4px; background: var(--bg); color: var(--fg); }
+.jump-input { width: 3.5rem; padding: 0.2rem 0.3rem; border: 1px solid var(--muted); border-radius: 4px; background: var(--bg); color: var(--fg); }
+.jump-error { font-size: 0.75rem; }
+button.ghost.active { background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent); border-color: var(--accent); }
+
+/* ── Tile grid scroll container ───────────────────────────── */
+.tile-grid-scroll {
+  flex: 1; overflow: auto;
+  background: color-mix(in srgb, var(--muted) 8%, var(--bg));
+}
+.tile-grid-canvas { /* sized dynamically via inline style */ }
+
+/* ── Individual page tiles ────────────────────────────────── */
+.page-tile {
+  box-sizing: border-box; cursor: default;
+  transition: box-shadow 0.15s ease;
+}
+.page-tile:hover { z-index: 1; }
+.tile-image-area { background: #fff; box-shadow: 0 1px 6px rgba(0,0,0,0.18); border-radius: 2px; overflow: hidden; }
+.tile-img { display: block; }
+
+/* ── Tile placeholder states ──────────────────────────────── */
+.tile-placeholder {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 0.4rem; font-size: 0.75rem; color: var(--muted);
+}
+.tile-placeholder.error { color: var(--danger); }
+.tile-loading-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--muted);
+  animation: tile-pulse 1.2s ease-in-out infinite;
+}
+@keyframes tile-pulse {
+  0%, 100% { opacity: 0.3; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+
+/* ── Tile page number label ───────────────────────────────── */
+.tile-label {
+  text-align: center; font-size: 0.7rem; color: var(--muted);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}

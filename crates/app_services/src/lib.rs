@@ -14,6 +14,7 @@ pub mod document_service;
 pub mod engine_boot;
 pub mod history_service;
 pub mod platform;
+pub mod render_service;
 pub mod settings_service;
 
 #[cfg(test)]

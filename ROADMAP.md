@@ -14,7 +14,7 @@ RFC designs live in `rfcs/proposed/`; the ADR and detailed roadmap are in
 | M1 | PDF core extraction | RFC 002, 004 | ✅ Done (this release) |
 | M2 | Dioxus shell + settings | RFC 001, 008, 009 | ✅ Done (this release) |
 | M3 | RFC 005 vertical slice (page-1 preview) | RFC 005 | ✅ Done (this release) |
-| M4 | Tile grid + lazy render queue | RFC 006, 007 | Planned |
+| M4 | Tile grid + lazy render queue | RFC 006, 007 | ✅ Done (alpha.2) |
 | M5 | Viewer controls, navigation, drag-and-drop | RFC 002, 008, 013 | Planned |
 | M6 | Search and page markers | RFC 010, 011 | Planned |
 | M7 | Zoom overlay, zen mode, accessibility | RFC 012, 013 | Planned |

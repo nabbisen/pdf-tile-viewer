@@ -7,4 +7,5 @@
 mod document;
 mod engine_boot;
 mod history;
+mod render_service;
 mod settings;

@@ -1,14 +1,16 @@
-//! Root component (RFC 001 shell + RFC 005 vertical slice flow).
+//! Root component (RFC 001 shell + RFC 005/M4 tile viewer).
 //!
-//! Open flow: native picker → intake validation + engine open
-//! (`app_services::document_service`) → render page 1 at the default scale
-//! → provisional PNG data URI (replaced by the render cache in RFC 007).
+//! Boot order: engine is already bound by `main`; we create the
+//! `RenderService` (RFC 007) here and provide it via context so every
+//! nested component can request renders without threading handles through
+//! props.
 
 use base64::Engine as _;
 use dioxus::prelude::*;
 
 use app_services::document_service;
 use app_services::history_service::SessionHistory;
+use app_services::render_service::{DEFAULT_CACHE_BUDGET_BYTES, RenderService};
 use app_services::settings_service::SettingsStore;
 use domain::document::PageIndex;
 use domain::render::{
@@ -35,6 +37,18 @@ pub fn App() -> Element {
 
     use_context_provider(|| settings);
     use_context_provider(|| locale);
+
+    // Provide the render service; all descendant components share it.
+    if let Some(engine) = state::engine() {
+        let budget = settings
+            .peek()
+            .advanced
+            .render_cache_budget_mb
+            .map(|mb| (mb as usize).saturating_mul(1024 * 1024))
+            .unwrap_or(DEFAULT_CACHE_BUDGET_BYTES);
+        use_context_provider(|| RenderService::with_default_budget(engine));
+        let _ = budget; // will be plumbed in RFC 008 settings panel
+    }
 
     let body = match &*phase.read() {
         Phase::Dashboard => rsx! {
@@ -70,8 +84,6 @@ pub fn App() -> Element {
     }
 }
 
-/// Build the "Open PDF" handler shared by dashboard button (and, later,
-/// drag & drop — RFC 002 M2).
 fn open_document_action(
     settings: Signal<AppSettingsV1>,
     mut phase: Signal<Phase>,
@@ -82,7 +94,7 @@ fn open_document_action(
         let default_scale = settings.read().viewer.default_scale;
         spawn(async move {
             let Some(path) = app_services::platform::pick_pdf_file().await else {
-                return; // user cancelled
+                return;
             };
             let Some(engine) = state::engine() else {
                 last_error.set(Some(MessageKey::EngineUnavailableTitle));
@@ -108,7 +120,8 @@ fn open_document_action(
                 render_error: None,
             };
 
-            // RFC 005: render page 1 only; tile grid arrives with RFC 006/007.
+            // Render page 1 preview for the Viewer initial header image
+            // (superseded by the tile grid in M4, but retained as fallback).
             let request = RenderPageRequest {
                 document_id: session.id,
                 generation: session.generation,
@@ -118,15 +131,12 @@ fn open_document_action(
                 format: RenderOutputFormat::Png,
             };
             match engine.render_page(request).await {
-                Ok(Ok(image)) => match image.payload {
-                    RenderedImagePayload::Bytes(png) => {
+                Ok(Ok(image)) => {
+                    if let RenderedImagePayload::Bytes(png) = image.payload {
                         let b64 = base64::engine::general_purpose::STANDARD.encode(&png);
                         view.page_one_data_uri = Some(format!("data:image/png;base64,{b64}"));
                     }
-                    RenderedImagePayload::DataUri(uri) => {
-                        view.page_one_data_uri = Some(uri);
-                    }
-                },
+                }
                 Ok(Err(e)) => view.render_error = Some(format!("{e:?}")),
                 Err(_) => view.render_error = Some("engine unavailable".to_string()),
             }
