@@ -236,9 +236,6 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
                         {t(locale(), MessageKey::ViewerBackToDashboard)}
                     }
                     h1 { class: "viewer-title", "{display_name}" }
-                    span { class: "muted",
-                        {t(locale(), MessageKey::ViewerPageCountLabel)} ": {page_count}"
-                    }
                     button {
                         class: if *show_search.read() { "ghost icon-btn active" } else { "ghost icon-btn" },
                         title: t(locale(), MessageKey::SearchButton),

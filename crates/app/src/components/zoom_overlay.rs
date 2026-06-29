@@ -133,163 +133,147 @@ pub fn ZoomOverlay(
     };
 
     rsx! {
-        div {
-            class: "zoom-backdrop",
-            role: "dialog",
-            "aria-modal": "true",
-            "aria-label": "Page zoom view",
-            tabindex: "-1",
-            // Keyboard navigation (RFC 012 §9)
-            onkeydown: move |evt: Event<KeyboardData>| {
-                match evt.key() {
-                    Key::Escape => on_close.call(()),
-                    Key::ArrowLeft | Key::PageUp => {
-                        if can_prev { goto(current_idx.0 - 1); }
-                    }
-                    Key::ArrowRight | Key::PageDown => {
-                        if can_next { goto(current_idx.0 + 1); }
-                    }
-                    Key::Home => goto(0),
-                    Key::End => goto(page_count.saturating_sub(1)),
-                    Key::Character(ref s) => match s.as_str() {
-                        "+" | "=" => {
-                            let v = (*zoom_scale.peek() + ZOOM_SCALE_STEP).min(ZOOM_SCALE_MAX);
-                            zoom_scale.set(v);
-                        }
-                        "-" => {
-                            let v = (*zoom_scale.peek() - ZOOM_SCALE_STEP).max(ZOOM_SCALE_MIN);
-                            zoom_scale.set(v);
-                        }
-                        _ => {}
-                    },
-                    _ => {}
-                }
-            },
-            // Click backdrop to close
-            onclick: move |_| on_close.call(()),
-
             div {
-                class: "zoom-panel",
-                // Prevent backdrop-click from bubbling through the panel
-                onclick: move |evt| evt.stop_propagation(),
-
-                // ── Header ─────────────────────────────────────────────
-                div { class: "zoom-header",
-                    span { class: "zoom-page-indicator",
-                        {t(locale(), MessageKey::ZoomPageIndicator)}
-                        " {display_num} / {page_count}"
-                    }
-                    div { class: "zoom-scale-ctrl",
-                        label { class: "muted control-label",
-                            {t(locale(), MessageKey::ZoomScaleLabel)}
+                class: "zoom-backdrop",
+                role: "dialog",
+                "aria-modal": "true",
+                "aria-label": "Page zoom view",
+                tabindex: "-1",
+                // Keyboard navigation (RFC 012 §9)
+                onkeydown: move |evt: Event<KeyboardData>| {
+                    match evt.key() {
+                        Key::Escape => on_close.call(()),
+                        Key::ArrowLeft | Key::PageUp => {
+                            if can_prev { goto(current_idx.0 - 1); }
                         }
-                        button {
-                            class: "ghost icon-btn",
-                            disabled: *zoom_scale.read() <= ZOOM_SCALE_MIN,
-                            onclick: move |_| {
-                                let v = (*zoom_scale.peek() - ZOOM_SCALE_STEP).max(ZOOM_SCALE_MIN);
-                                zoom_scale.set(v);
-                            },
-                            "−"
+                        Key::ArrowRight | Key::PageDown => {
+                            if can_next { goto(current_idx.0 + 1); }
                         }
-                        span { class: "muted scale-label",
-                            "{(*zoom_scale.read() * 100.0).round() as i32}%"
-                        }
-                        button {
-                            class: "ghost icon-btn",
-                            disabled: *zoom_scale.read() >= ZOOM_SCALE_MAX,
-                            onclick: move |_| {
+                        Key::Home => goto(0),
+                        Key::End => goto(page_count.saturating_sub(1)),
+                        Key::Character(ref s) => match s.as_str() {
+                            "+" | "=" => {
                                 let v = (*zoom_scale.peek() + ZOOM_SCALE_STEP).min(ZOOM_SCALE_MAX);
                                 zoom_scale.set(v);
-                            },
-                            "+"
+                            }
+                            "-" => {
+                                let v = (*zoom_scale.peek() - ZOOM_SCALE_STEP).max(ZOOM_SCALE_MIN);
+                                zoom_scale.set(v);
+                            }
+                            _ => {}
+                        },
+                        _ => {}
+                    }
+                },
+                // Click backdrop to close
+                onclick: move |_| on_close.call(()),
+
+                div {
+                    class: "zoom-panel",
+                    // Prevent backdrop-click from bubbling through the panel
+                    onclick: move |evt| evt.stop_propagation(),
+
+                    // ── Header ─────────────────────────────────────────────
+                    div { class: "zoom-header",
+                        span { class: "zoom-page-indicator",
+                            {t(locale(), MessageKey::ZoomPageIndicator)}
+                            " {display_num} / {page_count}"
+                        }
+                        div { class: "zoom-scale-ctrl",
+                            label { class: "muted control-label",
+                                {t(locale(), MessageKey::ZoomScaleLabel)}
+                            }
+                            button {
+                                class: "ghost icon-btn",
+                                disabled: *zoom_scale.read() <= ZOOM_SCALE_MIN,
+                                onclick: move |_| {
+                                    let v = (*zoom_scale.peek() - ZOOM_SCALE_STEP).max(ZOOM_SCALE_MIN);
+                                    zoom_scale.set(v);
+                                },
+                                "−"
+                            }
+                            span { class: "muted scale-label",
+                                "{(*zoom_scale.read() * 100.0).round() as i32}%"
+                            }
+                            button {
+                                class: "ghost icon-btn",
+                                disabled: *zoom_scale.read() >= ZOOM_SCALE_MAX,
+                                onclick: move |_| {
+                                    let v = (*zoom_scale.peek() + ZOOM_SCALE_STEP).min(ZOOM_SCALE_MAX);
+                                    zoom_scale.set(v);
+                                },
+                                "+"
+                            }
+                        }
+                        button {
+                            class: "ghost zoom-close",
+                            autofocus: true,
+                            "aria-label": t(locale(), MessageKey::ZoomClose),
+                            onclick: move |_| on_close.call(()),
+                            {t(locale(), MessageKey::ZoomClose)}
                         }
                     }
-                    button {
-                        class: "ghost zoom-close",
-                        autofocus: true,
-                        "aria-label": t(locale(), MessageKey::ZoomClose),
-                        onclick: move |_| on_close.call(()),
-                        {t(locale(), MessageKey::ZoomClose)}
-                    }
-                }
 
-                // ── Page image ─────────────────────────────────────────
-                div { class: "zoom-image-container",
-                    match &*zoom_image.read() {
-                        ZoomImageState::Ready { uri, width_px, height_px } => rsx! {
-                            div {
-                                class: "zoom-image-wrap",
-                                style: "position: relative; display: inline-block;",
-                                img {
-                                    class: "zoom-img",
-                                    src: "{uri}",
-                                    alt: "Page {display_num}",
-                                    style: "display: block; max-width: 100%; height: auto;",
-                                    width: "{width_px}",
-                                    height: "{height_px}",
-                                }
-                                // RFC 011 highlights in zoom view
-                                for rect in highlight_rects.iter().copied() {
-                                    {
-                                        let (rx, ry, rw, rh) = (rect.x, rect.y, rect.width, rect.height);
-                                        rsx! {
-                                            div {
-                                                class: "highlight-overlay",
-                                                style: "left:{rx}px; top:{ry}px; width:{rw}px; height:{rh}px;",
+                    // ── Page image ─────────────────────────────────────────
+                    div { class: "zoom-image-container",
+                        match &*zoom_image.read() {
+                            ZoomImageState::Ready { uri, width_px, height_px } => rsx! {
+                                div {
+                                    class: "zoom-image-wrap",
+                                    style: "position: relative; display: inline-block;",
+                                    img {
+                                        class: "zoom-img",
+                                        src: "{uri}",
+                                        alt: "Page {display_num}",
+                                        style: "display: block; max-width: 100%; height: auto;",
+                                        width: "{width_px}",
+                                        height: "{height_px}",
+                                    }
+                                    // RFC 011 highlights in zoom view
+                                    for rect in highlight_rects.iter().copied() {
+                                        {
+                                            let (rx, ry, rw, rh) = (rect.x, rect.y, rect.width, rect.height);
+                                            rsx! {
+                                                div {
+                                                    class: "highlight-overlay",
+                                                    style: "left:{rx}px; top:{ry}px; width:{rw}px; height:{rh}px;",
+                                                }
                                             }
                                         }
                                     }
                                 }
-                            }
-                        },
-                        ZoomImageState::Loading => rsx! {
-                            div { class: "zoom-placeholder",
-                                span { class: "tile-loading-dot" }
-                            }
-                        },
-                        ZoomImageState::Failed(msg) => rsx! {
-                            div { class: "zoom-placeholder error",
-                                "⚠ {msg}"
-                            }
-                        },
+                            },
+                            ZoomImageState::Loading => rsx! {
+                                div { class: "zoom-placeholder",
+                                    span { class: "tile-loading-dot" }
+                                }
+                            },
+                            ZoomImageState::Failed(msg) => rsx! {
+                                div { class: "zoom-placeholder error",
+                                    "⚠ {msg}"
+                                }
+                            },
+                        }
                     }
-                }
 
-                // ── Navigation footer ──────────────────────────────────
-                div { class: "zoom-footer",
-                    button {
-                        class: "ghost",
-                        disabled: !can_prev,
-                        title: t(locale(), MessageKey::ZoomFirstPage),
-                        "aria-label": t(locale(), MessageKey::ZoomFirstPage),
-                        onclick: move |_| goto(0),
-                        "⏮"
-                    }
-                    button {
-                        class: "ghost",
-                        disabled: !can_prev,
-                        "aria-label": t(locale(), MessageKey::ZoomPrevPage),
-                        onclick: move |_| { if can_prev { goto(current_idx.0 - 1); } },
-                        {t(locale(), MessageKey::ZoomPrevPage)}
-                    }
-                    button {
-                        class: "ghost",
-                        disabled: !can_next,
-                        "aria-label": t(locale(), MessageKey::ZoomNextPage),
-                        onclick: move |_| { if can_next { goto(current_idx.0 + 1); } },
-                        {t(locale(), MessageKey::ZoomNextPage)}
-                    }
-                    button {
-                        class: "ghost",
-                        disabled: !can_next,
-                        title: t(locale(), MessageKey::ZoomLastPage),
-                        "aria-label": t(locale(), MessageKey::ZoomLastPage),
-                        onclick: move |_| goto(page_count.saturating_sub(1)),
-                        "⏭"
+                    // ── Navigation footer ──────────────────────────────────
+                    div { class: "zoom-footer",
+    button {
+                            class: "ghost",
+                            disabled: !can_prev,
+                            "aria-label": t(locale(), MessageKey::ZoomPrevPage),
+                            onclick: move |_| { if can_prev { goto(current_idx.0 - 1); } },
+                            {t(locale(), MessageKey::ZoomPrevPage)}
+                        }
+                        button {
+                            class: "ghost",
+                            disabled: !can_next,
+                            "aria-label": t(locale(), MessageKey::ZoomNextPage),
+                            onclick: move |_| { if can_next { goto(current_idx.0 + 1); } },
+                            {t(locale(), MessageKey::ZoomNextPage)}
+                        }
                     }
                 }
             }
         }
-    }
 }

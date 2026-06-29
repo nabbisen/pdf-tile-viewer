@@ -1,29 +1,34 @@
-//! Viewer toolbar: scale, pages-per-row, page numbers, jump-to-page
-//! (RFC 008 §5 ViewerToolbar).
+//! Viewer toolbar: primary scale control always visible; secondary controls
+//! (pages-per-row, page numbers, jump-to-page) collapsed behind a ⚙ toggle.
+//!
+//! Design principle — less is more (RFC 008 §5):
+//! A new user needs only the scale slider. The remaining controls are
+//! revealed on demand so the toolbar stays uncluttered by default.
 
 use dioxus::prelude::*;
 
 use domain::layout::{MAX_FIXED_PAGES_PER_ROW, PagesPerRowMode, ViewerScale};
 
-/// Viewer toolbar props.
+use crate::i18n::{Locale, MessageKey, t};
+
 #[component]
 pub fn ViewerControls(
     page_count: usize,
     scale: Signal<f32>,
     mode: Signal<PagesPerRowMode>,
     show_page_numbers: Signal<bool>,
-    /// Callback(page_index 0-based) to request scroll-to-page.
     on_jump: Callback<usize>,
 ) -> Element {
+    let locale: Memo<Locale> = use_context();
+    let mut show_secondary = use_signal(|| false);
     let jump_input = use_signal(String::new);
-    let jump_error = use_signal(|| Option::<String>::None);
+    let jump_error: Signal<Option<String>> = use_signal(|| None);
 
     rsx! {
         div { class: "viewer-controls",
 
-            // ── Scale ──────────────────────────────────────────────────────
+            // ── Primary: scale ────────────────────────────────────────────
             div { class: "control-group",
-                label { class: "control-label", "Scale" }
                 button {
                     class: "ghost icon-btn",
                     title: "Zoom out",
@@ -57,71 +62,112 @@ pub fn ViewerControls(
                     },
                     "+"
                 }
-                span { class: "muted scale-label",
-                    "{(*scale.read() * 100.0).round() as i32}%"
-                }
             }
 
-            // ── Pages per row ──────────────────────────────────────────────
-            div { class: "control-group",
-                label { class: "control-label", "Cols" }
-                button {
-                    class: if matches!(*mode.read(), PagesPerRowMode::Auto) { "ghost active" } else { "ghost" },
-                    onclick: move |_| mode.set(PagesPerRowMode::Auto),
-                    "Auto"
-                }
-                input {
-                    r#type: "number",
-                    class: "pages-per-row-input",
-                    min: "1",
-                    max: "{MAX_FIXED_PAGES_PER_ROW}",
-                    value: {
-                        match *mode.read() {
-                            PagesPerRowMode::Fixed(n) => format!("{n}"),
-                            PagesPerRowMode::Auto => "5".to_string(),
-                        }
-                    },
-                    oninput: move |evt| {
-                        if let Ok(n) = evt.value().parse::<u16>() {
-                            let clamped = n.clamp(1, MAX_FIXED_PAGES_PER_ROW);
-                            mode.set(PagesPerRowMode::Fixed(clamped));
-                        }
-                    },
-                }
+            // ── Secondary toggle ──────────────────────────────────────────
+            button {
+                class: if *show_secondary.read() { "ghost icon-btn active" } else { "ghost icon-btn" },
+                title: "More controls",
+                "aria-label": "More controls",
+                "aria-expanded": if *show_secondary.read() { "true" } else { "false" },
+                onclick: move |_| show_secondary.toggle(),
+                "⚙"
             }
 
-            // ── Page numbers toggle ────────────────────────────────────────
-            div { class: "control-group",
-                label { class: "control-label",
-                    input {
-                        r#type: "checkbox",
-                        checked: *show_page_numbers.read(),
-                        onchange: move |evt| show_page_numbers.set(evt.checked()),
+            // ── Secondary: columns, page numbers, jump ────────────────────
+            if *show_secondary.read() {
+                // Pages per row
+                div { class: "control-group",
+                    label { class: "control-label", {t(locale(), MessageKey::ColumnsLabel)} }
+                    button {
+                        class: if matches!(*mode.read(), PagesPerRowMode::Auto) {
+                            "ghost active"
+                        } else {
+                            "ghost"
+                        },
+                        onclick: move |_| mode.set(PagesPerRowMode::Auto),
+                        {t(locale(), MessageKey::ColumnsAuto)}
                     }
-                    " #"
+                    if matches!(*mode.read(), PagesPerRowMode::Fixed(_)) {
+                        input {
+                            r#type: "number",
+                            class: "pages-per-row-input",
+                            min: "1",
+                            max: "{MAX_FIXED_PAGES_PER_ROW}",
+                            value: {
+                                match *mode.read() {
+                                    PagesPerRowMode::Fixed(n) => format!("{n}"),
+                                    PagesPerRowMode::Auto => "5".to_string(),
+                                }
+                            },
+                            oninput: move |evt| {
+                                if let Ok(n) = evt.value().parse::<u16>() {
+                                    mode.set(PagesPerRowMode::Fixed(
+                                        n.clamp(1, MAX_FIXED_PAGES_PER_ROW),
+                                    ));
+                                }
+                            },
+                        }
+                    } else {
+                        // Show a disabled input hint while in Auto mode
+                        input {
+                            r#type: "number",
+                            class: "pages-per-row-input",
+                            disabled: true,
+                            placeholder: "auto",
+                            onclick: move |_| mode.set(PagesPerRowMode::Fixed(5)),
+                        }
+                    }
                 }
-            }
 
-            // ── Jump to page ───────────────────────────────────────────────
-            div { class: "control-group",
-                label { class: "control-label", "p." }
-                input {
-                    r#type: "number",
-                    class: "jump-input",
-                    min: "1",
-                    max: "{page_count}",
-                    placeholder: "…",
-                    value: "{jump_input.read()}",
-                    oninput: {
-                        let mut jump_input = jump_input.clone();
-                        move |evt| jump_input.set(evt.value())
-                    },
-                    onkeydown: {
-                        let jump_input = jump_input.clone();
-                        let mut jump_error = jump_error.clone();
-                        let on_jump = on_jump.clone();
-                        move |evt: Event<KeyboardData>| {
-                            if evt.key() == Key::Enter {
+                // Page numbers
+                div { class: "control-group",
+                    label { class: "control-label",
+                        input {
+                            r#type: "checkbox",
+                            checked: *show_page_numbers.read(),
+                            onchange: move |evt| show_page_numbers.set(evt.checked()),
+                        }
+                        " " {t(locale(), MessageKey::PageNumbersLabel)}
+                    }
+                }
+
+                // Jump to page
+                div { class: "control-group",
+                    label { class: "control-label", {t(locale(), MessageKey::JumpToPageLabel)} }
+                    input {
+                        r#type: "number",
+                        class: "jump-input",
+                        min: "1",
+                        max: "{page_count}",
+                        placeholder: "…",
+                        value: "{jump_input.read()}",
+                        oninput: {
+                            let mut jump_input = jump_input.clone();
+                            move |evt| jump_input.set(evt.value())
+                        },
+                        onkeydown: {
+                            let jump_input = jump_input.clone();
+                            let mut jump_error = jump_error.clone();
+                            let on_jump = on_jump.clone();
+                            move |evt: Event<KeyboardData>| {
+                                if evt.key() == Key::Enter {
+                                    handle_jump(
+                                        &jump_input.read(),
+                                        page_count,
+                                        &on_jump,
+                                        &mut jump_error,
+                                    );
+                                }
+                            }
+                        },
+                    }
+                    button {
+                        class: "ghost",
+                        onclick: {
+                            let mut jump_error = jump_error.clone();
+                            let on_jump = on_jump.clone();
+                            move |_| {
                                 handle_jump(
                                     &jump_input.read(),
                                     page_count,
@@ -129,34 +175,18 @@ pub fn ViewerControls(
                                     &mut jump_error,
                                 );
                             }
-                        }
-                    },
-                }
-                button {
-                    class: "ghost",
-                    onclick: {
-                        let mut jump_error = jump_error.clone();
-                        let on_jump = on_jump.clone();
-                        move |_| {
-                            handle_jump(
-                                &jump_input.read(),
-                                page_count,
-                                &on_jump,
-                                &mut jump_error,
-                            );
-                        }
-                    },
-                    "Go"
-                }
-                if let Some(err) = &*jump_error.read() {
-                    span { class: "muted jump-error", "{err}" }
+                        },
+                        {t(locale(), MessageKey::JumpGoButton)}
+                    }
+                    if let Some(err) = &*jump_error.read() {
+                        span { class: "muted jump-error", "{err}" }
+                    }
                 }
             }
         }
     }
 }
 
-/// Validate and fire the jump callback (RFC 008 §9.3: one-based input).
 fn handle_jump(
     raw: &str,
     page_count: usize,
@@ -166,7 +196,7 @@ fn handle_jump(
     match raw.trim().parse::<usize>() {
         Ok(n) if n >= 1 && n <= page_count => {
             jump_error.set(None);
-            on_jump.call(n - 1); // convert to 0-based PageIndex
+            on_jump.call(n - 1);
         }
         Ok(_) => jump_error.set(Some(format!("1–{page_count}"))),
         Err(_) => jump_error.set(Some("?".to_string())),

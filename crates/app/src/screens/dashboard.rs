@@ -23,8 +23,6 @@ pub fn Dashboard(
     rsx! {
         main { class: "dashboard centered",
             h1 { {t(locale(), MessageKey::AppTitle)} }
-            p { class: "muted", {t(locale(), MessageKey::DashboardHint)} }
-
             // Error toast
             if let Some(key) = *last_error.read() {
                 p { class: "toast-error", role: "alert",
