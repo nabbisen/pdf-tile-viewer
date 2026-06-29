@@ -3,6 +3,7 @@
 use std::path::PathBuf;
 
 use base64::Engine as _;
+use dioxus::document::Title;
 use dioxus::prelude::*;
 
 use app_services::document_service;
@@ -36,7 +37,13 @@ pub fn App() -> Element {
     use_context_provider(|| locale);
 
     if let Some(engine) = state::engine() {
-        use_context_provider(|| RenderService::with_default_budget(engine));
+        let budget_bytes = settings
+            .peek()
+            .advanced
+            .render_cache_budget_mb
+            .map(|mb| (mb as usize) * 1024 * 1024)
+            .unwrap_or(app_services::render_service::DEFAULT_CACHE_BUDGET_BYTES);
+        use_context_provider(|| RenderService::new(engine, budget_bytes));
     }
 
     // Provide settings store for downstream save callbacks.
@@ -75,6 +82,22 @@ pub fn App() -> Element {
 
     rsx! {
         style { {STYLE} }
+        // Window title: privacy.show_full_path_in_title controls the path (RFC 016 §7).
+        {match &*phase.read() {
+            Phase::Viewer(view) => {
+                let title = if settings.read().privacy.show_full_path_in_title {
+                    match &view.session.source {
+                        domain::document::DocumentSource::LocalFile { path, .. } => {
+                            format!("{} — PDF Tile Viewer", path.display())
+                        }
+                    }
+                } else {
+                    format!("{} — PDF Tile Viewer", view.session.display_name)
+                };
+                rsx! { Title { "{title}" } }
+            }
+            _ => rsx! { Title { "PDF Tile Viewer" } },
+        }}
         div { class: "app-shell",
             if let Some(boot_error) = state::engine_boot_error() {
                 ErrorPanel {

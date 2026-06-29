@@ -13,12 +13,14 @@
 //!   -                   — scale down
 //!   Escape              — close
 
+mod util;
+
 use base64::Engine as _;
 use dioxus::prelude::*;
 
 use app_services::render_service::RenderService;
 use domain::document::{DocumentGeneration, DocumentId, PageIndex};
-use domain::layout::{RectPx, page_rect_to_image_rect};
+use domain::layout::RectPx;
 use domain::render::{RenderFlags, RenderOutputFormat, RenderPageRequest, ScaleBucket};
 use domain::search::PageHighlightSet;
 use domain::settings::AppSettingsV1;
@@ -91,8 +93,7 @@ pub fn ZoomOverlay(
             zi.set(ZoomImageState::Loading);
             match rs2.get_or_render(request).await {
                 Ok(png) => {
-                    // Decode dimensions from PNG IHDR for coordinate transforms.
-                    let (w, h) = png_dimensions(&png).unwrap_or((0, 0));
+                    let (w, h) = util::png_dimensions(&png).unwrap_or((0, 0));
                     let b64 = base64::engine::general_purpose::STANDARD.encode(&*png);
                     zi.set(ZoomImageState::Ready {
                         uri: format!("data:image/png;base64,{b64}"),
@@ -116,33 +117,19 @@ pub fn ZoomOverlay(
     };
 
     // ── Highlight rects in image-space for current page ───────────────────
-    let highlight_rects: Vec<RectPx> = {
-        let state = zoom_image.read();
-        if let ZoomImageState::Ready {
+    let highlight_rects: Vec<RectPx> = match &*zoom_image.read() {
+        ZoomImageState::Ready {
             width_px,
             height_px,
             ..
-        } = &*state
-        {
-            search_highlights
-                .iter()
-                .find(|ph| ph.page_index == current_idx)
-                .and_then(|ph| {
-                    let desc = page_descriptors
-                        .iter()
-                        .find(|d| d.page_index == current_idx)?;
-                    Some(
-                        ph.highlights
-                            .iter()
-                            .flat_map(|h| &h.page_rects)
-                            .map(|pr| page_rect_to_image_rect(desc, *pr, *width_px, *height_px))
-                            .collect::<Vec<_>>(),
-                    )
-                })
-                .unwrap_or_default()
-        } else {
-            Vec::new()
-        }
+        } => util::zoom_highlight_rects(
+            current_idx,
+            &page_descriptors,
+            &search_highlights,
+            *width_px,
+            *height_px,
+        ),
+        _ => Vec::new(),
     };
 
     rsx! {
@@ -305,19 +292,4 @@ pub fn ZoomOverlay(
             }
         }
     }
-}
-
-/// Extract PNG image dimensions from the IHDR chunk without full decode.
-fn png_dimensions(data: &[u8]) -> Option<(u32, u32)> {
-    // PNG signature = 8 bytes, then IHDR chunk:
-    // 4 bytes length, 4 bytes "IHDR", 4 bytes width, 4 bytes height
-    if data.len() < 24 {
-        return None;
-    }
-    if &data[0..8] != b"\x89PNG\r\n\x1a\n" {
-        return None;
-    }
-    let w = u32::from_be_bytes(data[16..20].try_into().ok()?);
-    let h = u32::from_be_bytes(data[20..24].try_into().ok()?);
-    Some((w, h))
 }

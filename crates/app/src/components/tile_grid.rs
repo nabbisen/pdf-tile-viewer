@@ -32,9 +32,6 @@ pub fn TileGrid(
 
     rsx! {
         div {
-            id: "{scroll_container_id}",
-            class: "tile-grid-scroll",
-            div {
                 class: "tile-grid-canvas",
                 style: "position: relative; \
                         width: {layout.content_width_px}px; \
@@ -178,7 +175,6 @@ pub fn TileGrid(
                             }
                         }
                     }
-                }
             }
         }
     }

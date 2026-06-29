@@ -19,8 +19,8 @@ RFC designs live in `rfcs/proposed/`; the ADR and detailed roadmap are in
 | M6 | Search and page markers | RFC 010, 011 | ✅ Done (alpha.4) |
 | M7 | Zoom overlay, zen mode, accessibility | RFC 012, 013 | ✅ Done (beta.1) |
 | M8 | Bundled PDFium packaging + CI release artifacts | RFC 014, 003 | ✅ Done (beta.1) |
-| M9 | Performance and large-document hardening | RFC 015 (extended), 016 | Planned |
-| M10 | Decommission old Tauri/Svelte/PDF.js stack | RFC 010 (old) | Planned |
+| M9 | Performance and large-document hardening | RFC 015 (extended), 016 | ✅ Done (beta.2) |
+| M10 | Decommission old Tauri/Svelte/PDF.js stack (RFC lifecycle) | — | ✅ Done (beta.2) |
 
 ---
 
@@ -32,7 +32,8 @@ RFC designs live in `rfcs/proposed/`; the ADR and detailed roadmap are in
 | `2.0.0-alpha.2` | Tile rendering, scale controls (done) |
 | `2.0.0-beta.1` | Search, highlights, zoomed page viewer, file history |
 | `2.0.0-rc.1` | Full v1.x feature parity, bundled PDFium, CI artifacts |
-| `2.0.0` | Production release, Tauri/Svelte removed |
+| `2.0.0-rc.2` | Window title privacy, window size restore, zoom overlay split |
+| `2.0.0` | Final release — pending confirmation |
 | `2.1.0` | Large-PDF cache policy, optional static PDFium linking |
 
 ---

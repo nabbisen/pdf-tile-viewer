@@ -7,15 +7,39 @@ and never leave your machine.
 
 **Can it open password-protected PDFs?**
 
-Not yet. Password-protected PDFs are on the roadmap but not supported in
-the current alpha.
+Not yet. The engine detects encrypted PDFs and shows a clear error message,
+but decryption is not supported in rc.1.
 
-**Why does the title bar not show the full file path?**
+**Why does the title bar show only the filename, not the full path?**
 
-Privacy is safe by default. You can enable full-path display in Settings →
-Privacy. See the [Settings Reference](../intermediate/settings.md).
+Privacy is safe by default — the window title uses the filename only.
+A `privacy.show_full_path_in_title` setting exists in the settings schema but
+is not yet wired to the title bar; it is reserved for a future release.
 
 **Where are settings stored?**
 
-Platform config directory — e.g. `~/.config/pdf-tile-viewer/settings.json`
-on Linux. The file is created on first settings change.
+In the platform config directory:
+- **Linux:** `~/.config/pdf-tile-viewer/settings.json`
+- **macOS:** `~/Library/Application Support/pdf-tile-viewer/settings.json`
+- **Windows:** `%APPDATA%\pdf-tile-viewer\settings.json`
+
+The file is created on the first settings change (e.g. adjusting tile scale).
+If the file is corrupt on startup, it is backed up as `settings.json.bak` and
+the app starts with defaults.
+
+**How is the session history stored?**
+
+It is not stored on disk. The list of recently opened files shown on the
+dashboard is in-memory for the current session only and is cleared when
+the app closes. Persistent history is a planned future feature.
+
+**What PDFium version is used?**
+
+Development builds use the binary fetched by `ci/fetch-pdfium.sh`
+(currently chromium/7763). Release packaging will bundle the library with
+the application so you do not need to install it separately.
+
+**Is the application code-signed?**
+
+No. rc.1 is unsigned. On macOS or Windows you may see an OS security
+prompt the first time you run it.

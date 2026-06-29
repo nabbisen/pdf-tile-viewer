@@ -1,12 +1,43 @@
 # Navigating the Tile Grid
 
-> **Coming in 2.0.0-alpha.2.** This page will be updated when the tile grid
-> renderer lands (RFC 006 / Milestone 4).
+When a PDF is open, all pages are rendered as a tile grid inside a scrollable
+container. You can see the whole document at once and navigate without reading
+linearly.
 
-The tile grid will show all pages of your document at once, arranged in rows.
-You can:
+## Scaling
 
-- Adjust the tile scale with the slider or Ctrl + scroll wheel.
-- Switch between auto-computed pages-per-row and a fixed count.
-- Jump to a specific page number.
-- Pan with Ctrl + drag.
+| Method | Action |
+|--------|--------|
+| Scale slider in the toolbar | Drag to any value 0.2×–5.0× |
+| ± buttons | Step by 0.2 |
+| `Ctrl + Scroll` | Scroll up = zoom in, down = zoom out |
+| `+` / `=` key (viewer focused) | Step up |
+| `-` key (viewer focused) | Step down |
+| `0` key (viewer focused) | Reset to your default scale from settings |
+
+## Pages per row
+
+The toolbar has an **Auto / Fixed** toggle:
+
+- **Auto** — computes columns from the window width and current tile size.
+- **Fixed** — use the number input to set a fixed column count (1–24).
+
+## Page numbers
+
+Toggle the checkbox (`#`) in the toolbar to show or hide a per-tile page
+number label below each tile image.
+
+## Jump to page
+
+Type a page number in the `p.` input and press Go or Enter. The grid
+scrolls that tile into view. The input accepts 1-based page numbers
+(the same numbers printed at the bottom of PDF viewers).
+
+## Zoom overlay
+
+Click any tile to open it in a larger zoom overlay. See
+[features](features.md#zoom-overlay) for details.
+
+## Keyboard navigation
+
+See [Keyboard Shortcuts](../intermediate/shortcuts.md).

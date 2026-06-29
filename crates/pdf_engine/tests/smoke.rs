@@ -198,3 +198,43 @@ fn close_document_invalidates_session() {
     let result = block_on(engine.render_page(request)).unwrap();
     assert!(result.is_err(), "closed document must not render");
 }
+
+#[test]
+fn large_document_opens_and_reports_correct_page_count() {
+    // RFC 015 M9 extension: opening a 50-page document must not panic, must
+    // return the correct page count, and must close cleanly.
+    let engine = require_engine!();
+    let path = fixture("fifty-pages-benchmark.pdf");
+    let session = block_on(engine.open_document(path)).unwrap().unwrap();
+
+    assert_eq!(session.pages.len(), 50, "page count");
+    assert_eq!(session.metadata.page_count, 50);
+    // All pages should be US Letter with 0° rotation.
+    for (i, page) in session.pages.iter().enumerate() {
+        assert!((page.width_points - 612.0).abs() < 1.0, "page {i} width");
+        assert!((page.height_points - 792.0).abs() < 1.0, "page {i} height");
+        assert_eq!(page.rotation_degrees, 0, "page {i} rotation");
+    }
+
+    let closed = block_on(engine.close_document(session.id)).unwrap();
+    assert!(closed, "close large document");
+}
+
+#[test]
+fn large_document_search_runs_without_error() {
+    let engine = require_engine!();
+    let session = block_on(engine.open_document(fixture("fifty-pages-benchmark.pdf")))
+        .unwrap()
+        .unwrap();
+
+    let request = domain::search::SearchRequest {
+        document_id: session.id,
+        generation: session.generation,
+        query: domain::search::SearchQuery::plain("benchmark"),
+    };
+    let results = block_on(engine.search_document(request)).unwrap().unwrap();
+
+    // "benchmark" appears on every page of the fixture.
+    assert_eq!(results.pages.len(), 50, "all 50 pages should match");
+    assert!(results.total_matches >= 50);
+}

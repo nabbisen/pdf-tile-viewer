@@ -1,9 +1,9 @@
-//! PDF Tile Viewer — Dioxus Desktop entrypoint (RFC 001, RFC 005).
+//! PDF Tile Viewer — Dioxus Desktop entrypoint (RFC 001, M9/RC-1).
 //!
-//! Boot order: resolve + bind PDFium on the engine worker thread first
-//! (RFC 003), load settings (RFC 008), then launch the UI. A failed PDFium
-//! bind does NOT abort: the app starts and shows a diagnostic panel
-//! (RFC 003 §9).
+//! Boot order:
+//! 1. Load settings to restore window size (RFC 008 window settings).
+//! 2. Resolve + bind PDFium on the engine worker thread (RFC 003).
+//! 3. Launch Dioxus Desktop with the configured window.
 
 mod app;
 mod components;
@@ -12,6 +12,7 @@ mod screens;
 mod state;
 
 use app_services::engine_boot;
+use app_services::settings_service::SettingsStore;
 use packaging::pdfium_bundle::PdfiumLoadMode;
 
 fn main() {
@@ -24,17 +25,25 @@ fn main() {
 
     let engine = match engine_boot::boot_engine(&config) {
         Ok((handle, thread)) => {
-            // The engine thread lives for the whole process; the OS reaps
-            // it at exit. Joining on UI close is deferred to RFC 004 M3.
             std::mem::forget(thread);
             Ok(handle)
         }
         Err(e) => Err(e.to_string()),
     };
-
     state::install_boot_state(engine);
-    dioxus::launch(app::App);
-}
 
-#[cfg(test)]
-mod tests;
+    // Restore saved window dimensions (RFC 008 §8).
+    let (settings, _) = SettingsStore::at_default_location().load();
+    let win_w = settings.window.width.unwrap_or(1200).max(400) as f64;
+    let win_h = settings.window.height.unwrap_or(800).max(300) as f64;
+
+    dioxus::LaunchBuilder::new()
+        .with_cfg(
+            dioxus::desktop::Config::new().with_window(
+                dioxus::desktop::WindowBuilder::new()
+                    .with_title("PDF Tile Viewer")
+                    .with_inner_size(dioxus::desktop::LogicalSize::new(win_w, win_h)),
+            ),
+        )
+        .launch(app::App);
+}

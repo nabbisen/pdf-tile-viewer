@@ -91,9 +91,20 @@ def main() -> None:
         )
     )
 
+    pages_50 = [
+        f"Page {i}: benchmark text for tile render performance testing"
+        for i in range(1, 51)
+    ]
+    (OUT_DIR / "fifty-pages-benchmark.pdf").write_bytes(build_pdf(pages_50))
+
     (OUT_DIR / "not-a-pdf.pdf").write_bytes(b"GIF89a this is not a pdf\n")
 
-    for name in ("single-page-basic.pdf", "multi-page-search.pdf", "not-a-pdf.pdf"):
+    for name in (
+        "single-page-basic.pdf",
+        "multi-page-search.pdf",
+        "fifty-pages-benchmark.pdf",
+        "not-a-pdf.pdf",
+    ):
         print(f"wrote {OUT_DIR / name}")
 
 

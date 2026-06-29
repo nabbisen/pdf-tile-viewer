@@ -1,36 +1,64 @@
 # Features
 
-> **Status:** Updated for 2.0.0-alpha.1 (vertical slice).
+> **Status:** rc.1 — all v2 features implemented.
 
-## Current (alpha.1)
+## All pages as a tile grid
 
-- Open a local PDF via a file picker.
-- View document metadata (page count, title, author).
-- Rendered first-page preview.
-- English and Japanese interface (system locale auto-detected).
-- Privacy safe by default: no telemetry, no cloud upload.
+Open any local PDF and every page renders as a thumbnail in a scrollable
+grid. You can see the whole document at once and navigate without reading
+linearly.
 
-## Current (alpha.2)
+- **Scale control**: slider, ± buttons, or Ctrl+scroll wheel — range 0.2×–5.0×.
+- **Auto pages-per-row**: the grid adapts to your window width automatically,
+  or you can fix the column count manually.
+- **Page-number labels**: toggle per-tile page numbers on or off.
+- **Jump to page**: type a page number and hit Go or Enter.
 
-- Tile grid — all pages rendered as a scaleable tile overview.
-- Scale control (slider, ± buttons, Ctrl+scroll wheel).
-- Auto / fixed pages-per-row toggle.
-- Page-number labels toggle.
-- Jump-to-page with one-based input validation.
+## Text search
 
-## Current (alpha.3)
+- Click the 🔍 button in the viewer toolbar to open the search panel.
+- Search runs through PDFium's native text index — non-mutating, never
+  modifies the PDF file.
+- Matched tiles get an accent border and a match-count badge.
+- Exact match positions are overlaid as semi-transparent yellow rectangles
+  directly over the page image.
+- Clear search instantly removes all markers without reloading the document.
 
-- Drag-and-drop to open PDFs.
-- Zen mode (Z key: full-screen tile grid, Escape to exit).
-- Settings persist across sessions (scale, pages-per-row, page numbers).
-- Reveal-in-file-manager button.
-- Keyboard shortcuts: +/-, 0 reset scale, Z zen, Escape navigate.
-- Click any tile to open it in a zoom overlay for detailed inspection.
+## Zoom overlay
 
-## Coming in upcoming milestones
+- Click any tile to open it in a full-page zoom overlay.
+- Navigate previous/next/first/last page inside the overlay.
+- Adjust zoom scale independently from the tile grid.
+- Search highlights remain visible in the zoomed view.
+- Close with Escape or the × button; focus returns to the tile grid.
 
-- Search with text highlights (M6).
-- Text search with page markers.
-- Zoom overlay for detailed page inspection.
-- Zen mode (minimal controls).
-- Drag-and-drop file opening.
+## File opening
+
+- **File picker**: click "Open PDF…" on the dashboard.
+- **Drag and drop**: drop a single PDF file onto the dashboard window.
+- **History**: documents opened during the current session are listed for
+  quick re-opening. History is session-only by default (privacy safe).
+- **Reveal in file manager**: open the PDF's containing folder from the 📂
+  button in the viewer toolbar.
+
+## Zen mode
+
+Press `Z` in the viewer for a distraction-free tile grid with all controls
+hidden. Press `Z` again or `Escape` to return to normal mode. A floating ×
+button is always visible as an exit affordance.
+
+## Keyboard shortcuts
+
+See the full [Keyboard Shortcuts](../intermediate/shortcuts.md) reference.
+
+## Privacy
+
+No telemetry. No cloud upload. Files never leave your machine. Settings and
+session history are stored locally; history does not persist across app
+restarts by default.
+
+## Multilingual
+
+The interface is available in English (complete, compiler-enforced) and
+Japanese. The locale can be forced in settings or auto-detected from your
+system.

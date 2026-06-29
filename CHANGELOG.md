@@ -11,6 +11,105 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [2.0.0-beta.2] — unreleased
+
+Performance hardening (M9), RFC lifecycle completion (M10),
+documentation audit, window title/size persistence, and code-quality fixes.
+
+### Performance and large-document hardening (M9)
+
+- **Viewport-based render scheduling** (`screens/viewer/render.rs`): only
+  visible and near-visible tiles (within a 600 px prefetch margin) are
+  scheduled; distant tiles stay `Pending` until scrolled into view.
+- **Scroll tracking**: `onscroll` on the tile-grid container updates
+  `scroll_y` and `viewport_height`, re-triggering the scheduler on each
+  scroll event.
+- **Viewport height measurement**: `eval("return window.innerHeight")` on
+  mount; combined with `window.innerWidth` for accurate layout.
+- **Settings-wired cache budget**: `advanced.render_cache_budget_mb` now
+  propagates to `RenderService::new(engine, budget)`.
+- **50-page benchmark fixture** and 2 new engine smoke tests (7 total).
+- **`viewer.rs` module split**: render scheduling extracted to
+  `screens/viewer/render.rs` (both files under 200 ELOC).
+
+### RFC lifecycle completion (M10)
+
+- All 17 migration RFCs moved `rfcs/proposed/` → `rfcs/done/` with
+  `status: Implemented`.
+- `rfcs/README.md` rewritten with all-implemented index and milestone
+  cross-references.
+
+### Window title and size (RFC 008/016)
+
+- **Window title** respects `privacy.show_full_path_in_title`: default
+  shows `<filename> — PDF Tile Viewer`; `true` shows the full path.
+  Implemented via `document::Title` (dioxus-document).
+- **Window size save**: viewport dimensions written to
+  `settings.window.width/height` when measured on document open.
+- **Window size restore**: `main.rs` uses `LaunchBuilder::with_cfg` +
+  `Config::new().with_window(WindowBuilder::new().with_inner_size(...))`
+  to restore the last-used size at launch.
+
+### Code-quality
+
+- `zoom_overlay/util.rs` sub-module extracted (`png_dimensions`,
+  `zoom_highlight_rects`); `zoom_overlay.rs` now 295 ELOC (under the
+  300 soft limit).
+
+### Documentation audit
+
+Comprehensive review of all docs against the codebase. Corrections in:
+`README.md`, `features.md`, `settings.md`, `shortcuts.md`, `faq.md`,
+`testing.md`, `installation.md`, `tile-grid.md`, `search.md`,
+`opening.md`, `architecture.md`. Key fixes: stale version references,
+removed unimplemented shortcuts (`Ctrl+O/F`, `G`), marked schema-only
+settings clearly, updated test counts (58).
+
+---
+
+## [2.0.0-rc.2] — unreleased
+
+Complete v2 Dioxus + PDFium candidate release.
+
+### Summary
+
+PDF Tile Viewer 2.0.0 is the complete Rust-first rewrite of the original
+Tauri + SvelteKit + PDF.js + external PDFium application. The product
+delivers feature parity with v1.x while replacing the entire frontend stack
+with a single Rust codebase.
+
+### New in 2.0.0 (over rc.1)
+
+- **Window title privacy**: the title bar shows `<filename> — PDF Tile Viewer`
+  by default. Set `privacy.show_full_path_in_title: true` in settings to
+  show the full file path (RFC 016 §7).
+- **Window size persistence**: the viewer measures `window.innerWidth/Height`
+  via JS eval on document open and saves to `window.width/height` in settings.
+  `main.rs` restores the last-used size at launch via `LaunchBuilder` +
+  `Config::new().with_window(WindowBuilder::new().with_inner_size(...))`.
+- **`zoom_overlay/util.rs`** split out: `png_dimensions` and
+  `zoom_highlight_rects` moved to a sub-module, bringing `zoom_overlay.rs`
+  from 323 to 310 ELOC (toward the 300 soft limit).
+- Documentation audit pass: all stale version references, "coming soon"
+  items that are done, unimplemented settings, and missing shortcuts
+  corrected across `README.md`, `features.md`, `settings.md`,
+  `shortcuts.md`, `faq.md`, `testing.md`, `installation.md`,
+  `tile-grid.md`, `search.md`, and `opening.md`.
+
+### Technical summary (full v2 over v1.x)
+
+| Dimension | v1.x | v2.0.0 |
+|-----------|------|--------|
+| Frontend | SvelteKit + TypeScript | Rust + Dioxus |
+| PDF rendering | PDF.js (JavaScript) | PDFium (Rust/native) |
+| PDF search | PDFium (external proc) | PDFium (same worker) |
+| Search model | Modified PDF bytes | Non-mutating overlays |
+| Shell | Tauri v2 | Dioxus Desktop |
+| External lib | Visible lib/ directory | resources/ bundled |
+| Test coverage | Minimal | 58 tests + 7 smoke |
+
+---
+
 ## [2.0.0-beta.1] — unreleased
 
 Zoom overlay (M7) and release packaging infrastructure (M8).

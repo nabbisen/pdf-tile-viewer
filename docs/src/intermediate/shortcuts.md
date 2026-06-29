@@ -1,28 +1,37 @@
 # Keyboard Shortcuts
 
-| Key | Action | Context |
-|-----|--------|---------|
-| `Z` | Toggle zen mode | Viewer focused |
-| `+` or `=` | Scale up (0.2 step) | Viewer focused |
-| `-` | Scale down (0.2 step) | Viewer focused |
-| `0` | Reset scale to default | Viewer focused |
-| `Escape` | Exit zen mode | Zen mode |
-| `Escape` | Back to dashboard | Normal mode |
-| `Ctrl + Scroll` | Scale tile grid | Viewer |
-| `Ctrl + O` | Open PDF | Planned (M7) |
-| `Ctrl + F` | Focus search | Planned (M6) |
-| `G` | Jump-to-page | Planned (M7) |
+Shortcuts fire when the viewer container has keyboard focus (click the tile
+grid area first). They do not fire when focus is inside a text input.
 
-> **Note:** Shortcuts are disabled when focus is inside a text input.
+## Tile grid
 
-## Zoom overlay shortcuts
+| Key | Action |
+|-----|--------|
+| `Z` | Toggle zen mode |
+| `+` or `=` | Scale up 0.2 step |
+| `-` | Scale down 0.2 step |
+| `0` | Reset scale to the default from settings |
+| `Escape` | Close zoom overlay → close search → exit zen → back to dashboard |
+| `Ctrl + Scroll` | Scale tile grid up / down |
+
+## Zoom overlay
 
 | Key | Action |
 |-----|--------|
 | `Escape` | Close zoom overlay |
-| `←` Arrow / `PageUp` | Previous page |
-| `→` Arrow / `PageDown` | Next page |
+| `←` / `PageUp` | Previous page |
+| `→` / `PageDown` | Next page |
 | `Home` | First page |
 | `End` | Last page |
 | `+` / `=` | Increase overlay zoom scale |
 | `-` | Decrease overlay zoom scale |
+
+## Search panel
+
+The search panel is opened with the 🔍 button in the viewer toolbar.
+Inside the text input:
+
+| Key | Action |
+|-----|--------|
+| `Enter` | Run search |
+| `Escape` | Close search panel |

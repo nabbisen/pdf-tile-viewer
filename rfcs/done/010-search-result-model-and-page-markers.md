@@ -3,7 +3,7 @@ project: PDF Tile Viewer
 document_family: Dioxus + embedded/bundled PDFium migration RFCs
 language: English
 date: 2026-06-07
-status: Proposed
+status: Implemented
 baseline: PDF Tile Viewer v1.1.2 reverse-engineered design + approved Dioxus goal-state design
 ---
 
