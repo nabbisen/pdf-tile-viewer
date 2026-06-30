@@ -134,3 +134,6 @@ pub const PDF_MAGIC: &[u8; 5] = b"%PDF-";
 pub fn header_is_pdf(prefix: &[u8]) -> bool {
     prefix.len() >= PDF_MAGIC.len() && &prefix[..PDF_MAGIC.len()] == PDF_MAGIC
 }
+
+#[cfg(test)]
+mod tests;

@@ -75,3 +75,6 @@ pub fn default_resource_root() -> PathBuf {
         .and_then(|exe| exe.parent().map(|d| d.join("resources")))
         .unwrap_or_else(|| PathBuf::from("resources"))
 }
+
+#[cfg(test)]
+mod tests;

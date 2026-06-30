@@ -65,6 +65,51 @@ ci/                CI helpers (fetch-pdfium.sh, archive-source.sh, package-linux
 rfcs/              RFC files following the lifecycle policy
 ```
 
+
+## Two release pathways
+
+PDF Tile Viewer has two independent release outputs:
+
+| Pathway | Workflow | Trigger | Output | Distribution |
+|---------|----------|---------|--------|--------------|
+| Executable build | `release.yml` | semver tag (`2.0.0`) | `.tar.gz` / `.zip` per OS | GitHub Release |
+| Microsoft Store | `msix-store.yml` | manual (`workflow_dispatch`) | `.msix` | Partner Center (Windows) |
+
+### Executable build (Linux, macOS, Windows)
+
+Tag-triggered, fully automated. See the `release.yml` section above. Produces
+a self-contained archive per platform with the binary, bundled PDFium,
+licenses, and docs, attached to a GitHub Release.
+
+### Microsoft Store (Windows MSIX)
+
+Manual only. Run the **Microsoft Store (MSIX)** workflow from the Actions
+tab. It builds the Windows binary, bundles PDFium, stages the package layout
+via `ci/stage-msix.sh`, and runs `makeappx` to produce a `.msix`.
+
+Notes:
+
+- **Version.** MSIX requires a 4-part numeric version `X.Y.Z.R` and does not
+  permit pre-release suffixes. The workflow derives `X.Y.Z` from the semver
+  core in `Cargo.toml` (so `2.0.0-beta.6` → `2.0.0`) and uses the
+  `msix_revision` dispatch input as the 4th part `R` (default `0`). Bump the
+  revision when re-submitting the same semver.
+- **Manifest.** `packaging/windows/AppxManifest.xml` carries a `@VERSION@`
+  placeholder that `ci/stage-msix.sh` substitutes at build time. Keep the
+  `Identity Name`, `Publisher`, and Store assets in sync with the Partner
+  Center listing.
+- **Signing.** The MSIX is built unsigned by default. Partner Center re-signs
+  Store submissions with the Store certificate, so unsigned is acceptable for
+  Store upload. To produce a sideloadable signed package, add the
+  `MSIX_CERT_BASE64` and `MSIX_CERT_PASSWORD` repository secrets; the workflow
+  signs with `signtool` when they are present.
+- **Submission is not automated.** The workflow produces the `.msix` as an
+  artifact and stops. Uploading to Partner Center and submitting for
+  certification is a deliberate, human-reviewed step. Wiring an automated
+  Partner Center submission would require Partner Center API credentials and
+  is intentionally left out.
+
+
 ## Code style
 
 - Rust 2024 edition, `rustfmt` enforced (`cargo fmt --check`).
@@ -72,3 +117,55 @@ rfcs/              RFC files following the lifecycle policy
 - Tests go in `src/tests.rs` (or `src/tests/` for larger test suites).
 - All public items should have doc comments.
 - English for all code comments and documentation.
+
+## Continuous integration and releases
+
+Two GitHub Actions workflows live in `.github/workflows/`:
+
+### `ci.yml` — on every push to `main` and every pull request
+
+- `rustfmt` check (`cargo fmt --all --check`)
+- `cargo check --workspace`
+- library + service unit tests (`cargo test --workspace --exclude app`)
+- engine smoke tests against the pinned PDFium (`cargo test -p pdf_engine
+  --test smoke`)
+
+This mirrors the local gate in [Running Tests](testing.md).
+
+### `release.yml` — on pushing a semver tag (no `v` prefix)
+
+Pushing a tag is the explicit, human-initiated act that starts a release.
+The workflow does **not** run on branch pushes.
+
+It builds the RFC 014 artifact matrix, each with its bundled PDFium:
+
+| Tag triggers | Runner | Artifact |
+|--------------|--------|----------|
+| `linux-x64` | `ubuntu-latest` | `…-linux-x64.tar.gz` |
+| `windows-x64` | `windows-latest` | `…-windows-x64.zip` |
+| `macos-arm64` | `macos-latest` | `…-macos-arm64.tar.gz` |
+| `macos-x64` | `macos-13` | `…-macos-x64.tar.gz` |
+
+Each build fetches the pinned PDFium for its platform, compiles the app,
+runs the engine smoke tests against that PDFium (the RFC 014 §7 package
+verification step), stages the RFC 014 §6 contents (binary, PDFium library,
+LICENSE, NOTICE, CHANGELOG, README, notes), and compresses it. A source
+archive (`ci/archive-source.sh`) is built in parallel. All artifacts are
+attached to a GitHub Release.
+
+A tag containing `-alpha`, `-beta`, or `-rc` is published as a GitHub
+**pre-release**; a clean `X.Y.Z` tag is a full release.
+
+To cut a release:
+
+```sh
+# 1. Bump version in Cargo.toml, update CHANGELOG.md, commit.
+# 2. Tag and push:
+# Tags use no leading "v" (project convention).
+git tag 2.0.0
+git push origin 2.0.0
+```
+
+> The PDFium release tag is pinned (`PDFIUM_RELEASE_TAG` in both workflows
+> and in `ci/fetch-pdfium.sh`). Bump all three together and re-run the
+> suite when updating PDFium.

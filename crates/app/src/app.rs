@@ -46,7 +46,7 @@ pub fn App() -> Element {
 
     let body = match &*phase.read() {
         Phase::Dashboard => {
-            let open_picker = open_action(settings, phase, history, last_error, None);
+            let open_picker = open_action(phase, history, last_error, None);
             let last_error_clone = last_error;
             rsx! {
                 Dashboard {
@@ -54,12 +54,11 @@ pub fn App() -> Element {
                     last_error: last_error_clone,
                     on_open: open_picker,
                     on_open_path: {
-                        let settings2 = settings;
                         let phase2 = phase;
                         let history2 = history;
                         let last_error2 = last_error;
                         Callback::new(move |path: PathBuf| {
-                            open_action(settings2, phase2, history2, last_error2, Some(path)).call(());
+                            open_action(phase2, history2, last_error2, Some(path)).call(());
                         })
                     },
                 }
@@ -110,7 +109,6 @@ pub fn App() -> Element {
 
 /// Build an open-document action.  If `path` is given, skip the picker.
 fn open_action(
-    settings: Signal<AppSettingsV1>,
     mut phase: Signal<Phase>,
     mut history: Signal<SessionHistory>,
     mut last_error: Signal<Option<MessageKey>>,

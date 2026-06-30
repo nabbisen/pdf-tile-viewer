@@ -4,9 +4,10 @@
   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
   xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10"
   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities">
+  <!-- @VERSION@ will be replaced by stage-msix.sh via msix-store.yml -->
   <Identity Name="nabbisen.pdf-tile-viewer"
             Publisher="CN=C4BA37E8-8670-4C82-8365-5ECB57373921"
-            Version="1.1.2.0" />
+            Version="@VERSION@" />
   <Properties>
     <DisplayName>pdf-tile-viewer</DisplayName>
     <PublisherDisplayName>nabbisen</PublisherDisplayName>

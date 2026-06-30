@@ -109,3 +109,6 @@ pub fn resolve(config: &PdfiumLoaderConfig) -> Result<PdfiumResolution, PdfiumRe
 
     Err(PdfiumResolveError::NotFound { searched })
 }
+
+#[cfg(test)]
+mod tests;

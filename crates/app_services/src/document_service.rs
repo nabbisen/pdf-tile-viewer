@@ -73,3 +73,6 @@ pub async fn open_document(
         Err(_) => Err(OpenError::EngineUnavailable),
     }
 }
+
+#[cfg(test)]
+mod tests;

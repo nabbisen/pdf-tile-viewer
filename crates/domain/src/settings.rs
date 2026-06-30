@@ -109,3 +109,6 @@ impl AppSettingsV1 {
         self
     }
 }
+
+#[cfg(test)]
+mod tests;

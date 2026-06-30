@@ -281,3 +281,6 @@ pub fn image_rect_to_tile_rect(image_rect: RectPx, tile: &PageTileLayout) -> Rec
         height: image_rect.height,
     }
 }
+
+#[cfg(test)]
+mod tests;

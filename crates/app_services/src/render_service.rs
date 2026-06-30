@@ -197,3 +197,6 @@ impl RenderService {
         self.cache.lock().unwrap().entry_count()
     }
 }
+
+#[cfg(test)]
+mod tests;

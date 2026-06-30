@@ -11,6 +11,60 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [2.0.0-beta.6]
+
+### Added
+
+- **NOTICE**: PDFium is licensed under the BSD 3-Clause License
+  ("Copyright 2014 The PDFium Authors"), not Apache 2.0.
+  `pdfium-render` is MIT OR Apache-2.0 (Alastair Carey). Dioxus is MIT OR
+  Apache-2.0. NOTICE now lists all three with accurate license statements.
+- **GitHub Actions CI** (`.github/workflows/ci.yml`): rustfmt check,
+  `cargo check --workspace`, library/service unit tests, and engine smoke
+  tests against the pinned PDFium — on every push to `main` and every PR.
+- **GitHub Actions release** (`.github/workflows/release.yml`): triggered by
+  a semver tag (no `v` prefix). Builds the RFC 014 artifact matrix (Linux x64, Windows x64,
+  macOS arm64, macOS x64), each with its bundled PDFium, runs the package
+  verification smoke test per platform, builds a source archive, and
+  publishes a GitHub Release. Pre-release tags (`-alpha`/`-beta`/`-rc`) are
+  marked as GitHub pre-releases.
+- **Microsoft Store MSIX workflow** (`.github/workflows/msix-store.yml`):
+  manual (`workflow_dispatch`) pathway that builds the Windows binary with
+  bundled PDFium, stages the package via `ci/stage-msix.sh`, runs `makeappx`,
+  and produces a `.msix` artifact for Partner Center. Optional `signtool`
+  signing when cert secrets are present. Store submission stays manual.
+- **`ci/stage-msix.sh`**: assembles the MSIX package root and substitutes the
+  `@VERSION@` placeholder in `AppxManifest.xml` with the semver core + revision.
+- `AppxManifest.xml`: replaced the stale `1.1.2.0` version with a `@VERSION@`
+  placeholder resolved at build time.
+- Documented both release pathways (executable build vs Store MSIX) in
+  `docs/src/contributors/dev.md`.
+
+### Fixed
+
+- **`open_action` warning** (`app.rs:113`): the `settings: Signal<AppSettingsV1>`
+  parameter was unused after the beta.5 dead-code cleanup. Removed from the
+  function signature and both call sites.
+
+### Changed — test structure
+
+All three library crates that had a monolithic `src/tests.rs` + `src/tests/`
+pattern now use per-module co-location as required by the project rules
+(`src/some_mod.rs` → `src/some_mod/tests.rs`):
+
+- **`domain`**: `document`, `layout`, `search`, `settings` tests each live
+  beside their module. Centralised `src/tests.rs` + `src/tests/` removed.
+- **`app_services`**: `document_service`, `engine_boot`, `history_service`,
+  `render_service`, `settings_service` tests co-located. Centralised files
+  removed. `src/` is now as clean as `domain/src/`.
+- **`packaging`**: `pdfium_bundle` tests moved to `src/pdfium_bundle/tests.rs`.
+  `src/tests.rs` removed.
+
+`pdf_engine/tests/smoke.rs` is a crate-level integration test (standard Rust
+`tests/` directory) — that structure is correct and was not changed.
+
+---
+
 ## [2.0.0-beta.5]
 
 * Codebase housekeeping.

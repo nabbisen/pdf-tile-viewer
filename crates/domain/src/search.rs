@@ -151,3 +151,6 @@ pub struct SearchHighlightSet {
     pub query: SearchQuery,
     pub pages: Vec<PageHighlightSet>,
 }
+
+#[cfg(test)]
+mod tests;

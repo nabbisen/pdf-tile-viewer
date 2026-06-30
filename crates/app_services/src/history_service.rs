@@ -77,3 +77,6 @@ fn same_file(a: &HistoryEntry, b: &HistoryEntry) -> bool {
         _ => a.display_name == b.display_name,
     }
 }
+
+#[cfg(test)]
+mod tests;

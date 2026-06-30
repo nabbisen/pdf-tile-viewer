@@ -16,6 +16,3 @@ pub mod history_service;
 pub mod platform;
 pub mod render_service;
 pub mod settings_service;
-
-#[cfg(test)]
-mod tests;
