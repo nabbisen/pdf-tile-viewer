@@ -13,7 +13,7 @@
 
 set -euo pipefail
 
-PDFIUM_RELEASE_TAG="chromium/7763"
+PDFIUM_RELEASE_TAG="chromium/7920"
 TARGET="${1:-linux-x64}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DEST_DIR="${SCRIPT_DIR}/.pdfium"

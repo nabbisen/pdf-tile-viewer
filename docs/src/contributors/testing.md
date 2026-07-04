@@ -26,7 +26,7 @@ Covers (58 tests total):
 ## Engine smoke tests (PDFium required)
 
 ```sh
-bash ci/fetch-pdfium.sh     # one-time: downloads chromium/7763 to ci/.pdfium/
+bash ci/fetch-pdfium.sh     # one-time: downloads chromium/7920 to ci/.pdfium/
 PDF_TILE_VIEWER_PDFIUM_DIR="$(pwd)/ci/.pdfium" cargo test -p pdf_engine --test smoke
 ```
 
@@ -42,7 +42,7 @@ Seven smoke tests exercise the full engine worker in a real process:
 | `large_document_opens_and_reports_correct_page_count` | 50-page fixture geometry |
 | `large_document_search_runs_without_error` | Search across 50 pages |
 
-All 7 pass against PDFium chromium/7763. Without the env var, every test
+All 7 pass against PDFium chromium/7920. Without the env var, every test
 prints a skip notice and exits 0, so `cargo test` stays green on machines
 without PDFium.
 

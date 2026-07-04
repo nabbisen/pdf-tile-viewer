@@ -36,7 +36,7 @@ the app closes. Persistent history is a planned future feature.
 **What PDFium version is used?**
 
 Development builds use the binary fetched by `ci/fetch-pdfium.sh`
-(currently chromium/7763). Release packaging will bundle the library with
+(currently chromium/7920). Release packaging will bundle the library with
 the application so you do not need to install it separately.
 
 **Is the application code-signed?**

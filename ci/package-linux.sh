@@ -29,7 +29,7 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 OUTPUT_DIR="${1:-${REPO_ROOT}/dist}"
 
 PDFIUM_DIR="${SCRIPT_DIR}/.pdfium"
-PDFIUM_RELEASE_TAG="chromium/7763"
+PDFIUM_RELEASE_TAG="chromium/7920"
 
 cd "${REPO_ROOT}"
 

@@ -9,7 +9,7 @@
   ```
 - PDFium (fetched by `ci/fetch-pdfium.sh`):
   ```sh
-  bash ci/fetch-pdfium.sh        # downloads chromium/7763 to ci/.pdfium/
+  bash ci/fetch-pdfium.sh        # downloads chromium/7920 to ci/.pdfium/
   ```
 
 ## Running
@@ -166,6 +166,6 @@ git tag 2.0.0
 git push origin 2.0.0
 ```
 
-> The PDFium release tag is pinned (`PDFIUM_RELEASE_TAG` in both workflows
-> and in `ci/fetch-pdfium.sh`). Bump all three together and re-run the
-> suite when updating PDFium.
+> The PDFium release tag is pinned in the GitHub workflows and local helper
+> scripts. Bump every `PDFIUM_RELEASE_TAG` together and re-run the suite when
+> updating PDFium.

@@ -9,6 +9,12 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- Aligned all PDFium pins to the current `bblanchon/pdfium-binaries` release:
+  `chromium/7920` is now used consistently by CI, release, MSIX, and local
+  fetch/package helpers.
+
 ---
 
 ## [2.0.0-beta.6]
