@@ -1,6 +1,6 @@
 # Features
 
-> **Status:** rc.1 — all v2 features implemented.
+> **Status:** 2.0.0-beta.6 — latest released beta.
 
 ## All pages as a tile grid
 

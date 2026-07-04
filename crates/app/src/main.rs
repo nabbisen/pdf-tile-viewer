@@ -1,4 +1,4 @@
-//! PDF Tile Viewer — Dioxus Desktop entrypoint (RFC 001, M9/RC-1).
+//! PDF Tile Viewer — Dioxus Desktop entrypoint (RFC 001, M9/beta).
 //!
 //! Boot order:
 //! 1. Load settings to restore window size (RFC 008 window settings).

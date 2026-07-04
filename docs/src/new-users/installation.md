@@ -1,7 +1,7 @@
 # Installation
 
-> Pre-built binaries are not yet available for `2.0.0-rc.1`.
-> Building from source is required; a packaging script for Linux is provided.
+> Latest release artifacts are available for `2.0.0-beta.6`.
+> Building from source is also supported; a packaging script for Linux is provided.
 
 ## Build from source
 

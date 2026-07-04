@@ -31,8 +31,8 @@ RFC designs live in `rfcs/proposed/`; the ADR and detailed roadmap are in
 | `2.0.0-alpha.1` | Vertical slice: open PDF, render page 1 |
 | `2.0.0-alpha.2` | Tile rendering, scale controls (done) |
 | `2.0.0-beta.1` | Search, highlights, zoomed page viewer, file history |
-| `2.0.0-rc.1` | Full v1.x feature parity, bundled PDFium, CI artifacts |
-| `2.0.0-rc.2` | Window title privacy, window size restore, zoom overlay split |
+| `2.0.0-beta.6` | Latest released beta; CI, release workflow, MSIX, docs, and notice cleanup |
+| `2.0.0-rc.1` | Future release candidate after maintainer validation |
 | `2.0.0` | Final release — pending confirmation |
 | `2.1.0` | Large-PDF cache policy, optional static PDFium linking |
 
