@@ -345,9 +345,9 @@ open a local PDF and display the rendered first page.
 
 - 51 unit tests covering RFC specifications across all library crates.
 - 5 engine smoke tests (RFC 015) exercising open / geometry / render /
-  search / close against a real PDFium 7763 binary; gracefully skipped
+  search / close against the then-pinned real PDFium binary; gracefully skipped
   when PDFium is not available (`PDF_TILE_VIEWER_PDFIUM_DIR` unset).
-- `ci/fetch-pdfium.sh` fetches the pinned PDFium 7763 prebuilt binary.
+- `ci/fetch-pdfium.sh` fetches the pinned PDFium prebuilt binary.
 - `fixtures/generate_fixtures.py` produces deterministic hand-built PDF
   test fixtures without third-party dependencies.
 

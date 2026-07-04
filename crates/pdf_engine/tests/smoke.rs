@@ -118,9 +118,7 @@ fn render_page_one_produces_valid_png() {
     assert!(image.pixel_width > 0 && image.pixel_height > 0);
     // 612pt @ scale 1.0 → target_w 612px (clamp not hit).
     assert_eq!(image.pixel_width, 612, "pixel width");
-    let RenderedImagePayload::Bytes(png) = &image.payload else {
-        panic!("expected PNG bytes payload");
-    };
+    let RenderedImagePayload::Bytes(png) = &image.payload;
     assert_eq!(&png[..8], b"\x89PNG\r\n\x1a\n", "PNG signature");
 }
 
