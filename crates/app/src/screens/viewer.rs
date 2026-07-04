@@ -295,6 +295,7 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
                     show_page_numbers: *show_page_numbers.read(),
                     search_summaries,
                     search_highlights: search_highlights.clone(),
+                    page_descriptors: session.pages.clone(),
                     on_tile_click: Some(Callback::new(move |idx: PageIndex| {
                         zoom_page.clone().set(Some(idx));
                     })),

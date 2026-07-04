@@ -8,8 +8,8 @@
 
 use dioxus::prelude::*;
 
-use domain::document::PageIndex;
-use domain::layout::{TileLayout, page_rect_to_image_rect};
+use domain::document::{PageDescriptor, PageIndex};
+use domain::layout::{RectPx, TileLayout, page_rect_to_image_rect};
 use domain::search::{PageHighlightSet, PageSearchSummary};
 
 use crate::i18n::{Locale, MessageKey, t};
@@ -24,6 +24,9 @@ pub fn TileGrid(
     search_summaries: Vec<PageSearchSummary>,
     /// Per-page highlight rectangles for overlay (RFC 011); empty = no overlays.
     search_highlights: Vec<PageHighlightSet>,
+    /// Page descriptors from the active session, used to transform PDF-space
+    /// highlight rectangles into rendered tile-image pixels (RFC 011).
+    page_descriptors: Vec<PageDescriptor>,
     on_tile_click: Option<Callback<PageIndex>>,
     scroll_container_id: String,
 ) -> Element {
@@ -59,45 +62,15 @@ pub fn TileGrid(
                             .find(|p| p.page_index == idx)
                             .cloned();
 
-                        // Highlight rects in image-space pixels (RFC 011 §6)
-                        let highlight_rects: Vec<(f32, f32, f32, f32)> = {
-                            let mut rects = Vec::new();
-                            if let (Some(ph), TileImageState::Ready(_)) =
-                                (&page_highlights, &image_state)
-                            {
-                                // We need rendered dimensions to transform coords.
-                                // For now, approximate from tile pixel dims.
-                                let rw = w.round() as u32;
-                                let rh = h.round() as u32;
-                                // Find the PageDescriptor for this page.
-                                if let Some(desc) = layout.tiles
-                                    .iter()
-                                    .find(|t| t.page_index == idx)
-                                    .and_then(|_| {
-                                        // The descriptor lives in the session; we get size
-                                        // from the tile geometry instead (scale-invariant).
-                                        None::<domain::document::PageDescriptor>
-                                    })
-                                {
-                                    for highlight in &ph.highlights {
-                                        for pr in &highlight.page_rects {
-                                            let ir = page_rect_to_image_rect(
-                                                &desc, *pr, rw, rh,
-                                            );
-                                            rects.push((ir.x, ir.y, ir.width, ir.height));
-                                        }
-                                    }
-                                } else {
-                                    // Fallback: use raw PDF-space proportional scaling.
-                                    for highlight in &ph.highlights {
-                                        for pr in &highlight.page_rects {
-                                            rects.push((pr.x, pr.y, pr.width, pr.height));
-                                        }
-                                    }
-                                }
-                            }
-                            rects
-                        };
+                        // Highlight rects in image-space pixels (RFC 011 §6).
+                        let highlight_rects = tile_highlight_rects(
+                            idx,
+                            &page_descriptors,
+                            page_highlights.as_ref(),
+                            &image_state,
+                            w.round() as u32,
+                            h.round() as u32,
+                        );
 
                         rsx! {
                             div {
@@ -132,11 +105,16 @@ pub fn TileGrid(
                                                         object-fit: contain;",
                                             }
                                             // RFC 011 highlight overlays
-                                            for (hx, hy, hw, hh) in &highlight_rects {
-                                                div {
-                                                    class: "highlight-overlay",
-                                                    style: "left:{hx}px; top:{hy}px; \
-                                                            width:{hw}px; height:{hh}px;",
+                                            for rect in highlight_rects.iter().copied() {
+                                                {
+                                                    let (hx, hy, hw, hh) = (rect.x, rect.y, rect.width, rect.height);
+                                                    rsx! {
+                                                        div {
+                                                            class: "highlight-overlay",
+                                                            style: "left:{hx}px; top:{hy}px; \
+                                                                    width:{hw}px; height:{hh}px;",
+                                                        }
+                                                    }
                                                 }
                                             }
                                         },
@@ -177,5 +155,98 @@ pub fn TileGrid(
                     }
             }
         }
+    }
+}
+
+fn tile_highlight_rects(
+    page_index: PageIndex,
+    page_descriptors: &[PageDescriptor],
+    page_highlights: Option<&PageHighlightSet>,
+    image_state: &TileImageState,
+    rendered_width_px: u32,
+    rendered_height_px: u32,
+) -> Vec<RectPx> {
+    if !matches!(image_state, TileImageState::Ready(_)) {
+        return Vec::new();
+    }
+    let Some(highlights) = page_highlights else {
+        return Vec::new();
+    };
+    let Some(descriptor) = page_descriptors
+        .iter()
+        .find(|page| page.page_index == page_index)
+    else {
+        return Vec::new();
+    };
+
+    highlights
+        .highlights
+        .iter()
+        .flat_map(|highlight| &highlight.page_rects)
+        .map(|rect| {
+            page_rect_to_image_rect(descriptor, *rect, rendered_width_px, rendered_height_px)
+        })
+        .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use domain::search::{PageCoordinateSpace, PageRect, TextHighlight};
+
+    fn descriptor() -> PageDescriptor {
+        PageDescriptor {
+            page_index: PageIndex(0),
+            width_points: 612.0,
+            height_points: 792.0,
+            rotation_degrees: 0,
+        }
+    }
+
+    fn highlights() -> PageHighlightSet {
+        PageHighlightSet {
+            page_index: PageIndex(0),
+            highlights: vec![TextHighlight {
+                match_index: 0,
+                page_rects: vec![PageRect {
+                    x: 0.0,
+                    y: 712.8,
+                    width: 612.0,
+                    height: 79.2,
+                    space: PageCoordinateSpace::PdfPointsBottomLeft,
+                }],
+            }],
+        }
+    }
+
+    #[test]
+    fn tile_highlights_use_page_descriptor_transform() {
+        let rects = tile_highlight_rects(
+            PageIndex(0),
+            &[descriptor()],
+            Some(&highlights()),
+            &TileImageState::Ready("data:image/png;base64,".to_string()),
+            1224,
+            1584,
+        );
+
+        assert_eq!(rects.len(), 1);
+        assert!((rects[0].width - 1224.0).abs() < 1.0);
+        assert!((rects[0].height - 158.4).abs() < 1.0);
+        assert!(rects[0].y < 2.0);
+    }
+
+    #[test]
+    fn tile_highlights_do_not_fallback_to_raw_pdf_rects() {
+        let rects = tile_highlight_rects(
+            PageIndex(0),
+            &[],
+            Some(&highlights()),
+            &TileImageState::Ready("data:image/png;base64,".to_string()),
+            1224,
+            1584,
+        );
+
+        assert!(rects.is_empty());
     }
 }

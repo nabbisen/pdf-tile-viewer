@@ -9,7 +9,6 @@ use app_services::document_service;
 use app_services::history_service::SessionHistory;
 use app_services::render_service::RenderService;
 use app_services::settings_service::SettingsStore;
-use domain::settings::AppSettingsV1;
 
 use crate::components::error_panel::ErrorPanel;
 use crate::i18n::{self, Locale, MessageKey, t};
