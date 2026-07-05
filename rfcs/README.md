@@ -1,7 +1,8 @@
 # RFC Index — PDF Tile Viewer
 
-All RFCs for the v2 Dioxus + PDFium migration are **implemented** and live in
-`rfcs/done/`. The lifecycle policy is in `rfcs/done/000-rfc-lifecycle-policy.md`.
+Implemented RFCs live in `rfcs/done/`. Proposed 2.0 RC follow-up work lives in
+`rfcs/proposed/`. The lifecycle policy is in
+`rfcs/done/000-rfc-lifecycle-policy.md`.
 
 ---
 
@@ -10,6 +11,27 @@ All RFCs for the v2 Dioxus + PDFium migration are **implemented** and live in
 | ID | Title | Status |
 |----|-------|--------|
 | 000 | [RFC Lifecycle Policy](done/000-rfc-lifecycle-policy.md) | Implemented |
+
+---
+
+## Proposed 2.0 RC Follow-Ups
+
+| ID | Title | Status |
+|----|-------|--------|
+| 018 | [Package Artifact Smoke Test](proposed/018-package-artifact-smoke-test.md) | Proposed |
+| 019 | [FAQ Correction for Full-Path Window Title Setting](proposed/019-faq-title-path-setting-doc-correction.md) | Proposed |
+| 020 | [Release PDFium Bundling Documentation Correction](proposed/020-release-pdfium-bundling-doc-correction.md) | Proposed |
+| 021 | [Hardcoded UI String i18n Sweep](proposed/021-i18n-hardcoded-ui-string-sweep.md) | Proposed |
+| 022 | [Contributor Test Layout Documentation Correction](proposed/022-contributor-test-layout-doc-correction.md) | Proposed |
+| 023 | [Single-Page PDF Text Selection Layer](proposed/023-pdf-text-selection-layer.md) | Proposed |
+
+---
+
+## Developer Handoffs
+
+| RFC | Handoff |
+|-----|---------|
+| 023 | [Single-Page PDF Text Selection Layer](handoffs/023-pdf-text-selection-layer/implementation-handoff.md) |
 
 ---
 
