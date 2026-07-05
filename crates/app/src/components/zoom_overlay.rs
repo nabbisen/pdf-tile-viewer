@@ -19,11 +19,13 @@ use base64::Engine as _;
 use dioxus::prelude::*;
 
 use app_services::render_service::RenderService;
+use app_services::text_service::TextLayerService;
 use domain::document::{DocumentGeneration, DocumentId, PageIndex};
 use domain::layout::RectPx;
 use domain::render::{RenderFlags, RenderOutputFormat, RenderPageRequest, ScaleBucket};
 use domain::search::PageHighlightSet;
 use domain::settings::AppSettingsV1;
+use domain::text::{PageTextLayer, TextLayerRequest};
 
 use crate::i18n::{Locale, MessageKey, t};
 
@@ -43,6 +45,14 @@ pub enum ZoomImageState {
     Failed(String),
 }
 
+/// State of the zoom overlay's current selectable text layer.
+#[derive(Clone, Debug, PartialEq)]
+pub enum ZoomTextLayerState {
+    Loading,
+    Ready(PageTextLayer),
+    Unavailable,
+}
+
 #[component]
 pub fn ZoomOverlay(
     document_id: DocumentId,
@@ -58,6 +68,7 @@ pub fn ZoomOverlay(
     let locale: Memo<Locale> = use_context();
     let settings: Signal<AppSettingsV1> = use_context();
     let render_service: RenderService = use_context();
+    let text_service: TextLayerService = use_context();
 
     let mut zoom_scale = use_signal(|| {
         settings
@@ -66,7 +77,11 @@ pub fn ZoomOverlay(
             .zoom_overlay_scale
             .clamp(ZOOM_SCALE_MIN, ZOOM_SCALE_MAX)
     });
-    let zoom_image: Signal<ZoomImageState> = use_signal(|| ZoomImageState::Loading);
+    let mut zoom_image: Signal<ZoomImageState> = use_signal(|| ZoomImageState::Loading);
+    let mut zoom_text_layer: Signal<ZoomTextLayerState> =
+        use_signal(|| ZoomTextLayerState::Loading);
+    let mut image_request_seq: Signal<u64> = use_signal(|| 0);
+    let mut text_request_seq: Signal<u64> = use_signal(|| 0);
 
     let current_idx = page_index.read().unwrap_or(PageIndex(0));
     let display_num = current_idx.display_number();
@@ -87,21 +102,92 @@ pub fn ZoomOverlay(
             flags: RenderFlags::default(),
             format: RenderOutputFormat::Png,
         };
+        let request_id = *image_request_seq.peek() + 1;
+        image_request_seq.set(request_id);
+        zoom_image.set(ZoomImageState::Loading);
+
         let rs2 = rs.clone();
         let mut zi = zoom_image;
+        let active_page = page_index;
+        let active_scale = zoom_scale;
         spawn(async move {
-            zi.set(ZoomImageState::Loading);
             match rs2.get_or_render(request).await {
                 Ok(png) => {
                     let (w, h) = util::png_dimensions(&png).unwrap_or((0, 0));
                     let b64 = base64::engine::general_purpose::STANDARD.encode(&*png);
-                    zi.set(ZoomImageState::Ready {
-                        uri: format!("data:image/png;base64,{b64}"),
-                        width_px: w,
-                        height_px: h,
-                    });
+                    if util::zoom_image_result_is_current(
+                        *image_request_seq.peek(),
+                        request_id,
+                        *active_page.peek(),
+                        idx,
+                        *active_scale.peek(),
+                        scale_bucket,
+                    ) {
+                        zi.set(ZoomImageState::Ready {
+                            uri: format!("data:image/png;base64,{b64}"),
+                            width_px: w,
+                            height_px: h,
+                        });
+                    }
                 }
-                Err(e) => zi.set(ZoomImageState::Failed(format!("{e:?}"))),
+                Err(e) => {
+                    if util::zoom_image_result_is_current(
+                        *image_request_seq.peek(),
+                        request_id,
+                        *active_page.peek(),
+                        idx,
+                        *active_scale.peek(),
+                        scale_bucket,
+                    ) {
+                        zi.set(ZoomImageState::Failed(format!("{e:?}")));
+                    }
+                }
+            }
+        });
+    });
+
+    // ── Text layer when page changes (RFC 023) ───────────────────────────
+    let ts = text_service.clone();
+    use_effect(move || {
+        let Some(idx) = *page_index.read() else {
+            return;
+        };
+        let request = TextLayerRequest {
+            document_id,
+            generation,
+            page_index: idx,
+        };
+        let request_id = *text_request_seq.peek() + 1;
+        text_request_seq.set(request_id);
+        zoom_text_layer.set(ZoomTextLayerState::Loading);
+
+        let ts2 = ts.clone();
+        let mut text_state = zoom_text_layer;
+        let active_page = page_index;
+        spawn(async move {
+            let is_current =
+                || *text_request_seq.peek() == request_id && *active_page.peek() == Some(idx);
+            match ts2.get_or_extract(request).await {
+                Ok(layer)
+                    if is_current()
+                        && util::zoom_text_layer_matches_overlay(
+                            &layer,
+                            document_id,
+                            generation,
+                            idx,
+                        ) =>
+                {
+                    if layer.segments.is_empty() {
+                        text_state.set(ZoomTextLayerState::Unavailable);
+                    } else {
+                        text_state.set(ZoomTextLayerState::Ready((*layer).clone()));
+                    }
+                }
+                Ok(_) => {}
+                Err(_) if is_current() => {
+                    text_state.set(ZoomTextLayerState::Unavailable);
+                }
+                Err(_) => {}
             }
         });
     });
@@ -131,6 +217,24 @@ pub fn ZoomOverlay(
         ),
         _ => Vec::new(),
     };
+    let text_segment_rects = match (&*zoom_image.read(), &*zoom_text_layer.read()) {
+        (
+            ZoomImageState::Ready {
+                width_px,
+                height_px,
+                ..
+            },
+            ZoomTextLayerState::Ready(layer),
+        ) => util::zoom_text_segment_rects(
+            current_idx,
+            &page_descriptors,
+            layer,
+            *width_px,
+            *height_px,
+        ),
+        _ => Vec::new(),
+    };
+    let show_text_unavailable = matches!(&*zoom_text_layer.read(), ZoomTextLayerState::Unavailable);
 
     rsx! {
             div {
@@ -220,12 +324,16 @@ pub fn ZoomOverlay(
                             ZoomImageState::Ready { uri, width_px, height_px } => rsx! {
                                 div {
                                     class: "zoom-image-wrap",
-                                    style: "position: relative; display: inline-block;",
+                                    style: "position: relative; display: inline-block; \
+                                            width: {width_px}px; height: {height_px}px;",
                                     img {
                                         class: "zoom-img",
                                         src: "{uri}",
                                         alt: "Page {display_num}",
-                                        style: "display: block; max-width: 100%; height: auto;",
+                                        draggable: "false",
+                                        style: "display: block; \
+                                                width: {width_px}px; height: {height_px}px; \
+                                                max-width: none;",
                                         width: "{width_px}",
                                         height: "{height_px}",
                                     }
@@ -239,6 +347,36 @@ pub fn ZoomOverlay(
                                                     style: "left:{rx}px; top:{ry}px; width:{rw}px; height:{rh}px;",
                                                 }
                                             }
+                                        }
+                                    }
+                                    // RFC 023 selectable text layer in zoom view
+                                    if !text_segment_rects.is_empty() {
+                                        div {
+                                            class: "zoom-text-layer",
+                                            for positioned in text_segment_rects.iter() {
+                                                {
+                                                    let segment = &positioned.segment;
+                                                    let rect = positioned.rect;
+                                                    let key = format!("{}-{}", current_idx.0, segment.segment_index);
+                                                    let (tx, ty, tw, th) = (rect.x, rect.y, rect.width, rect.height);
+                                                    let font_size = th.max(1.0);
+                                                    rsx! {
+                                                        span {
+                                                            key: "{key}",
+                                                            class: "zoom-text-segment",
+                                                            style: "left:{tx}px; top:{ty}px; \
+                                                                    width:{tw}px; height:{th}px; \
+                                                                    font-size:{font_size}px;",
+                                                            "{segment.text}"
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                    if show_text_unavailable {
+                                        div { class: "zoom-text-status",
+                                            {t(locale(), MessageKey::ZoomTextSelectionUnavailable)}
                                         }
                                     }
                                 }

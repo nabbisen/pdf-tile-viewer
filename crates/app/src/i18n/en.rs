@@ -52,6 +52,7 @@ pub fn message(key: MessageKey) -> &'static str {
         MessageKey::ZoomNextPage => "Next →",
         MessageKey::ZoomPageIndicator => "Page",
         MessageKey::ZoomScaleLabel => "Zoom",
+        MessageKey::ZoomTextSelectionUnavailable => "Text selection is unavailable for this page.",
         MessageKey::ZoomModeEnter => "Zoom",
         MessageKey::ColumnsLabel => "Columns",
         MessageKey::ColumnsAuto => "Auto",

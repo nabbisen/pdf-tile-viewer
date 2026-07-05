@@ -3,8 +3,8 @@ project: PDF Tile Viewer
 document_family: Dioxus + embedded/bundled PDFium migration RFCs
 language: English
 date: 2026-07-05
-status: Proposed
-baseline: PDF Tile Viewer 2.0.0-beta.7 + PDF Tile Viewer v1 text-selection parity
+status: Implemented (2.0.0-beta.8)
+baseline: PDF Tile Viewer 2.0.0-beta.8 + PDF Tile Viewer v1 text-selection parity
 review: .git-exclude/reviewed/pdf_tile_viewer_rfc023_text_selection_design_review.md
 rereview: .git-exclude/reviewed/pdf_tile_viewer_rfc023_text_selection_rereview.md
 ---

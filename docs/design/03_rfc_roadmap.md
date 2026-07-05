@@ -326,14 +326,6 @@ These RFCs should be postponed until the migrated app is stable.
 
 ---
 
-### Future RFC-F03 — Text Selection Layer
-
-**Goal:** Provide selectable text over page images.
-
-**Reason to defer:** Requires text layout extraction, coordinate mapping, selection UX, and accessibility decisions.
-
----
-
 ### Future RFC-F04 — Link and Outline Navigation
 
 **Goal:** Support PDF links, bookmarks, and table-of-contents navigation.
@@ -347,6 +339,14 @@ These RFCs should be postponed until the migrated app is stable.
 **Goal:** Re-evaluate Iced, Slint, egui, or Dioxus native renderer paths.
 
 **Reason to defer:** The approved migration is Dioxus Desktop; no-WebView is a separate strategic decision.
+
+---
+
+### Future RFC-F06 — Offline Web App Target
+
+**Goal:** Offer an offline-capable web app built from the same Dioxus component tree.
+
+**Reason to defer:** Requires a browser PDF engine backend, browser file intake, and web storage services.
 
 ---
 

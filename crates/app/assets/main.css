@@ -221,6 +221,7 @@ button:focus-visible, input:focus-visible {
 /* ── RFC 011 highlight overlay ────────────────────────────── */
 .highlight-overlay {
   position: absolute; pointer-events: none;
+  z-index: 1;
   background: rgba(255, 220, 0, 0.38);
   border: 1px solid rgba(200, 160, 0, 0.55);
   border-radius: 1px;
@@ -256,7 +257,49 @@ button:focus-visible, input:focus-visible {
   padding: 1rem; background: color-mix(in srgb, var(--muted) 6%, var(--bg));
 }
 .zoom-image-wrap { position: relative; display: inline-block; }
-.zoom-img { display: block; max-width: 100%; height: auto; }
+.zoom-img {
+  position: relative;
+  z-index: 0;
+  display: block;
+  max-width: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
+}
+.zoom-text-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+}
+.zoom-text-segment {
+  position: absolute;
+  display: block;
+  overflow: hidden;
+  white-space: pre;
+  line-height: 1;
+  color: transparent;
+  user-select: text;
+  -webkit-user-select: text;
+  pointer-events: auto;
+}
+.zoom-text-segment::selection {
+  color: transparent;
+  background: rgba(37, 99, 235, 0.32);
+}
+.zoom-text-status {
+  position: absolute;
+  left: 0.5rem;
+  bottom: 0.5rem;
+  z-index: 3;
+  max-width: min(28rem, calc(100% - 1rem));
+  padding: 0.3rem 0.5rem;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--panel) 92%, transparent);
+  color: var(--muted);
+  font-size: 0.75rem;
+  pointer-events: none;
+}
 
 .zoom-placeholder {
   display: flex; flex-direction: column; align-items: center;

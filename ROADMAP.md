@@ -31,7 +31,7 @@ RFC designs live in `rfcs/proposed/`; the ADR and detailed roadmap are in
 | `2.0.0-alpha.1` | Vertical slice: open PDF, render page 1 |
 | `2.0.0-alpha.2` | Tile rendering, scale controls (done) |
 | `2.0.0-beta.1` | Search, highlights, zoomed page viewer, file history |
-| `2.0.0-beta.6` | Latest released beta; CI, release workflow, MSIX, docs, and notice cleanup |
+| `2.0.0-beta.8` | Latest released beta; zoom-overlay PDF text selection |
 | `2.0.0-rc.1` | Future release candidate after maintainer validation |
 | `2.0.0` | Final release — pending confirmation |
 | `2.1.0` | Large-PDF cache policy, optional static PDFium linking |
@@ -43,11 +43,13 @@ RFC designs live in `rfcs/proposed/`; the ADR and detailed roadmap are in
 Tracked in `docs/design/RFC-FUTURE-notes.md`:
 
 - **F01** Static PDFium linking (single binary, no external .so)
-- **F02** Page text layer / text selection
-- **F03** Annotation and link support
-- **F04** Multi-document tabs / workspace
-- **F05** Persistent recent-files with cross-session history
+- **F02** Password-protected PDF open flow
+- **F04** Link and outline navigation
+- **F05** Native renderer / non-WebView UI investigation
 - **F06** Offline web app target (Dioxus Web / WASM)
+
+Future RFC-F03, text selection, has been implemented as RFC 023 in
+`2.0.0-beta.8`.
 
 ---
 

@@ -51,6 +51,7 @@ pub fn message(key: MessageKey) -> Option<&'static str> {
         MessageKey::ZoomNextPage => "次 →",
         MessageKey::ZoomPageIndicator => "ページ",
         MessageKey::ZoomScaleLabel => "ズーム",
+        MessageKey::ZoomTextSelectionUnavailable => "このページではテキスト選択を利用できません。",
         MessageKey::ZoomModeEnter => "ズーム",
         MessageKey::ColumnsLabel => "列数",
         MessageKey::ColumnsAuto => "自動",

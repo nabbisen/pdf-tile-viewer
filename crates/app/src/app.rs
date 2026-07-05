@@ -9,6 +9,7 @@ use app_services::document_service;
 use app_services::history_service::SessionHistory;
 use app_services::render_service::RenderService;
 use app_services::settings_service::SettingsStore;
+use app_services::text_service::{DEFAULT_TEXT_LAYER_CACHE_BUDGET_BYTES, TextLayerService};
 
 use crate::components::error_panel::ErrorPanel;
 use crate::i18n::{self, Locale, MessageKey, t};
@@ -37,7 +38,10 @@ pub fn App() -> Element {
             .render_cache_budget_mb
             .map(|mb| (mb as usize) * 1024 * 1024)
             .unwrap_or(app_services::render_service::DEFAULT_CACHE_BUDGET_BYTES);
-        use_context_provider(|| RenderService::new(engine, budget_bytes));
+        use_context_provider(|| RenderService::new(engine.clone(), budget_bytes));
+        use_context_provider(|| {
+            TextLayerService::new(engine, DEFAULT_TEXT_LAYER_CACHE_BUDGET_BYTES)
+        });
     }
 
     // Provide settings store for downstream save callbacks.

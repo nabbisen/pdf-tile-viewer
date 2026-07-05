@@ -11,6 +11,26 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [2.0.0-beta.8]
+
+### Added
+
+- Restored best-effort PDF text selection and copy in the single-page zoom
+  overlay (RFC 023). The tile grid remains bitmap/search-overlay only.
+- Added a PDFium-backed text-layer extraction path, serialized through the PDF
+  engine worker, with domain-owned text segments and page-space bounds.
+- Added a memory-only text-layer service cache keyed by document, generation,
+  and page, with stale-result suppression for closed document sessions.
+
+### Fixed
+
+- Added request guards for zoom overlay bitmap and text-layer results so rapid
+  page navigation or zoom changes do not apply stale asynchronous results.
+- Kept zoom text spans, search highlights, and the rendered page bitmap aligned
+  by using one natural-size rendered page coordinate system.
+
+---
+
 ## [2.0.0-beta.7]
 
 ### Fixed

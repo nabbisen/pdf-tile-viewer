@@ -46,6 +46,7 @@ _(manga by m. thanks)_
 - ✊ Mouse drag move with Ctrl key pushed
 - 🔧 Scale / pages-per-row changers
 - 🔍 Page zoom view
+- 📝 Text selection in zoom view
 - 🗺 Text search
 - 🍵 Zen mode
 - 🗄 Preserve some settings (even when app's quitted)

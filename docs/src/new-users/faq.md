@@ -8,7 +8,7 @@ and never leave your machine.
 **Can it open password-protected PDFs?**
 
 Not yet. The engine detects encrypted PDFs and shows a clear error message,
-but decryption is not supported in 2.0.0-beta.7.
+but decryption is not supported in 2.0.0-beta.8.
 
 **Why does the title bar show only the filename, not the full path?**
 
@@ -41,5 +41,5 @@ the application so you do not need to install it separately.
 
 **Is the application code-signed?**
 
-No. 2.0.0-beta.7 is unsigned. On macOS or Windows you may see an OS security
+No. 2.0.0-beta.8 is unsigned. On macOS or Windows you may see an OS security
 prompt the first time you run it.

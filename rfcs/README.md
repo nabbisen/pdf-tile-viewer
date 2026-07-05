@@ -23,7 +23,6 @@ Implemented RFCs live in `rfcs/done/`. Proposed 2.0 RC follow-up work lives in
 | 020 | [Release PDFium Bundling Documentation Correction](proposed/020-release-pdfium-bundling-doc-correction.md) | Proposed |
 | 021 | [Hardcoded UI String i18n Sweep](proposed/021-i18n-hardcoded-ui-string-sweep.md) | Proposed |
 | 022 | [Contributor Test Layout Documentation Correction](proposed/022-contributor-test-layout-doc-correction.md) | Proposed |
-| 023 | [Single-Page PDF Text Selection Layer](proposed/023-pdf-text-selection-layer.md) | Proposed |
 
 ---
 
@@ -56,10 +55,12 @@ Implemented RFCs live in `rfcs/done/`. Proposed 2.0 RC follow-up work lives in
 | 015 | [CI Smoke Tests for Rendering and Search](done/015-ci-smoke-tests-for-rendering-and-search.md) | M0/M9 (alpha.1/beta.2) |
 | 016 | [Security and Privacy Hardening](done/016-security-and-privacy-hardening.md) | M5/M9 (alpha.3/beta.2) |
 | 017 | [Internationalization and Language Resources](done/017-internationalization-and-language-resources.md) | M2 (alpha.1) |
+| 023 | [Single-Page PDF Text Selection Layer](done/023-pdf-text-selection-layer.md) | 2.0.0-beta.8 |
 
 ---
 
 ## Future themes
 
 See `docs/design/RFC-FUTURE-notes.md` for post-2.0 ideas (static PDFium
-linking, text selection, multi-tab, persistent history, offline WASM target).
+linking, password-protected PDFs, link navigation, native renderer
+investigation, and offline WASM target).

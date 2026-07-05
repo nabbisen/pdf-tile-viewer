@@ -16,7 +16,16 @@ remains image-based and continues to render search results as visual overlays.
   - added `domain::text` request/result/cache-key/error types;
   - added PDFium text-layer extraction through the serialized worker;
   - added `app_services::text_service` with bounded memory-only caching and
-    generation-close stale-result suppression.
+    generation-close stale-result suppression;
+  - wired `TextLayerService` into the app context;
+  - added zoom-overlay text-layer request state with request-id/current-page
+    stale-result guarding;
+  - rendered transparent selectable text spans above the zoom page bitmap and
+    search highlights;
+  - patched UI review findings before manual smoke: natural-size zoom page
+    geometry, stale bitmap render guarding, non-selectable/non-draggable page
+    bitmap, and explicit document/generation/page validation before applying
+    text-layer results.
 
 ## 3. Files changed
 
@@ -30,6 +39,13 @@ remains image-based and continues to render search results as visual overlays.
 - `crates/pdf_engine/tests/smoke.rs`
 - `crates/app_services/src/text_service.rs`
 - `crates/app_services/src/text_service/tests.rs`
+- `crates/app/src/app.rs`
+- `crates/app/src/components/zoom_overlay.rs`
+- `crates/app/src/components/zoom_overlay/util.rs`
+- `crates/app/assets/main.css`
+- `crates/app/src/i18n.rs`
+- `crates/app/src/i18n/en.rs`
+- `crates/app/src/i18n/ja.rs`
 
 ## 4. Design decisions and assumptions
 
@@ -104,9 +120,27 @@ Observed after backend review follow-up patches:
 - `cargo test -p app`
 - `cargo test --workspace --exclude app`
 
+Observed after the ZoomOverlay UI slice:
+
+- `cargo fmt`
+- `cargo fmt --check`
+- `cargo test -p app`
+- `cargo test -p app_services`
+- `cargo check --workspace`
+- `cargo test --workspace --exclude app`
+
+Observed after UI implementation review follow-up patches:
+
+- `cargo fmt`
+- `cargo fmt --check`
+- `cargo test -p app`
+- `cargo test -p app_services`
+- `cargo check --workspace`
+- `cargo test --workspace --exclude app`
+
 Broader gates should be rerun after each follow-up slice. Manual WebView
-selection smoke has not been run yet because the UI text-selection layer is not
-implemented.
+selection smoke was reported successful by the maintainer before the
+`2.0.0-beta.8` release-prep update.
 
 ## 6. Generated artifacts
 
@@ -114,9 +148,6 @@ None.
 
 ## 7. Known limitations
 
-- The RFC still requires developer validation against `pdfium-render` segment
-  extraction quality on real PDFs.
-- Browser/WebView selection behavior has not been manually tested.
 - Rotated/cropped page behavior is identified as a risk and needs fixture or
   manual coverage.
 - The implementation approach assumes native selection can work over
@@ -127,14 +158,13 @@ None.
 
 ## 8. Recommended next step
 
-Continue from the service boundary:
+Prepare and publish `2.0.0-beta.8`:
 
-1. Provide `TextLayerService` in the app context when the engine is available.
-2. Add zoom-overlay state for the active page text layer and request identity.
-3. Request text only for the active zoom page; discard results unless
-   `(document_id, generation, page_index, request_id)` still matches.
-4. Render selectable transparent text spans in `ZoomOverlay` using the shared
-   page/image geometry path.
-5. Keep `TileGrid` unchanged and independent from `PageTextLayer`.
-6. Add/keep tests for geometry mapping and simple one-column extraction order.
-7. Manually verify select/copy behavior on Windows, macOS, and Linux before RC.
+1. Commit the RFC 023 UI and release-prep changes.
+2. Run the release workflow from tag `2.0.0-beta.8`.
+3. After release, verify the published archive layout still keeps `bin/` and
+   `resources/` together and includes bundled PDFium.
+4. Keep real-world PDF fidelity checks open for rotated/cropped pages and
+   complex text ordering.
+5. Consider adding a PDFium-backed `TextLayerService::get_or_extract()` smoke
+   test before RC.

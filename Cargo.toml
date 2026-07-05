@@ -9,7 +9,7 @@ members = [
 ]
 
 [workspace.package]
-version     = "2.0.0-beta.7"
+version     = "2.0.0-beta.8"
 edition     = "2024"
 
 license                 = "Apache-2.0"
@@ -17,10 +17,10 @@ authors                 = ["nabbisen"]
 repository              = "https://github.com/nabbisen/pdf-tile-viewer"
 
 [workspace.dependencies]
-domain                      = { version = "2.0.0-beta.7", path = "crates/domain" }
-pdf_engine                  = { version = "2.0.0-beta.7", path = "crates/pdf_engine" }
-app_services                = { version = "2.0.0-beta.7", path = "crates/app_services" }
-packaging                   = { version = "2.0.0-beta.7", path = "crates/packaging" }
+domain                      = { version = "2.0.0-beta.8", path = "crates/domain" }
+pdf_engine                  = { version = "2.0.0-beta.8", path = "crates/pdf_engine" }
+app_services                = { version = "2.0.0-beta.8", path = "crates/app_services" }
+packaging                   = { version = "2.0.0-beta.8", path = "crates/packaging" }
 
 dioxus                      = { version = "0.7", features = ["document"] }
 

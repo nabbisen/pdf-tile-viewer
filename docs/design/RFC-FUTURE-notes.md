@@ -46,35 +46,32 @@ Password-protected PDFs complicate the document-opening lifecycle and error stat
 - Should passwords ever be remembered? Recommended answer: no.
 - How does failed password retry behave?
 
-## Future RFC-F03 — Text Selection Layer
-
-### Goal
-
-Provide selectable text over rendered PDF page images.
-
-### Reason to Defer
-
-Text selection requires text layout extraction, coordinate mapping, selection UX, accessibility decisions, and interaction with highlights. It is a separate product feature, not a rendering migration requirement.
+> Future RFC-F03, text selection, has been implemented as RFC 023 in
+> `2.0.0-beta.8`.
 
 ## Future RFC-F04 — Link and Outline Navigation
 
 ### Goal
 
-Support PDF links, bookmarks, table-of-contents navigation, and internal destinations.
+Support PDF links, bookmarks, table-of-contents navigation, and internal
+destinations.
 
 ### Reason to Defer
 
-Useful, but not central to the tile overview workflow. It also introduces external action/security policy decisions.
+Useful, but not central to the tile overview workflow. It also introduces
+external action/security policy decisions.
 
 ## Future RFC-F05 — Native Renderer / Non-WebView UI Investigation
 
 ### Goal
 
-Re-evaluate a no-WebView UI path using Iced, Slint, egui, a Dioxus native renderer path, or another toolkit.
+Re-evaluate a no-WebView UI path using Iced, Slint, egui, a Dioxus native
+renderer path, or another toolkit.
 
 ### Reason to Defer
 
-The approved migration target is Dioxus Desktop. Removing WebView is a separate strategic decision and should not be mixed into this migration.
+The approved migration target is Dioxus Desktop. Removing WebView is a
+separate strategic decision and should not be mixed into this migration.
 
 ## Future RFC-F06 — Offline Web App Target (Dioxus Web / WASM)
 
@@ -95,4 +92,3 @@ To keep this target reachable, the current migration must respect the dependency
 - PDFium-to-WASM build pipeline and size budget, versus adopting a second engine behind the PDF service trait.
 - Offline storage of settings (IndexedDB/localStorage) behind the settings service facade.
 - Whether desktop and web share one `app` crate with target-gated services or split into thin per-target binary crates.
-

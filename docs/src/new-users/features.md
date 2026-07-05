@@ -1,6 +1,6 @@
 # Features
 
-> **Status:** 2.0.0-beta.7 — latest released beta.
+> **Status:** 2.0.0-beta.8 — latest released beta.
 
 ## All pages as a tile grid
 
@@ -30,6 +30,8 @@ linearly.
 - Navigate previous/next/first/last page inside the overlay.
 - Adjust zoom scale independently from the tile grid.
 - Search highlights remain visible in the zoomed view.
+- Select and copy visible PDF text in the zoomed page when the PDF exposes a
+  usable text layer.
 - Close with Escape or the × button; focus returns to the tile grid.
 
 ## File opening
