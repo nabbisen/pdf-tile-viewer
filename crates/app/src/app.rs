@@ -93,12 +93,27 @@ pub fn App() -> Element {
         }}
         div { class: "app-shell",
             if let Some(boot_error) = state::engine_boot_error() {
-                ErrorPanel {
-                    title: t(locale(), MessageKey::EngineUnavailableTitle).to_string(),
-                    body: format!(
-                        "{} ({boot_error})",
-                        t(locale(), MessageKey::EngineUnavailableBody)
-                    ),
+                {
+                    let body = if cfg!(debug_assertions) {
+                        format!(
+                            "{}\n\n{}\n\n{}: {boot_error}",
+                            t(locale(), MessageKey::EngineUnavailableBody),
+                            t(locale(), MessageKey::EngineUnavailableDevelopmentHelp),
+                            t(locale(), MessageKey::DiagnosticDetailsLabel),
+                        )
+                    } else {
+                        format!(
+                            "{}\n\n{}",
+                            t(locale(), MessageKey::EngineUnavailableBody),
+                            t(locale(), MessageKey::EngineUnavailablePackagedHelp),
+                        )
+                    };
+                    rsx! {
+                        ErrorPanel {
+                            title: t(locale(), MessageKey::EngineUnavailableTitle).to_string(),
+                            body,
+                        }
+                    }
                 }
             }
             {body}

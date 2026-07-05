@@ -88,7 +88,7 @@ pub fn ZoomOverlay(
             format: RenderOutputFormat::Png,
         };
         let rs2 = rs.clone();
-        let mut zi = zoom_image.clone();
+        let mut zi = zoom_image;
         spawn(async move {
             zi.set(ZoomImageState::Loading);
             match rs2.get_or_render(request).await {

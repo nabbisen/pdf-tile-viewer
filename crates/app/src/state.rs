@@ -54,6 +54,7 @@ pub struct OpenDocumentView {
 /// Top-level UI phase: dashboard or viewer (router deferred; the vertical
 /// slice switches on state per RFC 005 §5 "minimal shell").
 #[derive(Clone, Debug, Default, PartialEq)]
+#[allow(clippy::large_enum_variant)]
 pub enum Phase {
     #[default]
     Dashboard,

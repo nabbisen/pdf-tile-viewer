@@ -67,13 +67,32 @@ pub fn boot_engine(
     })
 }
 
-/// Resource root for the running app: `<exe_dir>/resources` when packaged,
-/// falling back to `./resources` during development (RFC 003 §7).
+/// Resource root for the running app (RFC 003 §7).
 pub fn default_resource_root() -> PathBuf {
     std::env::current_exe()
         .ok()
-        .and_then(|exe| exe.parent().map(|d| d.join("resources")))
+        .and_then(|exe| resource_root_for_exe(&exe))
         .unwrap_or_else(|| PathBuf::from("resources"))
+}
+
+fn resource_root_for_exe(exe: &std::path::Path) -> Option<PathBuf> {
+    let exe_dir = exe.parent()?;
+
+    if exe_dir.file_name().is_some_and(|name| name == "MacOS")
+        && let Some(contents_dir) = exe_dir
+            .parent()
+            .filter(|dir| dir.file_name().is_some_and(|name| name == "Contents"))
+    {
+        return Some(contents_dir.join("Resources"));
+    }
+
+    if exe_dir.file_name().is_some_and(|name| name == "bin")
+        && let Some(package_root) = exe_dir.parent()
+    {
+        return Some(package_root.join("resources"));
+    }
+
+    Some(exe_dir.join("resources"))
 }
 
 #[cfg(test)]

@@ -9,11 +9,21 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+---
+
+## [2.0.0-beta.7]
+
 ### Fixed
 
 - Aligned all PDFium pins to the current `bblanchon/pdfium-binaries` release:
   `chromium/7920` is now used consistently by CI, release, MSIX, and local
   fetch/package helpers.
+- Cleared the current `cargo clippy --workspace --all-targets -- -D warnings`
+  findings across library crates and GUI glue.
+- Improved the missing-PDFium boot error so packaged users get install/archive
+  recovery guidance before low-level diagnostic details.
+- Aligned resource-root resolution with release archives that place the binary
+  under `bin/` and bundled PDFium under top-level `resources/`.
 
 ---
 

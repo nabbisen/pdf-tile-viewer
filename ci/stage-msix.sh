@@ -37,7 +37,7 @@ ASSETS_SRC="${REPO_ROOT}/packaging/windows/Assets"
 
 # ── Derive the MSIX 4-part version from Cargo.toml ───────────────────────────
 FULL_VERSION=$(grep '^version' "${REPO_ROOT}/Cargo.toml" | head -1 | sed 's/.*= *"//;s/".*//')
-# Strip any pre-release / build suffix: 2.0.0-beta.6 -> 2.0.0
+# Strip any pre-release / build suffix: 2.0.0-beta.7 -> 2.0.0
 SEMVER_CORE="${FULL_VERSION%%-*}"
 REVISION="${MSIX_REVISION:-0}"
 MSIX_VERSION="${SEMVER_CORE}.${REVISION}"

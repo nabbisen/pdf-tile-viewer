@@ -33,7 +33,7 @@ pub fn Dashboard(
             DropZone {
                 on_drop: move |path: PathBuf| on_open_path.call(path),
                 on_error: move |key: MessageKey| {
-                    let mut err = last_error.clone();
+                    let mut err = last_error;
                     err.set(Some(key));
                 },
                 h2 { {t(locale(), MessageKey::DashboardHeading)} }
@@ -59,7 +59,7 @@ pub fn Dashboard(
                                     "aria-label": "Reopen {entry.display_name}",
                                     onclick: {
                                         let path = entry.path.clone();
-                                        let on_open_path = on_open_path.clone();
+                                        let on_open_path = on_open_path;
                                         move |_| {
                                             if let Some(p) = &path {
                                                 on_open_path.call(p.clone());

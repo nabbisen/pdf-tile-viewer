@@ -52,7 +52,7 @@ checksum = "7f202df86484c868dbad7eaa557ef785d5c66295e41b460ef922eca0723b842c"
 
 [[package]]
 name = "app"
-version = "2.0.0-beta.6"
+version = "2.0.0-beta.7"
 dependencies = [
  "app_services",
  "base64",
@@ -64,7 +64,7 @@ dependencies = [
 
 [[package]]
 name = "app_services"
-version = "2.0.0-beta.6"
+version = "2.0.0-beta.7"
 dependencies = [
  "dirs",
  "domain",
@@ -1221,7 +1221,7 @@ dependencies = [
 
 [[package]]
 name = "domain"
-version = "2.0.0-beta.6"
+version = "2.0.0-beta.7"
 dependencies = [
  "serde",
  "serde_json",
@@ -3037,7 +3037,7 @@ checksum = "04744f49eae99ab78e0d5c0b603ab218f515ea8cfe5a456d7629ad883a3b6e7d"
 
 [[package]]
 name = "packaging"
-version = "2.0.0-beta.6"
+version = "2.0.0-beta.7"
 dependencies = [
  "dirs",
 ]
@@ -3104,7 +3104,7 @@ checksum = "35fb2e5f958ec131621fdd531e9fc186ed768cbe395337403ae56c17a74c68ec"
 
 [[package]]
 name = "pdf_engine"
-version = "2.0.0-beta.6"
+version = "2.0.0-beta.7"
 dependencies = [
  "domain",
  "futures-channel",

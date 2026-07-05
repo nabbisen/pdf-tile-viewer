@@ -24,6 +24,7 @@ const PREFETCH_MARGIN_PX: f32 = 600.0;
 ///
 /// Tiles outside the prefetch margin remain `Pending` and will be scheduled
 /// the next time they scroll into the margin.
+#[allow(clippy::too_many_arguments)]
 pub fn schedule_visible_renders(
     layout: TileLayout,
     scroll_y: f32,

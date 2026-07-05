@@ -94,7 +94,7 @@ impl RenderCache {
                 .entries
                 .iter()
                 .min_by_key(|(_, e)| e.insert_seq)
-                .map(|(k, _)| k.clone());
+                .map(|(k, _)| *k);
             if let Some(k) = victim {
                 if let Some(e) = self.entries.remove(&k) {
                     self.used_bytes = self.used_bytes.saturating_sub(e.bytes.len());

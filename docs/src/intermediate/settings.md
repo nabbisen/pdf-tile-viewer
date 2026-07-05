@@ -39,7 +39,7 @@ controls in the viewer toolbar.
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `privacy.show_full_path_in_title` | `bool` | `false` | When `true`, the window title shows the full file path instead of just the filename. |
-| `privacy.persist_recent_files` | `bool` | `false` | *(Schema only — session history is always ephemeral in 2.0.0-beta.6.)* |
+| `privacy.persist_recent_files` | `bool` | `false` | *(Schema only — session history is always ephemeral in 2.0.0-beta.7.)* |
 | `privacy.include_full_paths_in_diagnostics` | `bool` | `false` | *(Schema only — not yet used by diagnostics.)* |
 
 ---

@@ -91,7 +91,7 @@ Notes:
 
 - **Version.** MSIX requires a 4-part numeric version `X.Y.Z.R` and does not
   permit pre-release suffixes. The workflow derives `X.Y.Z` from the semver
-  core in `Cargo.toml` (so `2.0.0-beta.6` → `2.0.0`) and uses the
+  core in `Cargo.toml` (so `2.0.0-beta.7` → `2.0.0`) and uses the
   `msix_revision` dispatch input as the 4th part `R` (default `0`). Bump the
   revision when re-submitting the same semver.
 - **Manifest.** `packaging/windows/AppxManifest.xml` carries a `@VERSION@`

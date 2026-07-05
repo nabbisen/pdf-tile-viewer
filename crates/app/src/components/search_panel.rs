@@ -44,7 +44,7 @@ pub fn SearchPanel(
             query,
         };
         let engine = engine.clone();
-        let mut ss = search_state.clone();
+        let mut ss = search_state;
         spawn(async move {
             ss.set(SearchState::Searching);
             match engine.search_document_with_highlights(request).await {
@@ -107,7 +107,7 @@ pub fn SearchPanel(
                     disabled: *is_running.read(),
                     oninput: move |e| input_text.set(e.value()),
                     onkeydown: {
-                        let ds = do_search.clone();
+                        let ds = do_search;
                         move |e: Event<KeyboardData>| {
                             if e.key() == Key::Enter { ds.call(()); }
                         }
@@ -117,7 +117,7 @@ pub fn SearchPanel(
                     class: "primary search-btn",
                     disabled: *is_running.read(),
                     onclick: {
-                        let ds = do_search.clone();
+                        let ds = do_search;
                         move |_| ds.call(())
                     },
                     {t(locale(), MessageKey::SearchButton)}

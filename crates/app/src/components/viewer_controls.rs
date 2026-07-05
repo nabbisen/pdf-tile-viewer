@@ -21,7 +21,7 @@ pub fn ViewerControls(
 ) -> Element {
     let locale: Memo<Locale> = use_context();
     let mut show_secondary = use_signal(|| false);
-    let jump_input = use_signal(String::new);
+    let mut jump_input = use_signal(String::new);
     let jump_error: Signal<Option<String>> = use_signal(|| None);
 
     rsx! {
@@ -142,14 +142,9 @@ pub fn ViewerControls(
                         max: "{page_count}",
                         placeholder: "…",
                         value: "{jump_input.read()}",
-                        oninput: {
-                            let mut jump_input = jump_input.clone();
-                            move |evt| jump_input.set(evt.value())
-                        },
+                        oninput: move |evt| jump_input.set(evt.value()),
                         onkeydown: {
-                            let jump_input = jump_input.clone();
-                            let mut jump_error = jump_error.clone();
-                            let on_jump = on_jump.clone();
+                            let mut jump_error = jump_error;
                             move |evt: Event<KeyboardData>| {
                                 if evt.key() == Key::Enter {
                                     handle_jump(
@@ -165,8 +160,7 @@ pub fn ViewerControls(
                     button {
                         class: "ghost",
                         onclick: {
-                            let mut jump_error = jump_error.clone();
-                            let on_jump = on_jump.clone();
+                            let mut jump_error = jump_error;
                             move |_| {
                                 handle_jump(
                                     &jump_input.read(),

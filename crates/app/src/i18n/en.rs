@@ -17,8 +17,15 @@ pub fn message(key: MessageKey) -> &'static str {
         MessageKey::RenderingPage => "Rendering page…",
         MessageKey::EngineUnavailableTitle => "PDF engine unavailable",
         MessageKey::EngineUnavailableBody => {
-            "The bundled PDFium library could not be loaded. Reinstalling the application usually fixes this."
+            "PDF Tile Viewer needs its bundled PDF engine library to open, render, and search PDFs, but that library was not found."
         }
+        MessageKey::EngineUnavailableDevelopmentHelp => {
+            "If you installed the app, download the full official release archive again and launch it without moving the executable out of the extracted folder. If you are building from source, see `docs/src/contributors/dev.md` for PDFium setup."
+        }
+        MessageKey::EngineUnavailablePackagedHelp => {
+            "This install appears incomplete. Re-extract the official release archive and keep the `bin/` and `resources/` folders together."
+        }
+        MessageKey::DiagnosticDetailsLabel => "Diagnostic detail",
         MessageKey::ErrFileNotFound => "The file could not be found.",
         MessageKey::ErrNotAFile => "That item is not a file.",
         MessageKey::ErrWrongExtension => "Only .pdf files can be opened.",

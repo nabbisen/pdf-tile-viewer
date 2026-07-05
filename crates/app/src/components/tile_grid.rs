@@ -50,7 +50,7 @@ pub fn TileGrid(
                         let image_state = images.get(&idx).cloned()
                             .unwrap_or(TileImageState::Pending);
                         let tile_id = format!("tile-{}", idx.0);
-                        let click_cb = on_tile_click.clone();
+                        let click_cb = on_tile_click;
 
                         // Search match badge and highlights
                         let match_count = search_summaries

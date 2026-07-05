@@ -32,7 +32,7 @@ pub fn DropZone(
             ondrop: move |evt: Event<DragData>| {
                 evt.prevent_default();
                 is_over.set(false);
-                let files = (&*evt.data()).files();
+                let files = (*evt.data()).files();
                 match files.len() {
                     0 => {} // no files — ignore silently
                     1 => {

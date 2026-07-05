@@ -78,12 +78,13 @@ Launch:
   cd <artifact-directory>
   ./bin/pdf-tile-viewer
 
-The binary expects resources/ in the same directory as the executable,
-or in the directory from which you launch it.
+The binary expects the bundled resources/ directory to remain at the
+top level of this extracted archive. Do not move bin/pdf-tile-viewer
+out of the extracted folder.
 
 Troubleshooting:
   If PDFium fails to load, check resources/pdfium/linux-x86_64/libpdfium.so.
-  Run: PDF_TILE_VIEWER_PDFIUM_DIR=resources/pdfium/linux-x86_64 ./bin/pdf-tile-viewer
+  Re-extract the full archive if the resources/ directory is missing.
 
 Report issues: https://github.com/nabbisen/pdf-tile-viewer/issues
 NOTES

@@ -75,6 +75,7 @@ button.ghost {
   background: var(--panel);
 }
 .error-panel h2 { margin-top: 0; color: var(--danger); }
+.error-panel p { white-space: pre-line; }
 
 .toast-error {
   margin: 0.5rem 1rem;

@@ -78,23 +78,22 @@ pub fn resolve(config: &PdfiumLoaderConfig) -> Result<PdfiumResolution, PdfiumRe
     if matches!(
         config.mode,
         PdfiumLoadMode::Development | PdfiumLoadMode::Test
-    ) {
-        if let Some(dev) = &config.explicit_dev_path {
-            if !config.allow_dev_fallback {
-                return Err(PdfiumResolveError::DevFallbackDisabled);
-            }
-            let lib = dev.join(library_file_name());
-            if lib.is_file() {
-                return Ok(PdfiumResolution {
-                    library_dir: dev.clone(),
-                    source: match config.mode {
-                        PdfiumLoadMode::Test => PdfiumLoadSource::TestFixturePath,
-                        _ => PdfiumLoadSource::ExplicitDevelopmentPath,
-                    },
-                });
-            }
-            searched.push(lib);
+    ) && let Some(dev) = &config.explicit_dev_path
+    {
+        if !config.allow_dev_fallback {
+            return Err(PdfiumResolveError::DevFallbackDisabled);
         }
+        let lib = dev.join(library_file_name());
+        if lib.is_file() {
+            return Ok(PdfiumResolution {
+                library_dir: dev.clone(),
+                source: match config.mode {
+                    PdfiumLoadMode::Test => PdfiumLoadSource::TestFixturePath,
+                    _ => PdfiumLoadSource::ExplicitDevelopmentPath,
+                },
+            });
+        }
+        searched.push(lib);
     }
 
     let bundled = bundled_library_dir(&config.bundled_resource_root);

@@ -1,6 +1,6 @@
 # Installation
 
-> Latest release artifacts are available for `2.0.0-beta.6`.
+> Latest release artifacts are available for `2.0.0-beta.7`.
 > Building from source is also supported; a packaging script for Linux is provided.
 
 ## Build from source
@@ -46,6 +46,10 @@ Launch from the artifact directory:
 ```sh
 ./bin/pdf-tile-viewer
 ```
+
+Keep the extracted directory intact. The application expects the bundled
+`resources/` directory, including PDFium, to remain next to `bin/` at the
+top level of the archive.
 
 ## Security note
 

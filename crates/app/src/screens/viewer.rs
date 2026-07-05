@@ -71,15 +71,15 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
     // ── Measure viewport on mount ─────────────────────────────────────────
     use_effect(move || {
         spawn(async move {
-            if let Ok(w) = eval("return window.innerWidth").join::<f64>().await {
-                if w > 0.0 {
-                    viewport_width.set(w as f32);
-                }
+            if let Ok(w) = eval("return window.innerWidth").join::<f64>().await
+                && w > 0.0
+            {
+                viewport_width.set(w as f32);
             }
-            if let Ok(h) = eval("return window.innerHeight").join::<f64>().await {
-                if h > 0.0 {
-                    viewport_height.set(h as f32);
-                }
+            if let Ok(h) = eval("return window.innerHeight").join::<f64>().await
+                && h > 0.0
+            {
+                viewport_height.set(h as f32);
             }
         });
     });
@@ -183,10 +183,10 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
     });
     let reveal_path = doc_path.clone();
     let on_reveal = Callback::new(move |_| {
-        if let Some(ref p) = reveal_path {
-            if let Err(e) = reveal_in_file_manager(p) {
-                reveal_error.set(Some(format!("{e:?}")));
-            }
+        if let Some(ref p) = reveal_path
+            && let Err(e) = reveal_in_file_manager(p)
+        {
+            reveal_error.set(Some(format!("{e:?}")));
         }
     });
 

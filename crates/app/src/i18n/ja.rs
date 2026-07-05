@@ -16,8 +16,15 @@ pub fn message(key: MessageKey) -> Option<&'static str> {
         MessageKey::RenderingPage => "ページを描画しています…",
         MessageKey::EngineUnavailableTitle => "PDF エンジンを利用できません",
         MessageKey::EngineUnavailableBody => {
-            "同梱の PDFium ライブラリを読み込めませんでした。アプリケーションの再インストールで解決することがあります。"
+            "PDF を開く、描画する、検索するには同梱の PDF エンジンライブラリが必要ですが、そのライブラリが見つかりませんでした。"
         }
+        MessageKey::EngineUnavailableDevelopmentHelp => {
+            "アプリをインストールした場合は、公式リリースアーカイブ全体をもう一度ダウンロードして展開し、実行ファイルだけを移動せずに起動してください。ソースからビルドしている場合は、PDFium のセットアップについて `docs/src/contributors/dev.md` を参照してください。"
+        }
+        MessageKey::EngineUnavailablePackagedHelp => {
+            "このインストールは不完全なようです。公式リリースアーカイブを展開し直し、`bin/` フォルダと `resources/` フォルダを一緒に置いたままにしてください。"
+        }
+        MessageKey::DiagnosticDetailsLabel => "診断情報",
         MessageKey::ErrFileNotFound => "ファイルが見つかりませんでした。",
         MessageKey::ErrNotAFile => "ファイルではありません。",
         MessageKey::ErrWrongExtension => "開けるのは .pdf ファイルのみです。",

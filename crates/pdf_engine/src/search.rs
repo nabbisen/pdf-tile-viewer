@@ -111,9 +111,7 @@ pub fn search_document_with_highlights(
         };
 
         let mut highlights: Vec<domain::search::TextHighlight> = Vec::new();
-        let mut match_idx = 0usize;
-
-        for segments in search.iter(PdfSearchDirection::SearchForward) {
+        for (match_idx, segments) in search.iter(PdfSearchDirection::SearchForward).enumerate() {
             let rects: Vec<domain::search::PageRect> = segments
                 .iter()
                 .map(|seg| {
@@ -134,7 +132,6 @@ pub fn search_document_with_highlights(
                     page_rects: rects,
                 });
             }
-            match_idx += 1;
         }
 
         if !highlights.is_empty() {

@@ -1,6 +1,6 @@
 # Features
 
-> **Status:** 2.0.0-beta.6 — latest released beta.
+> **Status:** 2.0.0-beta.7 — latest released beta.
 
 ## All pages as a tile grid
 
