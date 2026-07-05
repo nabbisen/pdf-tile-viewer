@@ -14,13 +14,13 @@ Use `--exclude app` to run only the library crates on any machine:
 cargo test --workspace --exclude app
 ```
 
-Covers (58 tests total):
-- `domain` (24): tile-layout geometry, scale bucketing, coordinate transforms,
+Covers the library/service crates:
+- `domain`: tile-layout geometry, scale bucketing, coordinate transforms,
   settings clamping/fallback/round-trip, search-result formatting.
-- `app_services` (22): file-intake validation ordering, settings
+- `app_services`: file-intake validation ordering, settings
   backup-on-corruption, history dedupe-to-top, engine boot policy,
-  render-cache eviction and generation cleanup.
-- `packaging` (5): PDFium resolution policy, production vs development mode.
+  render-cache eviction, text-layer cache behavior, and generation cleanup.
+- `packaging`: PDFium resolution policy, production vs development mode.
 - `pdf_engine` lib (0 — PDFium itself is not available in the unit-test harness).
 
 ## Engine smoke tests (PDFium required)
@@ -30,7 +30,7 @@ bash ci/fetch-pdfium.sh     # one-time: downloads chromium/7920 to ci/.pdfium/
 PDF_TILE_VIEWER_PDFIUM_DIR="$(pwd)/ci/.pdfium" cargo test -p pdf_engine --test smoke
 ```
 
-Seven smoke tests exercise the full engine worker in a real process:
+The PDFium smoke tests exercise the full engine worker in a real process:
 
 | Test | What it checks |
 |------|---------------|
@@ -41,10 +41,32 @@ Seven smoke tests exercise the full engine worker in a real process:
 | `close_document_invalidates_session` | Render after close returns error |
 | `large_document_opens_and_reports_correct_page_count` | 50-page fixture geometry |
 | `large_document_search_runs_without_error` | Search across 50 pages |
+| `text_layer_extracts_segments_for_single_page` | Text-layer extraction returns ordered page segments |
+| `text_layer_rejects_stale_generation` | Text-layer extraction rejects stale document generations |
 
-All 7 pass against PDFium chromium/7920. Without the env var, every test
+All smoke tests pass against PDFium chromium/7920. Without the env var, every test
 prints a skip notice and exits 0, so `cargo test` stays green on machines
 without PDFium.
+
+## Packaged artifact smoke test
+
+RFC 018 adds a release-artifact gate that runs after archive compression:
+
+```sh
+bash ci/smoke-release-artifact.sh dist/pdf-tile-viewer-v<version>-linux-x64.tar.gz
+```
+
+The smoke extracts the archive, requires a flat archive root with `bin/` and
+`resources/pdfium/<platform>/` directly under the extraction directory, derives
+the production resource root from the packaged executable path, resolves
+bundled PDFium in production mode, and binds it. It deliberately does not use
+`PDF_TILE_VIEWER_PDFIUM_DIR`.
+
+Negative layout self-tests are available:
+
+```sh
+bash ci/smoke-release-artifact-self-test.sh
+```
 
 ## fmt check
 

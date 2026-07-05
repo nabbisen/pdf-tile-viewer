@@ -8,6 +8,10 @@ name: Release
 # IMPORTANT: pushing a tag is the explicit, human-initiated act that starts
 # a release. This workflow does not run on branch pushes. A pre-release tag
 # (containing '-alpha', '-beta', or '-rc') is marked as a GitHub pre-release.
+#
+# RFC 018 packaged-artifact smoke runs a host helper that binds the packaged
+# PDFium library. Each runner OS/architecture must therefore match the
+# artifact/PDFium architecture it builds.
 
 on:
   push:
@@ -140,11 +144,18 @@ jobs:
             ./bin/${{ matrix.bin_file }}
 
           Keep the bundled resources/ directory at the top level of the extracted archive.
-          Do not move the executable out of the extracted folder.
+          Do not move the executable away from the extracted resources/ directory.
           Report issues: https://github.com/nabbisen/pdf-tile-viewer/issues
           EOF
           echo "stage_dir=$stage" >> "$GITHUB_ENV"
           echo "artifact_name=$name" >> "$GITHUB_ENV"
+
+      - name: Build package artifact smoke helper
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustc -vV
+          cargo build --release -p app_services --bin package_artifact_smoke
 
       # ── Compress: .zip on Windows, .tar.gz elsewhere ───────────────────────
       - name: Compress artifact (tar.gz)
@@ -152,15 +163,31 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          ( cd dist && tar -czf "${artifact_name}.tar.gz" "${artifact_name}" )
+          tar -czf "dist/${artifact_name}.tar.gz" -C "${stage_dir}" .
           ls -lh "dist/${artifact_name}.tar.gz"
 
       - name: Compress artifact (zip)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          Compress-Archive -Path "dist/$env:artifact_name" -DestinationPath "dist/$env:artifact_name.zip"
+          Compress-Archive -Path "dist/$env:artifact_name/*" -DestinationPath "dist/$env:artifact_name.zip"
           Get-ChildItem "dist/$env:artifact_name.zip"
+
+      - name: Smoke final artifact layout (tar.gz)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+          PACKAGE_ARTIFACT_SMOKE_BIN="target/release/package_artifact_smoke" \
+            bash ci/smoke-release-artifact.sh "dist/${artifact_name}.tar.gz"
+
+      - name: Smoke final artifact layout (zip)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+          PACKAGE_ARTIFACT_SMOKE_BIN="target/release/package_artifact_smoke.exe" \
+            bash ci/smoke-release-artifact.sh "dist/${artifact_name}.zip"
 
       - name: Upload artifact for release job
         uses: actions/upload-artifact@v7

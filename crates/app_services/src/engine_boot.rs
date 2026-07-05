@@ -75,7 +75,7 @@ pub fn default_resource_root() -> PathBuf {
         .unwrap_or_else(|| PathBuf::from("resources"))
 }
 
-fn resource_root_for_exe(exe: &std::path::Path) -> Option<PathBuf> {
+pub fn resource_root_for_exe(exe: &std::path::Path) -> Option<PathBuf> {
     let exe_dir = exe.parent()?;
 
     if exe_dir.file_name().is_some_and(|name| name == "MacOS")

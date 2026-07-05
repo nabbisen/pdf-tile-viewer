@@ -46,6 +46,11 @@ The project may reduce the first release matrix, but the chosen matrix must be e
 
 ## 6. Required Package Contents
 
+End-user binary release archives use the project release-archive convention:
+files are stored directly at archive root, without an intermediate parent
+directory. After extraction, `bin/`, `resources/`, and release docs must be
+siblings in the extraction destination.
+
 ```text
 Application binary / bundle
 PDFium dynamic library

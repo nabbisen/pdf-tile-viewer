@@ -3,8 +3,8 @@ project: PDF Tile Viewer
 document_family: Dioxus + embedded/bundled PDFium migration RFCs
 language: English
 date: 2026-07-05
-status: Proposed
-baseline: PDF Tile Viewer 2.0.0-beta.7
+status: Implemented
+baseline: PDF Tile Viewer 2.0.0-beta.8
 ---
 
 # RFC 018 — Package Artifact Smoke Test
@@ -43,24 +43,33 @@ For each release artifact:
 
 1. Build and stage the release artifact as today.
 2. Compress the archive.
-3. Extract the archive into a fresh temporary directory.
+3. Extract the archive into a fresh temporary directory. The archive must unpack
+   flat: `bin/`, `resources/`, and release docs appear directly at the
+   extraction root, with no intermediate parent directory.
 4. Assert these paths exist:
    - `bin/<app binary>`
    - `resources/pdfium/<platform>/<pdfium library>`
    - `LICENSE`
    - `NOTICE`
-   - `README.md` or `notes.txt`
+   - `README.md`
+   - `notes.txt` or `CHANGELOG.md`
 5. Run a packaged-layout smoke test against the extracted root.
 
-The smoke test may be an `xtask` command, a small helper binary, or an
-integration test that calls the same resource-root resolution logic used by the
-app. It should not depend on `PDF_TILE_VIEWER_PDFIUM_DIR` in production mode.
+The implemented smoke uses `ci/smoke-release-artifact.sh` plus the
+`app_services` binary helper `package_artifact_smoke`. It calls the same
+resource-root resolution logic used by the app, resolves PDFium in production
+bundled mode, and binds PDFium without relying on `PDF_TILE_VIEWER_PDFIUM_DIR`.
+CI builds the helper once and passes it to the script with
+`PACKAGE_ARTIFACT_SMOKE_BIN`; local use may still let the script invoke
+`cargo run`.
 
 ## 6. Acceptance Criteria
 
 - CI/release-gate fails if the final archive is missing PDFium.
 - CI/release-gate fails if the archive layout places `resources/` somewhere the
   production loader will not search.
+- CI/release-gate fails if the archive uses an intermediate parent directory
+  instead of unpacking flat.
 - The test covers at least the Linux artifact before 2.0 RC.
 - Windows and macOS artifact checks are either implemented or explicitly listed
   as RC release-gate manual checks.
@@ -72,4 +81,3 @@ app. It should not depend on `PDF_TILE_VIEWER_PDFIUM_DIR` in production mode.
 | Full GUI launch is flaky in CI | Test loader resolution and PDFium binding without opening a window. |
 | Cross-platform artifact paths drift | Keep platform segments in one helper and reuse packaging constants where practical. |
 | Gate slows release builds | Run only after artifact creation, not on every ordinary unit-test job. |
-

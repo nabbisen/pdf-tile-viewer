@@ -18,7 +18,6 @@ Implemented RFCs live in `rfcs/done/`. Proposed 2.0 RC follow-up work lives in
 
 | ID | Title | Status |
 |----|-------|--------|
-| 018 | [Package Artifact Smoke Test](proposed/018-package-artifact-smoke-test.md) | Proposed |
 | 019 | [FAQ Correction for Full-Path Window Title Setting](proposed/019-faq-title-path-setting-doc-correction.md) | Proposed |
 | 020 | [Release PDFium Bundling Documentation Correction](proposed/020-release-pdfium-bundling-doc-correction.md) | Proposed |
 | 021 | [Hardcoded UI String i18n Sweep](proposed/021-i18n-hardcoded-ui-string-sweep.md) | Proposed |
@@ -55,6 +54,7 @@ Implemented RFCs live in `rfcs/done/`. Proposed 2.0 RC follow-up work lives in
 | 015 | [CI Smoke Tests for Rendering and Search](done/015-ci-smoke-tests-for-rendering-and-search.md) | M0/M9 (alpha.1/beta.2) |
 | 016 | [Security and Privacy Hardening](done/016-security-and-privacy-hardening.md) | M5/M9 (alpha.3/beta.2) |
 | 017 | [Internationalization and Language Resources](done/017-internationalization-and-language-resources.md) | M2 (alpha.1) |
+| 018 | [Package Artifact Smoke Test](done/018-package-artifact-smoke-test.md) | RC gate |
 | 023 | [Single-Page PDF Text Selection Layer](done/023-pdf-text-selection-layer.md) | 2.0.0-beta.8 |
 
 ---

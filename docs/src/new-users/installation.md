@@ -25,20 +25,19 @@ bundled PDFium library:
 
 ```sh
 bash ci/fetch-pdfium.sh          # populate ci/.pdfium/
-bash ci/package-linux.sh         # writes dist/pdf-tile-viewer-<ver>-linux-x64.tar.gz
+bash ci/package-linux.sh         # writes dist/pdf-tile-viewer-v<version>-linux-x64.tar.gz
 ```
 
 The artifact layout:
 
 ```
-pdf-tile-viewer-<version>-linux-x64/
-  bin/pdf-tile-viewer
-  resources/pdfium/linux-x86_64/libpdfium.so
-  LICENSE
-  NOTICE
-  CHANGELOG.md
-  README.md
-  notes.txt
+bin/pdf-tile-viewer
+resources/pdfium/linux-x86_64/libpdfium.so
+LICENSE
+NOTICE
+CHANGELOG.md
+README.md
+notes.txt
 ```
 
 Launch from the artifact directory:
@@ -47,9 +46,9 @@ Launch from the artifact directory:
 ./bin/pdf-tile-viewer
 ```
 
-Keep the extracted directory intact. The application expects the bundled
-`resources/` directory, including PDFium, to remain next to `bin/` at the
-top level of the archive.
+Keep the extracted contents together. The application expects the bundled
+`resources/` directory, including PDFium, to remain next to `bin/` in the
+extraction directory.
 
 ## Security note
 

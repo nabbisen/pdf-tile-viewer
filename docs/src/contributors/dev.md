@@ -149,9 +149,27 @@ It builds the RFC 014 artifact matrix, each with its bundled PDFium:
 Each build fetches the pinned PDFium for its platform, compiles the app,
 runs the engine smoke tests against that PDFium (the RFC 014 §7 package
 verification step), stages the RFC 014 §6 contents (binary, PDFium library,
-LICENSE, NOTICE, CHANGELOG, README, notes), and compresses it. A source
+LICENSE, NOTICE, CHANGELOG, README, notes), compresses them into a flat
+archive with `bin/` and `resources/` at archive root, then runs the RFC 018
+packaged-artifact smoke gate against the final archive. A source
 archive (`ci/archive-source.sh`) is built in parallel. All artifacts are
 attached to a GitHub Release.
+
+The packaged-artifact smoke can also be run manually after creating an archive:
+
+```sh
+bash ci/smoke-release-artifact.sh dist/pdf-tile-viewer-v<version>-linux-x64.tar.gz
+```
+
+It extracts the archive, derives the production `resources/` root from
+`bin/pdf-tile-viewer`, resolves bundled PDFium in production mode, and binds
+PDFium without using `PDF_TILE_VIEWER_PDFIUM_DIR`.
+
+Negative layout self-tests for the smoke script can be run with:
+
+```sh
+bash ci/smoke-release-artifact-self-test.sh
+```
 
 A tag containing `-alpha`, `-beta`, or `-rc` is published as a GitHub
 **pre-release**; a clean `X.Y.Z` tag is a full release.

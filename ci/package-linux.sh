@@ -13,14 +13,13 @@
 #   <output_dir>/pdf-tile-viewer-vX.X.X-linux-x64.tar.gz
 #
 # Archive layout:
-#   pdf-tile-viewer-vX.X.X-linux-x64/
-#     bin/pdf-tile-viewer
-#     resources/pdfium/linux-x86_64/libpdfium.so
-#     LICENSE
-#     NOTICE
-#     CHANGELOG.md
-#     README.md
-#     notes.txt
+#   bin/pdf-tile-viewer
+#   resources/pdfium/linux-x86_64/libpdfium.so
+#   LICENSE
+#   NOTICE
+#   CHANGELOG.md
+#   README.md
+#   notes.txt
 
 set -euo pipefail
 
@@ -75,12 +74,12 @@ This is an unsigned development build.
 PDFium: ${PDFIUM_RELEASE_TAG} (dynamic, bundled in resources/)
 
 Launch:
-  cd <artifact-directory>
+  cd <extraction-directory>
   ./bin/pdf-tile-viewer
 
 The binary expects the bundled resources/ directory to remain at the
 top level of this extracted archive. Do not move bin/pdf-tile-viewer
-out of the extracted folder.
+away from the extracted resources/ directory.
 
 Troubleshooting:
   If PDFium fails to load, check resources/pdfium/linux-x86_64/libpdfium.so.
@@ -99,16 +98,17 @@ echo "Smoke tests passed."
 
 # ── 4. Archive ───────────────────────────────────────────────────────────────
 #
-# The staged directory is already named pdf-tile-viewer-vX.X.X-linux-x64,
-# so archiving it directly gives the correct root:
-#   pdf-tile-viewer-vX.X.X-linux-x64/bin/...
-#   pdf-tile-viewer-vX.X.X-linux-x64/resources/...
+# Archive the staged contents, not the staging directory itself. Project
+# release archives unpack flat into the extraction destination.
 
 mkdir -p "${OUTPUT_DIR}"
 (
-    cd "$(dirname "${STAGE}")"
-    tar -czf "${OUTPUT_DIR}/${ARTIFACT_NAME}.tar.gz" "${ARTIFACT_NAME}/"
+    cd "${STAGE}"
+    tar -czf "${OUTPUT_DIR}/${ARTIFACT_NAME}.tar.gz" .
 )
+
+echo "Running packaged artifact smoke test..."
+bash ci/smoke-release-artifact.sh "${OUTPUT_DIR}/${ARTIFACT_NAME}.tar.gz"
 
 echo "Artifact: ${OUTPUT_DIR}/${ARTIFACT_NAME}.tar.gz"
 ls -lh "${OUTPUT_DIR}/${ARTIFACT_NAME}.tar.gz"

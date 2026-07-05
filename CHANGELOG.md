@@ -9,6 +9,13 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Added an RFC 018 packaged-artifact smoke gate. Release archives are extracted
+  after compression and checked with production bundled-resource PDFium
+  resolution before upload.
+- Added smoke self-tests for malformed package archive layouts.
+
 ---
 
 ## [2.0.0-beta.8]
