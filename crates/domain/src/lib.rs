@@ -9,3 +9,4 @@ pub mod layout;
 pub mod render;
 pub mod search;
 pub mod settings;
+pub mod text;

@@ -17,12 +17,14 @@ use std::thread::JoinHandle;
 use domain::document::{DocumentError, DocumentId, DocumentSession};
 use domain::render::{RenderError, RenderPageRequest, RenderedPageImage};
 use domain::search::{SearchError, SearchHighlightSet, SearchRequest, SearchResultSet};
+use domain::text::{PageTextLayer, TextLayerError, TextLayerRequest};
 use futures_channel::oneshot;
 
 use crate::engine::PdfEngine;
 use crate::loader::{self, PdfiumLoadError, PdfiumLoadReport};
 use crate::render;
 use crate::search;
+use crate::text_layer;
 
 /// Commands executed sequentially on the engine thread.
 enum Command {
@@ -45,6 +47,10 @@ enum Command {
     SearchDocumentWithHighlights {
         request: SearchRequest,
         reply: oneshot::Sender<Result<(SearchResultSet, SearchHighlightSet), SearchError>>,
+    },
+    ExtractPageTextLayer {
+        request: TextLayerRequest,
+        reply: oneshot::Sender<Result<PageTextLayer, TextLayerError>>,
     },
     Shutdown,
 }
@@ -191,6 +197,21 @@ impl EngineHandle {
         }
     }
 
+    pub fn extract_page_text_layer(
+        &self,
+        request: TextLayerRequest,
+    ) -> impl std::future::Future<Output = Result<Result<PageTextLayer, TextLayerError>, EngineGone>>
+    + use<> {
+        let (reply, rx) = oneshot::channel();
+        let sent = self
+            .sender
+            .send(Command::ExtractPageTextLayer { request, reply });
+        async move {
+            sent.map_err(|_| EngineGone)?;
+            rx.await.map_err(|_| EngineGone)
+        }
+    }
+
     /// Ask the worker to exit after draining queued commands.
     pub fn shutdown(&self) {
         let _ = self.sender.send(Command::Shutdown);
@@ -225,6 +246,9 @@ fn run_loop(mut engine: PdfEngine, receiver: mpsc::Receiver<Command>) {
             }
             Command::SearchDocumentWithHighlights { request, reply } => {
                 let _ = reply.send(search::search_document_with_highlights(&engine, &request));
+            }
+            Command::ExtractPageTextLayer { request, reply } => {
+                let _ = reply.send(text_layer::extract_page_text_layer(&engine, &request));
             }
             Command::Shutdown => break,
         }

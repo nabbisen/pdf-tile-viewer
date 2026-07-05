@@ -19,6 +19,7 @@ use domain::render::{
     RenderFlags, RenderOutputFormat, RenderPageRequest, RenderedImagePayload, ScaleBucket,
 };
 use domain::search::{SearchQuery, SearchRequest};
+use domain::text::{TextLayerError, TextLayerRequest};
 use pdf_engine::worker::EngineHandle;
 
 const PDFIUM_DIR_ENV: &str = "PDF_TILE_VIEWER_PDFIUM_DIR";
@@ -175,6 +176,57 @@ fn search_finds_expected_pages_without_mutating_file() {
     // RFC 010 §11: search never mutates the PDF.
     let bytes_after = std::fs::read(&path).unwrap();
     assert_eq!(bytes_before, bytes_after, "PDF file must not be modified");
+}
+
+#[test]
+fn text_layer_extracts_segments_for_single_page() {
+    let engine = require_engine!();
+    let session = block_on(engine.open_document(fixture("single-page-basic.pdf")))
+        .unwrap()
+        .unwrap();
+
+    let request = TextLayerRequest {
+        document_id: session.id,
+        generation: session.generation,
+        page_index: PageIndex(0),
+    };
+    let layer = block_on(engine.extract_page_text_layer(request))
+        .unwrap()
+        .unwrap();
+
+    assert_eq!(layer.document_id, session.id);
+    assert_eq!(layer.generation, session.generation);
+    assert_eq!(layer.page_index, PageIndex(0));
+    assert!(!layer.segments.is_empty(), "fixture should expose text");
+    for (expected, segment) in layer.segments.iter().enumerate() {
+        assert_eq!(
+            segment.segment_index, expected as u32,
+            "segment index should preserve extraction order"
+        );
+        assert!(
+            !segment.text.is_empty(),
+            "empty text segments should be filtered"
+        );
+        assert!(segment.rect.width > 0.0);
+        assert!(segment.rect.height > 0.0);
+    }
+}
+
+#[test]
+fn text_layer_rejects_stale_generation() {
+    let engine = require_engine!();
+    let session = block_on(engine.open_document(fixture("single-page-basic.pdf")))
+        .unwrap()
+        .unwrap();
+
+    let request = TextLayerRequest {
+        document_id: session.id,
+        generation: domain::document::DocumentGeneration(session.generation.0 + 999),
+        page_index: PageIndex(0),
+    };
+    let result = block_on(engine.extract_page_text_layer(request)).unwrap();
+
+    assert_eq!(result, Err(TextLayerError::DocumentNotOpen));
 }
 
 #[test]

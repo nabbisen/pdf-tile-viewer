@@ -11,4 +11,5 @@ pub mod engine;
 pub mod loader;
 pub mod render;
 pub mod search;
+pub mod text_layer;
 pub mod worker;
