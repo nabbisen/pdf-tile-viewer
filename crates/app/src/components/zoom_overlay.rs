@@ -235,13 +235,17 @@ pub fn ZoomOverlay(
         _ => Vec::new(),
     };
     let show_text_unavailable = matches!(&*zoom_text_layer.read(), ZoomTextLayerState::Unavailable);
+    let page_alt = format!(
+        "{} {display_num}",
+        t(locale(), MessageKey::PageImageAltPrefix)
+    );
 
     rsx! {
             div {
                 class: "zoom-backdrop",
                 role: "dialog",
                 "aria-modal": "true",
-                "aria-label": "Page zoom view",
+                "aria-label": t(locale(), MessageKey::PageZoomView),
                 tabindex: "-1",
                 // Keyboard navigation (RFC 012 §9)
                 onkeydown: move |evt: Event<KeyboardData>| {
@@ -289,6 +293,8 @@ pub fn ZoomOverlay(
                             }
                             button {
                                 class: "ghost icon-btn",
+                                title: t(locale(), MessageKey::ZoomOut),
+                                "aria-label": t(locale(), MessageKey::ZoomOut),
                                 disabled: *zoom_scale.read() <= ZOOM_SCALE_MIN,
                                 onclick: move |_| {
                                     let v = (*zoom_scale.peek() - ZOOM_SCALE_STEP).max(ZOOM_SCALE_MIN);
@@ -301,6 +307,8 @@ pub fn ZoomOverlay(
                             }
                             button {
                                 class: "ghost icon-btn",
+                                title: t(locale(), MessageKey::ZoomIn),
+                                "aria-label": t(locale(), MessageKey::ZoomIn),
                                 disabled: *zoom_scale.read() >= ZOOM_SCALE_MAX,
                                 onclick: move |_| {
                                     let v = (*zoom_scale.peek() + ZOOM_SCALE_STEP).min(ZOOM_SCALE_MAX);
@@ -329,7 +337,7 @@ pub fn ZoomOverlay(
                                     img {
                                         class: "zoom-img",
                                         src: "{uri}",
-                                        alt: "Page {display_num}",
+                                        alt: "{page_alt}",
                                         draggable: "false",
                                         style: "display: block; \
                                                 width: {width_px}px; height: {height_px}px; \

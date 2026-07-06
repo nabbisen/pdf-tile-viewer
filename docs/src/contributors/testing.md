@@ -97,7 +97,7 @@ project code. No custom hooks exist that would justify the infrastructure.
 **End-to-end testing (Playwright)**
 The Dioxus guide targets the **web** renderer. This app is a
 **Dioxus Desktop** application backed by a native PDFium library — there
-is no browser to drive. The 7 PDFium engine smoke tests already exercise
+is no browser to drive. The PDFium engine smoke tests already exercise
 the real open → render → search path end-to-end at the layer where the
 actual integration risk lives.
 

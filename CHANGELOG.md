@@ -18,6 +18,8 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Moved remaining obvious hardcoded user-visible app strings into the i18n
+  catalog and wired the app catalog completeness tests.
 - Corrected bundled-PDFium user documentation so official release archives are
   described as self-contained, with source-build PDFium setup kept separate.
 - Corrected the FAQ entry for `privacy.show_full_path_in_title`; the setting

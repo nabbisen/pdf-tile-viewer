@@ -50,6 +50,10 @@ pub fn TileGrid(
                         let image_state = images.get(&idx).cloned()
                             .unwrap_or(TileImageState::Pending);
                         let tile_id = format!("tile-{}", idx.0);
+                        let page_alt = format!(
+                            "{} {display_num}",
+                            t(locale(), MessageKey::PageImageAltPrefix)
+                        );
                         let click_cb = on_tile_click;
 
                         // Search match badge and highlights
@@ -99,7 +103,7 @@ pub fn TileGrid(
                                             img {
                                                 class: "tile-img",
                                                 src: "{uri}",
-                                                alt: "Page {display_num}",
+                                                alt: "{page_alt}",
                                                 style: "display: block; \
                                                         width: {w}px; height: {h}px; \
                                                         object-fit: contain;",
@@ -140,10 +144,18 @@ pub fn TileGrid(
 
                                 // Match-count badge (RFC 010)
                                 if let Some(count) = match_count {
-                                    div {
-                                        class: "search-match-badge",
-                                        "aria-label": "{count} matches",
-                                        "{count}"
+                                    {
+                                        let badge_label = format!(
+                                            "{count} {}",
+                                            t(locale(), MessageKey::SearchMatchBadgeSuffix)
+                                        );
+                                        rsx! {
+                                            div {
+                                                class: "search-match-badge",
+                                                "aria-label": "{badge_label}",
+                                                "{count}"
+                                            }
+                                        }
                                     }
                                 }
 

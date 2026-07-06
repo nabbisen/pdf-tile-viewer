@@ -82,18 +82,19 @@ pub fn App() -> Element {
         // Window title: privacy.show_full_path_in_title controls the path (RFC 016 §7).
         {match &*phase.read() {
             Phase::Viewer(view) => {
+                let app_title = t(locale(), MessageKey::AppTitle);
                 let title = if settings.read().privacy.show_full_path_in_title {
                     match &view.session.source {
                         domain::document::DocumentSource::LocalFile { path, .. } => {
-                            format!("{} — PDF Tile Viewer", path.display())
+                            format!("{} — {app_title}", path.display())
                         }
                     }
                 } else {
-                    format!("{} — PDF Tile Viewer", view.session.display_name)
+                    format!("{} — {app_title}", view.session.display_name)
                 };
                 rsx! { Title { "{title}" } }
             }
-            _ => rsx! { Title { "PDF Tile Viewer" } },
+            _ => rsx! { Title { {t(locale(), MessageKey::AppTitle)} } },
         }}
         div { class: "app-shell",
             if let Some(boot_error) = state::engine_boot_error() {

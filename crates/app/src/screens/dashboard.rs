@@ -52,22 +52,36 @@ pub fn Dashboard(
                 } else {
                     ul {
                         for entry in history_read.entries() {
-                            li {
-                                key: "{entry.document_id.0}",
-                                button {
-                                    class: "ghost history-btn",
-                                    "aria-label": "Reopen {entry.display_name}",
-                                    onclick: {
-                                        let path = entry.path.clone();
-                                        let on_open_path = on_open_path;
-                                        move |_| {
-                                            if let Some(p) = &path {
-                                                on_open_path.call(p.clone());
-                                            }
+                            {
+                                let reopen_label = format!(
+                                    "{} {}",
+                                    t(locale(), MessageKey::ReopenDocument),
+                                    entry.display_name
+                                );
+                                let page_count_label = format!(
+                                    " — {}{}",
+                                    entry.page_count,
+                                    t(locale(), MessageKey::PageCountSuffix)
+                                );
+                                rsx! {
+                                    li {
+                                        key: "{entry.document_id.0}",
+                                        button {
+                                            class: "ghost history-btn",
+                                            "aria-label": "{reopen_label}",
+                                            onclick: {
+                                                let path = entry.path.clone();
+                                                let on_open_path = on_open_path;
+                                                move |_| {
+                                                    if let Some(p) = &path {
+                                                        on_open_path.call(p.clone());
+                                                    }
+                                                }
+                                            },
+                                            span { class: "history-name", "{entry.display_name}" }
+                                            span { class: "muted history-pages", "{page_count_label}" }
                                         }
-                                    },
-                                    span { class: "history-name", "{entry.display_name}" }
-                                    span { class: "muted history-pages", " — {entry.page_count}p" }
+                                    }
                                 }
                             }
                         }

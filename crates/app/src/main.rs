@@ -13,7 +13,11 @@ mod state;
 
 use app_services::engine_boot;
 use app_services::settings_service::SettingsStore;
+use i18n::{MessageKey, en};
 use packaging::pdfium_bundle::PdfiumLoadMode;
+
+#[cfg(test)]
+mod tests;
 
 fn main() {
     let mode = if cfg!(debug_assertions) {
@@ -41,7 +45,7 @@ fn main() {
         .with_cfg(
             dioxus::desktop::Config::new().with_window(
                 dioxus::desktop::WindowBuilder::new()
-                    .with_title("PDF Tile Viewer")
+                    .with_title(en::message(MessageKey::AppTitle))
                     .with_inner_size(dioxus::desktop::LogicalSize::new(win_w, win_h)),
             ),
         )

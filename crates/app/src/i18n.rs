@@ -76,16 +76,25 @@ pub enum MessageKey {
     SearchButton,
     SearchClear,
     SearchPlaceholder,
-    SearchSummaryMatches, // "{n} matches on {p} pages"
+    SearchSummaryMatches, // summary text; distinct from badge text for context-specific copy.
     SearchNoMatches,
     Searching,
+    SearchErrorPrefix,
+    SearchPagesPrefix,
+    SearchMatchBadgeSuffix,
+    CloseSearch,
     ZoomClose,
     ZoomPrevPage,
     ZoomNextPage,
+    ZoomIn,
+    ZoomOut,
+    PageZoomView,
+    PageImageAltPrefix, // image alt text; distinct from the visible page indicator.
     ZoomPageIndicator,
     ZoomScaleLabel,
     ZoomTextSelectionUnavailable,
     ZoomModeEnter,
+    MoreControls,
     ColumnsLabel,
     ColumnsAuto,
     PageNumbersLabel,
@@ -93,6 +102,8 @@ pub enum MessageKey {
     JumpGoButton,
     ZenModeEnter,
     ZenModeExit,
+    ReopenDocument,
+    PageCountSuffix,
 }
 
 impl MessageKey {
@@ -132,13 +143,22 @@ impl MessageKey {
         MessageKey::SearchSummaryMatches,
         MessageKey::SearchNoMatches,
         MessageKey::Searching,
+        MessageKey::SearchErrorPrefix,
+        MessageKey::SearchPagesPrefix,
+        MessageKey::SearchMatchBadgeSuffix,
+        MessageKey::CloseSearch,
         MessageKey::ZoomClose,
         MessageKey::ZoomPrevPage,
         MessageKey::ZoomNextPage,
+        MessageKey::ZoomIn,
+        MessageKey::ZoomOut,
+        MessageKey::PageZoomView,
+        MessageKey::PageImageAltPrefix,
         MessageKey::ZoomPageIndicator,
         MessageKey::ZoomScaleLabel,
         MessageKey::ZoomTextSelectionUnavailable,
         MessageKey::ZoomModeEnter,
+        MessageKey::MoreControls,
         MessageKey::ColumnsLabel,
         MessageKey::ColumnsAuto,
         MessageKey::PageNumbersLabel,
@@ -146,6 +166,8 @@ impl MessageKey {
         MessageKey::JumpGoButton,
         MessageKey::ZenModeEnter,
         MessageKey::ZenModeExit,
+        MessageKey::ReopenDocument,
+        MessageKey::PageCountSuffix,
     ];
 }
 

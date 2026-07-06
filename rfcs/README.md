@@ -16,9 +16,7 @@ Implemented RFCs live in `rfcs/done/`. Proposed 2.0 RC follow-up work lives in
 
 ## Proposed 2.0 RC Follow-Ups
 
-| ID | Title | Status |
-|----|-------|--------|
-| 021 | [Hardcoded UI String i18n Sweep](proposed/021-i18n-hardcoded-ui-string-sweep.md) | Proposed |
+No active proposed 2.0 RC follow-up RFCs.
 
 ---
 
@@ -54,6 +52,7 @@ Implemented RFCs live in `rfcs/done/`. Proposed 2.0 RC follow-up work lives in
 | 018 | [Package Artifact Smoke Test](done/018-package-artifact-smoke-test.md) | RC gate |
 | 019 | [FAQ Correction for Full-Path Window Title Setting](done/019-faq-title-path-setting-doc-correction.md) | RC docs |
 | 020 | [Release PDFium Bundling Documentation Correction](done/020-release-pdfium-bundling-doc-correction.md) | RC docs |
+| 021 | [Hardcoded UI String i18n Sweep](done/021-i18n-hardcoded-ui-string-sweep.md) | RC i18n |
 | 022 | [Contributor Test Layout Documentation Correction](done/022-contributor-test-layout-doc-correction.md) | RC docs |
 | 023 | [Single-Page PDF Text Selection Layer](done/023-pdf-text-selection-layer.md) | 2.0.0-beta.8 |
 

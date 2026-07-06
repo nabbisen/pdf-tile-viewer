@@ -31,7 +31,8 @@ pub fn ViewerControls(
             div { class: "control-group",
                 button {
                     class: "ghost icon-btn",
-                    title: "Zoom out",
+                    title: t(locale(), MessageKey::ZoomOut),
+                    "aria-label": t(locale(), MessageKey::ZoomOut),
                     disabled: *scale.read() <= ViewerScale::MIN,
                     onclick: move |_| {
                         let v = (*scale.read() - 0.2).max(ViewerScale::MIN);
@@ -54,7 +55,8 @@ pub fn ViewerControls(
                 }
                 button {
                     class: "ghost icon-btn",
-                    title: "Zoom in",
+                    title: t(locale(), MessageKey::ZoomIn),
+                    "aria-label": t(locale(), MessageKey::ZoomIn),
                     disabled: *scale.read() >= ViewerScale::MAX,
                     onclick: move |_| {
                         let v = (*scale.read() + 0.2).min(ViewerScale::MAX);
@@ -67,8 +69,8 @@ pub fn ViewerControls(
             // ── Secondary toggle ──────────────────────────────────────────
             button {
                 class: if *show_secondary.read() { "ghost icon-btn active" } else { "ghost icon-btn" },
-                title: "More controls",
-                "aria-label": "More controls",
+                title: t(locale(), MessageKey::MoreControls),
+                "aria-label": t(locale(), MessageKey::MoreControls),
                 "aria-expanded": if *show_secondary.read() { "true" } else { "false" },
                 onclick: move |_| show_secondary.toggle(),
                 "⚙"
@@ -114,7 +116,7 @@ pub fn ViewerControls(
                             r#type: "number",
                             class: "pages-per-row-input",
                             disabled: true,
-                            placeholder: "auto",
+                            placeholder: t(locale(), MessageKey::ColumnsAuto),
                             onclick: move |_| mode.set(PagesPerRowMode::Fixed(5)),
                         }
                     }

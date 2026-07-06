@@ -45,6 +45,7 @@ pub fn SearchPanel(
         };
         let engine = engine.clone();
         let mut ss = search_state;
+        let engine_unavailable = t(locale(), MessageKey::EngineUnavailableTitle).to_string();
         spawn(async move {
             ss.set(SearchState::Searching);
             match engine.search_document_with_highlights(request).await {
@@ -61,7 +62,7 @@ pub fn SearchPanel(
                     }
                 }
                 Ok(Err(e)) => ss.set(SearchState::Failed(format!("{e:?}"))),
-                Err(_) => ss.set(SearchState::Failed("Engine unavailable".into())),
+                Err(_) => ss.set(SearchState::Failed(engine_unavailable)),
             }
         });
     });
@@ -78,13 +79,17 @@ pub fn SearchPanel(
             let n = results.total_matches;
             let p = results.pages.len();
             Some(format!(
-                "{n} {} / {}p",
+                "{n} {} / {}{}",
                 t(locale(), MessageKey::SearchSummaryMatches),
-                p
+                p,
+                t(locale(), MessageKey::PageCountSuffix)
             ))
         }
         SearchState::NoResults { .. } => Some(t(locale(), MessageKey::SearchNoMatches).to_string()),
-        SearchState::Failed(msg) => Some(format!("Error: {msg}")),
+        SearchState::Failed(msg) => Some(format!(
+            "{}: {msg}",
+            t(locale(), MessageKey::SearchErrorPrefix)
+        )),
     };
 
     let matched_pages_str = match &*search_state.read() {
@@ -129,7 +134,7 @@ pub fn SearchPanel(
                 }
                 button {
                     class: "ghost icon-btn",
-                    "aria-label": "Close search",
+                    "aria-label": t(locale(), MessageKey::CloseSearch),
                     onclick: move |_| on_close.call(()),
                     "×"
                 }
@@ -141,7 +146,10 @@ pub fn SearchPanel(
                 }
             }
             if let Some(ref pages) = matched_pages_str {
-                p { class: "search-pages muted", "p. {pages}" }
+                p { class: "search-pages muted",
+                    {t(locale(), MessageKey::SearchPagesPrefix)}
+                    " {pages}"
+                }
             }
         }
     }

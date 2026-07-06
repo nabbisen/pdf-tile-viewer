@@ -3,8 +3,8 @@ project: PDF Tile Viewer
 document_family: Dioxus + embedded/bundled PDFium migration RFCs
 language: English
 date: 2026-07-05
-status: Proposed
-baseline: PDF Tile Viewer 2.0.0-beta.7
+status: Implemented
+baseline: PDF Tile Viewer 2.0.0-beta.8
 ---
 
 # RFC 021 — Hardcoded UI String i18n Sweep
@@ -73,4 +73,3 @@ small typed helper is justified.
 | Over-cataloging internal strings creates noise | Only catalog strings rendered to users or assistive technology. |
 | Japanese translations lag | Keep the RFC scoped and require every new key to have a Japanese entry. |
 | Dynamic strings become awkward | Use small formatting helpers where repeated. |
-
