@@ -3,8 +3,8 @@ project: PDF Tile Viewer
 document_family: Dioxus + embedded/bundled PDFium migration RFCs
 language: English
 date: 2026-07-05
-status: Proposed
-baseline: PDF Tile Viewer 2.0.0-beta.7
+status: Implemented
+baseline: PDF Tile Viewer 2.0.0-beta.8
 ---
 
 # RFC 019 — FAQ Correction for Full-Path Window Title Setting
@@ -58,4 +58,3 @@ Replace the stale FAQ answer with:
 |---|---|
 | Users infer there is an in-app settings UI | State that the key lives in the settings file unless a UI is added later. |
 | Privacy behavior is overclaimed | Keep the default and opt-in behavior explicit. |
-

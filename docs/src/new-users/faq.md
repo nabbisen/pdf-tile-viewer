@@ -10,11 +10,12 @@ and never leave your machine.
 Not yet. The engine detects encrypted PDFs and shows a clear error message,
 but decryption is not supported in 2.0.0-beta.8.
 
-**Why does the title bar show only the filename, not the full path?**
+**Can the title bar show the full file path?**
 
 Privacy is safe by default — the window title uses the filename only.
-A `privacy.show_full_path_in_title` setting exists in the settings schema but
-is not yet wired to the title bar; it is reserved for a future release.
+If `privacy.show_full_path_in_title` is set to `true` in the settings file,
+the title shows the full local file path. Full paths can reveal usernames or
+folder names, so this is opt-in.
 
 **Where are settings stored?**
 
