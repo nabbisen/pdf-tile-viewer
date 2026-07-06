@@ -9,6 +9,10 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+---
+
+## [2.0.0-beta.9]
+
 ### Added
 
 - Added an RFC 018 packaged-artifact smoke gate. Release archives are extracted

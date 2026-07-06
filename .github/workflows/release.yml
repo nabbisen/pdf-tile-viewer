@@ -1,6 +1,6 @@
 name: Release
 
-# Triggered by a semver version tag (e.g. 2.0.0-beta.8; no "v" prefix,
+# Triggered by a semver version tag (e.g. 2.0.0-beta.9; no "v" prefix,
 # per project convention). Builds the RFC 014
 # artifact matrix — Linux x64, Windows x64, macOS arm64, macOS x64 — each
 # with its bundled PDFium dynamic library, then publishes a GitHub Release.
@@ -17,7 +17,7 @@ on:
   push:
     tags:
       # Semver tags WITHOUT a leading "v" (project convention), e.g.
-      # 2.0.0, 2.0.0-beta.8, 2.1.0-beta.1.
+      # 2.0.0, 2.0.0-beta.9, 2.1.0-beta.1.
       - "[0-9]+.[0-9]+.[0-9]+"
       - "[0-9]+.[0-9]+.[0-9]+-*"
 

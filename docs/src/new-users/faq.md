@@ -8,7 +8,7 @@ and never leave your machine.
 **Can it open password-protected PDFs?**
 
 Not yet. The engine detects encrypted PDFs and shows a clear error message,
-but decryption is not supported in 2.0.0-beta.8.
+but decryption is not supported in 2.0.0-beta.9.
 
 **Can the title bar show the full file path?**
 
@@ -52,5 +52,5 @@ For source builds, see the contributor development guide for PDFium setup.
 
 **Is the application code-signed?**
 
-No. 2.0.0-beta.8 is unsigned. On macOS or Windows you may see an OS security
+No. 2.0.0-beta.9 is unsigned. On macOS or Windows you may see an OS security
 prompt the first time you run it.

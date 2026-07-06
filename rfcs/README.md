@@ -49,11 +49,11 @@ No active proposed 2.0 RC follow-up RFCs.
 | 015 | [CI Smoke Tests for Rendering and Search](done/015-ci-smoke-tests-for-rendering-and-search.md) | M0/M9 (alpha.1/beta.2) |
 | 016 | [Security and Privacy Hardening](done/016-security-and-privacy-hardening.md) | M5/M9 (alpha.3/beta.2) |
 | 017 | [Internationalization and Language Resources](done/017-internationalization-and-language-resources.md) | M2 (alpha.1) |
-| 018 | [Package Artifact Smoke Test](done/018-package-artifact-smoke-test.md) | RC gate |
-| 019 | [FAQ Correction for Full-Path Window Title Setting](done/019-faq-title-path-setting-doc-correction.md) | RC docs |
-| 020 | [Release PDFium Bundling Documentation Correction](done/020-release-pdfium-bundling-doc-correction.md) | RC docs |
-| 021 | [Hardcoded UI String i18n Sweep](done/021-i18n-hardcoded-ui-string-sweep.md) | RC i18n |
-| 022 | [Contributor Test Layout Documentation Correction](done/022-contributor-test-layout-doc-correction.md) | RC docs |
+| 018 | [Package Artifact Smoke Test](done/018-package-artifact-smoke-test.md) | 2.0.0-beta.9 |
+| 019 | [FAQ Correction for Full-Path Window Title Setting](done/019-faq-title-path-setting-doc-correction.md) | 2.0.0-beta.9 |
+| 020 | [Release PDFium Bundling Documentation Correction](done/020-release-pdfium-bundling-doc-correction.md) | 2.0.0-beta.9 |
+| 021 | [Hardcoded UI String i18n Sweep](done/021-i18n-hardcoded-ui-string-sweep.md) | 2.0.0-beta.9 |
+| 022 | [Contributor Test Layout Documentation Correction](done/022-contributor-test-layout-doc-correction.md) | 2.0.0-beta.9 |
 | 023 | [Single-Page PDF Text Selection Layer](done/023-pdf-text-selection-layer.md) | 2.0.0-beta.8 |
 
 ---
