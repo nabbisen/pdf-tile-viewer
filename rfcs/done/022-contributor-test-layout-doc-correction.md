@@ -3,8 +3,8 @@ project: PDF Tile Viewer
 document_family: Dioxus + embedded/bundled PDFium migration RFCs
 language: English
 date: 2026-07-05
-status: Proposed
-baseline: PDF Tile Viewer 2.0.0-beta.7
+status: Implemented
+baseline: PDF Tile Viewer 2.0.0-beta.8
 ---
 
 # RFC 022 — Contributor Test Layout Documentation Correction
@@ -58,4 +58,3 @@ Replace the stale code-style bullet with:
 |---|---|
 | Rule is read as banning all `tests/` directories | Explicitly distinguish module co-location from crate-level integration tests. |
 | Future contributors miss the pattern | Include a concrete `src/foo.rs` → `src/foo/tests.rs` example. |
-

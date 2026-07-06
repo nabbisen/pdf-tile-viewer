@@ -22,6 +22,8 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   described as self-contained, with source-build PDFium setup kept separate.
 - Corrected the FAQ entry for `privacy.show_full_path_in_title`; the setting
   is wired to the window title and remains opt-in for privacy.
+- Corrected contributor test-layout documentation to prefer co-located module
+  tests and reserve crate-level `tests/` for integration boundaries.
 
 ---
 

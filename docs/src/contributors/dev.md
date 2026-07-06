@@ -114,7 +114,11 @@ Notes:
 
 - Rust 2024 edition, `rustfmt` enforced (`cargo fmt --check`).
 - Files are split at ~300 ELOC; splitting is required above ~500.
-- Tests go in `src/tests.rs` (or `src/tests/` for larger test suites).
+- Unit tests live next to the module they test: `src/foo.rs` uses
+  `src/foo/tests.rs` with `#[cfg(test)] mod tests;`. Avoid central
+  `src/tests.rs` for ordinary module tests.
+- Crate-level `tests/` remains valid for integration tests that exercise the
+  public crate boundary or real external resources, such as PDFium smoke tests.
 - All public items should have doc comments.
 - English for all code comments and documentation.
 
