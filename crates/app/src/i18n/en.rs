@@ -20,10 +20,10 @@ pub fn message(key: MessageKey) -> &'static str {
             "PDF Tile Viewer needs its bundled PDF engine library to open, render, and search PDFs, but that library was not found."
         }
         MessageKey::EngineUnavailableDevelopmentHelp => {
-            "If you installed the app, download the full official release archive again and launch it without moving the executable out of the extracted folder. If you are building from source, see `docs/src/contributors/dev.md` for PDFium setup."
+            "If you installed the app, download the full official release archive again, extract it into a directory, and launch it without moving `bin/` away from `resources/`. If you are building from source, see `docs/src/contributors/dev.md` for PDFium setup."
         }
         MessageKey::EngineUnavailablePackagedHelp => {
-            "This install appears incomplete. Re-extract the official release archive and keep the `bin/` and `resources/` folders together."
+            "This install appears incomplete. Re-extract the official release archive and keep `bin/` and `resources/` together in the same directory."
         }
         MessageKey::DiagnosticDetailsLabel => "Diagnostic detail",
         MessageKey::ErrFileNotFound => "The file could not be found.",

@@ -35,9 +35,19 @@ the app closes. Persistent history is a planned future feature.
 
 **What PDFium version is used?**
 
-Development builds use the binary fetched by `ci/fetch-pdfium.sh`
-(currently chromium/7920). Release packaging will bundle the library with
-the application so you do not need to install it separately.
+Official release archives bundle the platform PDFium library under
+`resources/pdfium/<platform>/`, so packaged users do not install PDFium
+separately. Extract the full archive and keep `bin/` and `resources/`
+together in the same directory.
+
+Source builds use the binary fetched by `ci/fetch-pdfium.sh` (currently
+chromium/7920) or an explicit `PDF_TILE_VIEWER_PDFIUM_DIR`.
+
+**What should I do if the app says the PDF engine is unavailable?**
+
+For an official release archive, download the archive again, extract it into a
+directory, and launch the app without moving `bin/` away from `resources/`.
+For source builds, see the contributor development guide for PDFium setup.
 
 **Is the application code-signed?**
 

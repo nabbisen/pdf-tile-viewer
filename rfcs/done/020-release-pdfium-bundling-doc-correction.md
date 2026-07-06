@@ -3,8 +3,8 @@ project: PDF Tile Viewer
 document_family: Dioxus + embedded/bundled PDFium migration RFCs
 language: English
 date: 2026-07-05
-status: Proposed
-baseline: PDF Tile Viewer 2.0.0-beta.7
+status: Implemented
+baseline: PDF Tile Viewer 2.0.0-beta.8
 ---
 
 # RFC 020 — Release PDFium Bundling Documentation Correction
@@ -58,4 +58,3 @@ Update FAQ/install/troubleshooting wording:
 |---|---|
 | Source-builder and packaged-user instructions get mixed again | Keep separate "release artifact" and "build from source" sections. |
 | Users move only the executable | State explicitly that `bin/` and `resources/` must remain together. |
-

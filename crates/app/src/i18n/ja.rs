@@ -19,10 +19,10 @@ pub fn message(key: MessageKey) -> Option<&'static str> {
             "PDF を開く、描画する、検索するには同梱の PDF エンジンライブラリが必要ですが、そのライブラリが見つかりませんでした。"
         }
         MessageKey::EngineUnavailableDevelopmentHelp => {
-            "アプリをインストールした場合は、公式リリースアーカイブ全体をもう一度ダウンロードして展開し、実行ファイルだけを移動せずに起動してください。ソースからビルドしている場合は、PDFium のセットアップについて `docs/src/contributors/dev.md` を参照してください。"
+            "アプリをインストールした場合は、公式リリースアーカイブ全体をもう一度ダウンロードしてディレクトリに展開し、`bin/` を `resources/` から離して移動せずに起動してください。ソースからビルドしている場合は、PDFium のセットアップについて `docs/src/contributors/dev.md` を参照してください。"
         }
         MessageKey::EngineUnavailablePackagedHelp => {
-            "このインストールは不完全なようです。公式リリースアーカイブを展開し直し、`bin/` フォルダと `resources/` フォルダを一緒に置いたままにしてください。"
+            "このインストールは不完全なようです。公式リリースアーカイブを展開し直し、`bin/` と `resources/` を同じディレクトリに置いたままにしてください。"
         }
         MessageKey::DiagnosticDetailsLabel => "診断情報",
         MessageKey::ErrFileNotFound => "ファイルが見つかりませんでした。",

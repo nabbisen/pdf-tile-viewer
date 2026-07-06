@@ -16,6 +16,11 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   resolution before upload.
 - Added smoke self-tests for malformed package archive layouts.
 
+### Fixed
+
+- Corrected bundled-PDFium user documentation so official release archives are
+  described as self-contained, with source-build PDFium setup kept separate.
+
 ---
 
 ## [2.0.0-beta.8]
