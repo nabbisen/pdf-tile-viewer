@@ -10,6 +10,20 @@ Fixtures:
                           (display numbering), page 2 contains unrelated text.
   not-a-pdf.pdf           wrong magic bytes, for intake-rejection tests.
 
+Carve-out:
+  password-protected.pdf  generated from single-page-basic.pdf with qpdf 12.3.2
+                          for RFC 024 encrypted-PDF smoke coverage. Public
+                          user password: pdf-tile-viewer-test. Public owner
+                          password: pdf-tile-viewer-owner-test.
+                          Uses 128-bit AES because qpdf 12.3.2 256-bit
+                          encrypted output is not byte-stable across runs.
+                          Regenerate after running this script with:
+                          qpdf --static-id --static-aes-iv \
+                            --encrypt pdf-tile-viewer-test \
+                            pdf-tile-viewer-owner-test 128 --use-aes=y -- \
+                            fixtures/single-page-basic.pdf \
+                            fixtures/password-protected.pdf
+
 Run from the repository root:  python3 fixtures/generate_fixtures.py
 """
 
