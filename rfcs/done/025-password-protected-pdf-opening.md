@@ -3,7 +3,7 @@ project: PDF Tile Viewer
 document_family: Dioxus + embedded/bundled PDFium migration RFCs
 language: English
 date: 2026-07-07
-status: Implemented (unreleased)
+status: Implemented (2.0.0-beta.11)
 baseline: PDF Tile Viewer 2.0.0-beta.10
 depends_on: RFC 024
 review: .git-exclude/reviewed/pdf_tile_viewer_rfc025_password_protected_pdf_opening_design_review.md

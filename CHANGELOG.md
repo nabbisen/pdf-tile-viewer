@@ -9,6 +9,10 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+---
+
+## [2.0.0-beta.11]
+
 ### Added
 
 - Added a password prompt workflow for password-protected PDFs, including

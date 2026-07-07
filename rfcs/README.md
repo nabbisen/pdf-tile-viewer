@@ -56,7 +56,7 @@ No active proposed 2.0 RC follow-up RFCs.
 | 022 | [Contributor Test Layout Documentation Correction](done/022-contributor-test-layout-doc-correction.md) | 2.0.0-beta.9 |
 | 023 | [Single-Page PDF Text Selection Layer](done/023-pdf-text-selection-layer.md) | 2.0.0-beta.8 |
 | 024 | [Encrypted PDF Detection Hardening](done/024-encrypted-pdf-detection-hardening.md) | 2.0.0-beta.10 |
-| 025 | [Password-Protected PDF Opening Workflow](done/025-password-protected-pdf-opening.md) | Unreleased |
+| 025 | [Password-Protected PDF Opening Workflow](done/025-password-protected-pdf-opening.md) | 2.0.0-beta.11 |
 
 ---
 

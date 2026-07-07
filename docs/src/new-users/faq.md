@@ -56,5 +56,5 @@ For source builds, see the contributor development guide for PDFium setup.
 
 **Is the application code-signed?**
 
-No. 2.0.0-beta.10 is unsigned. On macOS or Windows you may see an OS security
+No. 2.0.0-beta.11 is unsigned. On macOS or Windows you may see an OS security
 prompt the first time you run it.
