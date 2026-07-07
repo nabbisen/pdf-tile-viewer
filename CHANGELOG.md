@@ -9,6 +9,10 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+---
+
+## [2.0.0-beta.10]
+
 ### Fixed
 
 - Hardened encrypted/password-protected PDF detection by mapping PDFium's

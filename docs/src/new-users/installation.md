@@ -1,6 +1,6 @@
 # Installation
 
-> Latest release artifacts are available for `2.0.0-beta.9`.
+> Latest release artifacts are available for `2.0.0-beta.10`.
 > Building from source is also supported; a packaging script for Linux is provided.
 
 ## Build from source
