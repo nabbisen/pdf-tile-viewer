@@ -16,9 +16,7 @@ Implemented RFCs live in `rfcs/done/`. Proposed 2.0 RC follow-up work lives in
 
 ## Proposed 2.0 RC Follow-Ups
 
-| ID | Title | Status |
-|----|-------|--------|
-| 024 | [Encrypted PDF Detection Hardening](proposed/024-encrypted-pdf-detection-hardening.md) | Proposed |
+No active proposed 2.0 RC follow-up RFCs.
 
 ---
 
@@ -57,6 +55,7 @@ Implemented RFCs live in `rfcs/done/`. Proposed 2.0 RC follow-up work lives in
 | 021 | [Hardcoded UI String i18n Sweep](done/021-i18n-hardcoded-ui-string-sweep.md) | 2.0.0-beta.9 |
 | 022 | [Contributor Test Layout Documentation Correction](done/022-contributor-test-layout-doc-correction.md) | 2.0.0-beta.9 |
 | 023 | [Single-Page PDF Text Selection Layer](done/023-pdf-text-selection-layer.md) | 2.0.0-beta.8 |
+| 024 | [Encrypted PDF Detection Hardening](done/024-encrypted-pdf-detection-hardening.md) | Unreleased |
 
 ---
 

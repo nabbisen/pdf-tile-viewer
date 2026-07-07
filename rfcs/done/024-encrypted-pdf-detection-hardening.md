@@ -3,10 +3,11 @@ project: PDF Tile Viewer
 document_family: Dioxus + embedded/bundled PDFium migration RFCs
 language: English
 date: 2026-07-06
-status: Proposed
+status: Implemented (unreleased)
 baseline: PDF Tile Viewer 2.0.0-beta.9
 review: .git-exclude/reviewed/pdf_tile_viewer_rfc024_encrypted_pdf_detection_design_review.md
 rereview: .git-exclude/reviewed/pdf_tile_viewer_rfc024_encrypted_pdf_detection_design_rereview.md
+implementation_review: .git-exclude/reviewed/pdf_tile_viewer_rfc024_encrypted_pdf_detection_implementation_review.md
 ---
 
 # RFC 024 — Encrypted PDF Detection Hardening
