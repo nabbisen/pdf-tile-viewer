@@ -16,9 +16,7 @@ Implemented RFCs live in `rfcs/done/`. Proposed 2.0 RC follow-up work lives in
 
 ## Proposed 2.0 RC Follow-Ups
 
-| ID | Title | Status |
-|----|-------|--------|
-| 025 | [Password-Protected PDF Opening Workflow](proposed/025-password-protected-pdf-opening.md) | Proposed |
+No active proposed 2.0 RC follow-up RFCs.
 
 ---
 
@@ -58,11 +56,12 @@ Implemented RFCs live in `rfcs/done/`. Proposed 2.0 RC follow-up work lives in
 | 022 | [Contributor Test Layout Documentation Correction](done/022-contributor-test-layout-doc-correction.md) | 2.0.0-beta.9 |
 | 023 | [Single-Page PDF Text Selection Layer](done/023-pdf-text-selection-layer.md) | 2.0.0-beta.8 |
 | 024 | [Encrypted PDF Detection Hardening](done/024-encrypted-pdf-detection-hardening.md) | 2.0.0-beta.10 |
+| 025 | [Password-Protected PDF Opening Workflow](done/025-password-protected-pdf-opening.md) | Unreleased |
 
 ---
 
 ## Future themes
 
 See `docs/design/RFC-FUTURE-notes.md` for post-2.0 ideas (static PDFium
-linking, password-protected PDFs, link navigation, native renderer
-investigation, and offline WASM target).
+linking, link navigation, native renderer investigation, and offline WASM
+target).

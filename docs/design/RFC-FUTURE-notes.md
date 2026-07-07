@@ -32,18 +32,20 @@ Static linking requires target-specific PDFium static archives and platform-spec
 
 ## Future RFC-F02 — Password-Protected PDF Support
 
-> Promoted to proposed RFC 025 after the RFC 024 encrypted-PDF detection
-> hardening shipped in `2.0.0-beta.10`.
+> Implemented as RFC 025 after the RFC 024 encrypted-PDF detection hardening
+> shipped in `2.0.0-beta.10`.
 
 ### Goal
 
 Add password prompt and encrypted PDF opening workflow.
 
-### Reason to Defer
+### Resolution
 
-Password-protected PDFs complicate the document-opening lifecycle and error states. The existing migration should first restore the ordinary local PDF tile viewer workflow.
+RFC 025 added a password prompt and encrypted PDF opening workflow. Future work
+may still revisit permission-aware copy/search behavior, certificate-encrypted
+PDFs, or optional credential storage.
 
-### Future Design Questions
+### Resolved Design Questions
 
 - How are passwords entered and cleared from memory?
 - Should passwords ever be remembered? Recommended answer: no.
