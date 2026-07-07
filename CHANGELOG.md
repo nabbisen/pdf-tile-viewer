@@ -9,6 +9,11 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- Hardened encrypted/password-protected PDF detection by mapping PDFium's
+  typed password error directly, with fixture-backed smoke coverage.
+
 ---
 
 ## [2.0.0-beta.9]

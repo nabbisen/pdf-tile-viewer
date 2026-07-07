@@ -14,7 +14,7 @@
 use std::path::PathBuf;
 use std::sync::LazyLock;
 
-use domain::document::PageIndex;
+use domain::document::{DocumentError, PageIndex};
 use domain::render::{
     RenderFlags, RenderOutputFormat, RenderPageRequest, RenderedImagePayload, ScaleBucket,
 };
@@ -174,6 +174,19 @@ fn search_finds_expected_pages_without_mutating_file() {
     assert!(results.total_matches >= 2, "match count");
 
     // RFC 010 §11: search never mutates the PDF.
+    let bytes_after = std::fs::read(&path).unwrap();
+    assert_eq!(bytes_before, bytes_after, "PDF file must not be modified");
+}
+
+#[test]
+fn encrypted_pdf_reports_encrypted_unsupported() {
+    let engine = require_engine!();
+    let path = fixture("password-protected.pdf");
+    let bytes_before = std::fs::read(&path).unwrap();
+
+    let result = block_on(engine.open_document(path.clone())).expect("engine alive");
+
+    assert_eq!(result, Err(DocumentError::EncryptedUnsupported));
     let bytes_after = std::fs::read(&path).unwrap();
     assert_eq!(bytes_before, bytes_after, "PDF file must not be modified");
 }

@@ -71,7 +71,7 @@ impl PdfEngine {
         let native = self
             .pdfium
             .load_pdf_from_file(path, None)
-            .map_err(map_pdfium_error)?;
+            .map_err(map_pdfium_load_error)?;
         // SAFETY: see `new` — the document never outlives `self.pdfium`.
         let native: PdfDocument<'static> = unsafe { std::mem::transmute(native) };
 
@@ -125,16 +125,18 @@ impl PdfEngine {
     }
 }
 
-fn map_pdfium_error(e: PdfiumError) -> DocumentError {
-    match e {
-        PdfiumError::PdfiumLibraryInternalError(internal) => {
-            let text = format!("{internal:?}");
-            if text.contains("Password") || text.contains("PASSWORD") {
-                DocumentError::EncryptedUnsupported
-            } else {
-                DocumentError::PdfParseFailed
+fn map_pdfium_load_error(error: PdfiumError) -> DocumentError {
+    match error {
+        PdfiumError::PdfiumLibraryInternalError(internal) => match internal {
+            PdfiumInternalError::FileError => DocumentError::FileNotReadable,
+            PdfiumInternalError::FormatError
+            | PdfiumInternalError::SecurityError
+            | PdfiumInternalError::PageError => DocumentError::PdfParseFailed,
+            PdfiumInternalError::PasswordError => DocumentError::EncryptedUnsupported,
+            PdfiumInternalError::Unknown => {
+                DocumentError::Unknown("Unknown PDFium internal load error".to_string())
             }
-        }
+        },
         other => DocumentError::Unknown(other.to_string()),
     }
 }
@@ -154,6 +156,63 @@ fn collect_page_descriptors(
         });
     }
     Ok(out)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn map_internal(error: PdfiumInternalError) -> DocumentError {
+        map_pdfium_load_error(PdfiumError::PdfiumLibraryInternalError(error))
+    }
+
+    #[test]
+    fn password_error_maps_to_encrypted_unsupported() {
+        assert_eq!(
+            map_internal(PdfiumInternalError::PasswordError),
+            DocumentError::EncryptedUnsupported
+        );
+    }
+
+    #[test]
+    fn format_error_maps_to_parse_failed() {
+        assert_eq!(
+            map_internal(PdfiumInternalError::FormatError),
+            DocumentError::PdfParseFailed
+        );
+    }
+
+    #[test]
+    fn security_error_maps_to_parse_failed() {
+        assert_eq!(
+            map_internal(PdfiumInternalError::SecurityError),
+            DocumentError::PdfParseFailed
+        );
+    }
+
+    #[test]
+    fn page_error_maps_to_parse_failed() {
+        assert_eq!(
+            map_internal(PdfiumInternalError::PageError),
+            DocumentError::PdfParseFailed
+        );
+    }
+
+    #[test]
+    fn file_error_maps_to_file_not_readable() {
+        assert_eq!(
+            map_internal(PdfiumInternalError::FileError),
+            DocumentError::FileNotReadable
+        );
+    }
+
+    #[test]
+    fn unknown_internal_error_stays_unknown() {
+        assert!(matches!(
+            map_internal(PdfiumInternalError::Unknown),
+            DocumentError::Unknown(_)
+        ));
+    }
 }
 
 fn collect_metadata(document: &PdfDocument<'_>, page_count: usize) -> DocumentMetadata {
