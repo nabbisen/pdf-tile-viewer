@@ -1,5 +1,8 @@
 use crate::i18n::{Locale, MessageKey, en, t};
 
+use app_services::document_service::OpenError;
+use domain::document::DocumentError;
+
 #[test]
 fn english_catalog_is_complete_and_non_empty() {
     // RFC 017 §9: the reference catalog must cover every key.
@@ -31,4 +34,13 @@ fn locale_resolution_prefers_explicit_setting() {
     assert_eq!(Locale::from_tag("en-US"), Locale::En);
     assert_eq!(Locale::from_tag("fr"), Locale::En); // unsupported → reference
     assert_eq!(Locale::resolve(Some("ja")), Locale::Ja);
+}
+
+#[test]
+fn encrypted_pdf_open_error_uses_specific_message_key() {
+    let error = OpenError::Engine(DocumentError::EncryptedUnsupported);
+    assert_eq!(
+        crate::i18n::open_error_key(&error),
+        MessageKey::ErrEncryptedUnsupported
+    );
 }
