@@ -40,6 +40,12 @@ pub fn message(key: MessageKey) -> &'static str {
             "Only one PDF can be opened at a time. Drop a single file."
         }
         MessageKey::DropZoneHint => "Drop a PDF here or click \"Open PDF\u{2026}\"",
+        MessageKey::PasswordPromptTitle => "Password required",
+        MessageKey::PasswordPromptBody => "This PDF is password-protected.",
+        MessageKey::PasswordPromptField => "Password",
+        MessageKey::PasswordPromptRejected => "The password was not accepted.",
+        MessageKey::PasswordPromptOpen => "Open",
+        MessageKey::PasswordPromptCancel => "Cancel",
         MessageKey::RevealInFileManager => "Show in File Manager",
         MessageKey::SearchButton => "Search",
         MessageKey::SearchClear => "Clear",

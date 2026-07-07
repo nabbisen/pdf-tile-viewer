@@ -6,8 +6,9 @@ use std::path::Path;
 use std::time::SystemTime;
 
 use domain::document::{
-    DocumentError, DocumentGeneration, DocumentId, DocumentMetadata, DocumentSession,
-    DocumentSource, DocumentState, FileFingerprint, PageDescriptor, PageIndex, header_is_pdf,
+    DocumentError, DocumentGeneration, DocumentId, DocumentMetadata, DocumentPassword,
+    DocumentSession, DocumentSource, DocumentState, FileFingerprint, PageDescriptor, PageIndex,
+    header_is_pdf,
 };
 use pdfium_render::prelude::*;
 
@@ -46,6 +47,14 @@ impl PdfEngine {
     }
 
     pub fn open_document(&mut self, path: &Path) -> Result<DocumentSession, DocumentError> {
+        self.open_document_with_password(path, None)
+    }
+
+    pub fn open_document_with_password(
+        &mut self,
+        path: &Path,
+        password: Option<&DocumentPassword>,
+    ) -> Result<DocumentSession, DocumentError> {
         let bytes_prefix = std::fs::File::open(path)
             .map_err(|e| match e.kind() {
                 std::io::ErrorKind::NotFound => DocumentError::FileNotFound,
@@ -70,7 +79,7 @@ impl PdfEngine {
 
         let native = self
             .pdfium
-            .load_pdf_from_file(path, None)
+            .load_pdf_from_file(path, password.map(DocumentPassword::as_str))
             .map_err(map_pdfium_load_error)?;
         // SAFETY: see `new` — the document never outlives `self.pdfium`.
         let native: PdfDocument<'static> = unsafe { std::mem::transmute(native) };
@@ -123,6 +132,10 @@ impl PdfEngine {
     pub(crate) fn native(&self, id: DocumentId) -> Option<&PdfDocument<'static>> {
         self.sessions.get(&id).map(|s| &s.native)
     }
+
+    pub fn session_count(&self) -> usize {
+        self.sessions.len()
+    }
 }
 
 fn map_pdfium_load_error(error: PdfiumError) -> DocumentError {
@@ -132,7 +145,7 @@ fn map_pdfium_load_error(error: PdfiumError) -> DocumentError {
             PdfiumInternalError::FormatError
             | PdfiumInternalError::SecurityError
             | PdfiumInternalError::PageError => DocumentError::PdfParseFailed,
-            PdfiumInternalError::PasswordError => DocumentError::EncryptedUnsupported,
+            PdfiumInternalError::PasswordError => DocumentError::PasswordRequired,
             PdfiumInternalError::Unknown => {
                 DocumentError::Unknown("Unknown PDFium internal load error".to_string())
             }
@@ -158,6 +171,31 @@ fn collect_page_descriptors(
     Ok(out)
 }
 
+fn collect_metadata(document: &PdfDocument<'_>, page_count: usize) -> DocumentMetadata {
+    let meta = document.metadata();
+    let get = |tag: PdfDocumentMetadataTagType| {
+        meta.get(tag)
+            .map(|item| item.value().to_string())
+            .filter(|s| !s.is_empty())
+    };
+    DocumentMetadata {
+        title: get(PdfDocumentMetadataTagType::Title),
+        author: get(PdfDocumentMetadataTagType::Author),
+        subject: get(PdfDocumentMetadataTagType::Subject),
+        creator: get(PdfDocumentMetadataTagType::Creator),
+        producer: get(PdfDocumentMetadataTagType::Producer),
+        page_count,
+        encrypted: is_encrypted(document),
+    }
+}
+
+fn is_encrypted(document: &PdfDocument<'_>) -> bool {
+    !matches!(
+        document.permissions().security_handler_revision(),
+        Ok(PdfSecurityHandlerRevision::Unprotected)
+    )
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -167,10 +205,10 @@ mod tests {
     }
 
     #[test]
-    fn password_error_maps_to_encrypted_unsupported() {
+    fn password_error_maps_to_password_required() {
         assert_eq!(
             map_internal(PdfiumInternalError::PasswordError),
-            DocumentError::EncryptedUnsupported
+            DocumentError::PasswordRequired
         );
     }
 
@@ -212,23 +250,5 @@ mod tests {
             map_internal(PdfiumInternalError::Unknown),
             DocumentError::Unknown(_)
         ));
-    }
-}
-
-fn collect_metadata(document: &PdfDocument<'_>, page_count: usize) -> DocumentMetadata {
-    let meta = document.metadata();
-    let get = |tag: PdfDocumentMetadataTagType| {
-        meta.get(tag)
-            .map(|item| item.value().to_string())
-            .filter(|s| !s.is_empty())
-    };
-    DocumentMetadata {
-        title: get(PdfDocumentMetadataTagType::Title),
-        author: get(PdfDocumentMetadataTagType::Author),
-        subject: get(PdfDocumentMetadataTagType::Subject),
-        creator: get(PdfDocumentMetadataTagType::Creator),
-        producer: get(PdfDocumentMetadataTagType::Producer),
-        page_count,
-        encrypted: false,
     }
 }

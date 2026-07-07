@@ -85,6 +85,54 @@ button.ghost {
   color: var(--danger);
 }
 
+/* ── Password prompt (RFC 025) ───────────────────────────── */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.5);
+}
+.password-dialog {
+  width: min(24rem, calc(100vw - 2rem));
+  padding: 1rem;
+  border: 1px solid color-mix(in srgb, var(--muted) 35%, transparent);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.32);
+  text-align: left;
+}
+.password-dialog h2 { margin: 0 0 0.4rem; font-size: 1.1rem; }
+.password-dialog p { margin: 0.3rem 0 0.8rem; }
+.password-label {
+  display: block;
+  margin: 0.8rem 0 0.25rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.password-input {
+  width: 100%;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid var(--muted);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--fg);
+  font-size: 1rem;
+}
+.password-error {
+  color: var(--danger);
+  font-size: 0.85rem;
+}
+.password-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
 /* ── Viewer layout ─────────────────────────────────────────── */
 .viewer { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 .viewer-title { font-size: 1rem; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 40vw; }

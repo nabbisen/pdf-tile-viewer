@@ -7,8 +7,12 @@ and never leave your machine.
 
 **Can it open password-protected PDFs?**
 
-Not yet. The engine detects encrypted PDFs and shows a clear error message,
-but decryption is not supported in 2.0.0-beta.10.
+Yes. When a PDF requires a password, the app prompts for it and opens the
+document if the password is accepted.
+
+Passwords are used only for that open attempt. They are not saved to settings,
+session history, logs, or diagnostics, and they must be entered again in a
+future app session.
 
 **Can the title bar show the full file path?**
 

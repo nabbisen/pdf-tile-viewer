@@ -5,6 +5,7 @@
 //! by the root component.
 
 use std::collections::HashMap;
+use std::path::PathBuf;
 use std::sync::OnceLock;
 
 use domain::document::{DocumentSession, PageIndex};
@@ -60,6 +61,13 @@ pub enum Phase {
     Dashboard,
     Opening,
     Viewer(OpenDocumentView),
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct PasswordPromptState {
+    pub path: PathBuf,
+    pub rejected: bool,
+    pub submitting: bool,
 }
 
 // ── Search state (RFC 010/011) ────────────────────────────────────────────────

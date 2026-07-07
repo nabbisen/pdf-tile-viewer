@@ -83,6 +83,24 @@ pub struct DocumentMetadata {
     pub encrypted: bool,
 }
 
+/// Transient user-supplied PDF password.
+///
+/// This type intentionally does not implement `Display`, `Debug`, or `Clone`.
+/// It reduces accidental exposure in logs and diagnostics, but it is not a
+/// hard memory-erasure guarantee.
+#[derive(Eq, PartialEq)]
+pub struct DocumentPassword(String);
+
+impl DocumentPassword {
+    pub fn new(value: String) -> Self {
+        DocumentPassword(value)
+    }
+
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+
 /// Canonical page geometry. Width/height are PDF points (1/72 inch).
 /// Layout and coordinate-transform code must use these descriptors and must
 /// not query the PDF engine for page size (RFC 004 §11).
@@ -110,6 +128,7 @@ pub enum DocumentError {
     UnsupportedFile,
     PdfiumUnavailable,
     PdfParseFailed,
+    PasswordRequired,
     EncryptedUnsupported,
     TooLargeForPolicy,
     Unknown(String),

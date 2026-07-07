@@ -5,8 +5,11 @@
 //! inside the engine worker, which re-validates the header itself.
 
 use std::path::Path;
+use std::path::PathBuf;
 
-use domain::document::{DocumentError, DocumentSession, PDF_MAGIC, header_is_pdf};
+use domain::document::{
+    DocumentError, DocumentPassword, DocumentSession, PDF_MAGIC, header_is_pdf,
+};
 use pdf_engine::worker::EngineHandle;
 
 /// Why a candidate file was rejected before reaching the engine.
@@ -61,15 +64,57 @@ pub enum OpenError {
     EngineUnavailable,
 }
 
+#[derive(Clone, Debug, PartialEq)]
+pub struct PasswordRequiredContext {
+    pub path: PathBuf,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+#[allow(clippy::large_enum_variant)]
+pub enum OpenDocumentOutcome {
+    Opened(DocumentSession),
+    PasswordRequired(PasswordRequiredContext),
+}
+
+fn outcome_from_engine_result(
+    path: &Path,
+    result: Result<DocumentSession, DocumentError>,
+) -> Result<OpenDocumentOutcome, OpenError> {
+    match result {
+        Ok(session) => Ok(OpenDocumentOutcome::Opened(session)),
+        Err(DocumentError::PasswordRequired) => Ok(OpenDocumentOutcome::PasswordRequired(
+            PasswordRequiredContext {
+                path: path.to_path_buf(),
+            },
+        )),
+        Err(e) => Err(OpenError::Engine(e)),
+    }
+}
+
 /// Validate, then open the document on the engine worker.
 pub async fn open_document(
     engine: &EngineHandle,
     path: &Path,
-) -> Result<DocumentSession, OpenError> {
+) -> Result<OpenDocumentOutcome, OpenError> {
     validate_candidate(path).map_err(OpenError::Rejected)?;
     match engine.open_document(path.to_path_buf()).await {
-        Ok(Ok(session)) => Ok(session),
-        Ok(Err(e)) => Err(OpenError::Engine(e)),
+        Ok(result) => outcome_from_engine_result(path, result),
+        Err(_) => Err(OpenError::EngineUnavailable),
+    }
+}
+
+/// Validate, then retry opening the document with a transient password.
+pub async fn open_document_with_password(
+    engine: &EngineHandle,
+    path: &Path,
+    password: DocumentPassword,
+) -> Result<OpenDocumentOutcome, OpenError> {
+    validate_candidate(path).map_err(OpenError::Rejected)?;
+    match engine
+        .open_document_with_password(path.to_path_buf(), password)
+        .await
+    {
+        Ok(result) => outcome_from_engine_result(path, result),
         Err(_) => Err(OpenError::EngineUnavailable),
     }
 }

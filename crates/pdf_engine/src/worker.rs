@@ -14,7 +14,7 @@ use std::path::PathBuf;
 use std::sync::mpsc;
 use std::thread::JoinHandle;
 
-use domain::document::{DocumentError, DocumentId, DocumentSession};
+use domain::document::{DocumentError, DocumentId, DocumentPassword, DocumentSession};
 use domain::render::{RenderError, RenderPageRequest, RenderedPageImage};
 use domain::search::{SearchError, SearchHighlightSet, SearchRequest, SearchResultSet};
 use domain::text::{PageTextLayer, TextLayerError, TextLayerRequest};
@@ -30,6 +30,7 @@ use crate::text_layer;
 enum Command {
     OpenDocument {
         path: PathBuf,
+        password: Option<DocumentPassword>,
         reply: oneshot::Sender<Result<DocumentSession, DocumentError>>,
     },
     CloseDocument {
@@ -51,6 +52,9 @@ enum Command {
     ExtractPageTextLayer {
         request: TextLayerRequest,
         reply: oneshot::Sender<Result<PageTextLayer, TextLayerError>>,
+    },
+    DebugSessionCount {
+        reply: oneshot::Sender<usize>,
     },
     Shutdown,
 }
@@ -135,7 +139,41 @@ impl EngineHandle {
         Output = Result<Result<DocumentSession, DocumentError>, EngineGone>,
     > + use<> {
         let (reply, rx) = oneshot::channel();
-        let sent = self.sender.send(Command::OpenDocument { path, reply });
+        let sent = self.sender.send(Command::OpenDocument {
+            path,
+            password: None,
+            reply,
+        });
+        async move {
+            sent.map_err(|_| EngineGone)?;
+            rx.await.map_err(|_| EngineGone)
+        }
+    }
+
+    pub fn open_document_with_password(
+        &self,
+        path: PathBuf,
+        password: DocumentPassword,
+    ) -> impl std::future::Future<
+        Output = Result<Result<DocumentSession, DocumentError>, EngineGone>,
+    > + use<> {
+        let (reply, rx) = oneshot::channel();
+        let sent = self.sender.send(Command::OpenDocument {
+            path,
+            password: Some(password),
+            reply,
+        });
+        async move {
+            sent.map_err(|_| EngineGone)?;
+            rx.await.map_err(|_| EngineGone)
+        }
+    }
+
+    pub fn debug_session_count(
+        &self,
+    ) -> impl std::future::Future<Output = Result<usize, EngineGone>> + use<> {
+        let (reply, rx) = oneshot::channel();
+        let sent = self.sender.send(Command::DebugSessionCount { reply });
         async move {
             sent.map_err(|_| EngineGone)?;
             rx.await.map_err(|_| EngineGone)
@@ -232,8 +270,12 @@ impl EngineThread {
 fn run_loop(mut engine: PdfEngine, receiver: mpsc::Receiver<Command>) {
     while let Ok(command) = receiver.recv() {
         match command {
-            Command::OpenDocument { path, reply } => {
-                let _ = reply.send(engine.open_document(&path));
+            Command::OpenDocument {
+                path,
+                password,
+                reply,
+            } => {
+                let _ = reply.send(engine.open_document_with_password(&path, password.as_ref()));
             }
             Command::CloseDocument { id, reply } => {
                 let _ = reply.send(engine.close_document(id));
@@ -249,6 +291,9 @@ fn run_loop(mut engine: PdfEngine, receiver: mpsc::Receiver<Command>) {
             }
             Command::ExtractPageTextLayer { request, reply } => {
                 let _ = reply.send(text_layer::extract_page_text_layer(&engine, &request));
+            }
+            Command::DebugSessionCount { reply } => {
+                let _ = reply.send(engine.session_count());
             }
             Command::Shutdown => break,
         }

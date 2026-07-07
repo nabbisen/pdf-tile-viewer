@@ -42,6 +42,9 @@ controls in the viewer toolbar.
 | `privacy.persist_recent_files` | `bool` | `false` | *(Schema only — session history is always ephemeral in 2.0.0-beta.10.)* |
 | `privacy.include_full_paths_in_diagnostics` | `bool` | `false` | *(Schema only — not yet used by diagnostics.)* |
 
+PDF passwords are not settings. They are never written to `settings.json` and
+must be entered again when needed.
+
 ---
 
 ## Advanced

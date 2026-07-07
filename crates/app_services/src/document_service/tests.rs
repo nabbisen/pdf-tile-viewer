@@ -1,6 +1,10 @@
 use std::io::Write;
 
-use crate::document_service::{IntakeRejection, validate_candidate};
+use domain::document::DocumentError;
+
+use crate::document_service::{
+    IntakeRejection, OpenDocumentOutcome, outcome_from_engine_result, validate_candidate,
+};
 
 fn temp_dir() -> std::path::PathBuf {
     let dir = std::env::temp_dir().join(format!(
@@ -69,4 +73,17 @@ fn too_short_file_is_not_a_pdf() {
         .write_all(b"%P")
         .unwrap();
     assert_eq!(validate_candidate(&path), Err(IntakeRejection::NotAPdf));
+}
+
+#[test]
+fn password_required_becomes_recoverable_outcome() {
+    let path = temp_dir().join("protected.pdf");
+    let outcome = outcome_from_engine_result(&path, Err(DocumentError::PasswordRequired)).unwrap();
+
+    assert_eq!(
+        outcome,
+        OpenDocumentOutcome::PasswordRequired(crate::document_service::PasswordRequiredContext {
+            path,
+        })
+    );
 }

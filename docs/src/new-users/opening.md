@@ -20,6 +20,15 @@ are rejected with a clear error message.
 Documents opened during the current session are listed on the dashboard.
 Click any entry to reopen it. The history is cleared when the app closes.
 
+## Password-protected PDFs
+
+If a PDF requires a password, the app shows a password prompt. Enter the
+password and choose **Open**. If the password is not accepted, the prompt stays
+open and the password field is cleared.
+
+Choose **Cancel** or close the prompt to keep the current dashboard or viewer
+unchanged. Passwords are not saved.
+
 ## Error handling
 
 | Situation | Message shown |
@@ -28,4 +37,4 @@ Click any entry to reopen it. The history is cleared when the app closes.
 | Not a file (directory) | "That item is not a file." |
 | Wrong extension | "Only .pdf files can be opened." |
 | Not a valid PDF | "This file is not a valid PDF document." |
-| Password-protected | "Password-protected PDFs are not supported yet." |
+| Password not accepted | "The password was not accepted." |

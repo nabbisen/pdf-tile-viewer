@@ -72,6 +72,12 @@ pub enum MessageKey {
     ErrMultipleFilesDropped,
     ErrRenderFailed,
     DropZoneHint,
+    PasswordPromptTitle,
+    PasswordPromptBody,
+    PasswordPromptField,
+    PasswordPromptRejected,
+    PasswordPromptOpen,
+    PasswordPromptCancel,
     RevealInFileManager,
     SearchButton,
     SearchClear,
@@ -136,6 +142,12 @@ impl MessageKey {
         MessageKey::ErrRenderFailed,
         MessageKey::ErrMultipleFilesDropped,
         MessageKey::DropZoneHint,
+        MessageKey::PasswordPromptTitle,
+        MessageKey::PasswordPromptBody,
+        MessageKey::PasswordPromptField,
+        MessageKey::PasswordPromptRejected,
+        MessageKey::PasswordPromptOpen,
+        MessageKey::PasswordPromptCancel,
         MessageKey::RevealInFileManager,
         MessageKey::SearchButton,
         MessageKey::SearchClear,
@@ -193,6 +205,13 @@ pub fn open_error_key(error: &app_services::document_service::OpenError) -> Mess
         OpenError::Engine(DocumentError::FileNotReadable) => MessageKey::ErrUnreadable,
         OpenError::Engine(DocumentError::UnsupportedFile) => MessageKey::ErrNotAPdf,
         OpenError::Engine(DocumentError::EncryptedUnsupported) => {
+            MessageKey::ErrEncryptedUnsupported
+        }
+        OpenError::Engine(DocumentError::PasswordRequired) => {
+            debug_assert!(
+                std::env::var_os("PDF_TILE_VIEWER_ALLOW_PASSWORD_REQUIRED_ERROR_PATH").is_some(),
+                "PasswordRequired must be handled as an open outcome, not a display error"
+            );
             MessageKey::ErrEncryptedUnsupported
         }
         OpenError::Engine(DocumentError::PdfParseFailed) => MessageKey::ErrPdfParseFailed,

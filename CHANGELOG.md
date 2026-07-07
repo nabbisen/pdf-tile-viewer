@@ -9,6 +9,12 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Added a password prompt workflow for password-protected PDFs, including
+  retry/cancel behavior, transient password handling, and fixture-backed
+  PDFium smoke coverage.
+
 ---
 
 ## [2.0.0-beta.10]

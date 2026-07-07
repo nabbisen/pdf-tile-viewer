@@ -16,7 +16,9 @@ Implemented RFCs live in `rfcs/done/`. Proposed 2.0 RC follow-up work lives in
 
 ## Proposed 2.0 RC Follow-Ups
 
-No active proposed 2.0 RC follow-up RFCs.
+| ID | Title | Status |
+|----|-------|--------|
+| 025 | [Password-Protected PDF Opening Workflow](proposed/025-password-protected-pdf-opening.md) | Proposed |
 
 ---
 
