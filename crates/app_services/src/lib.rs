@@ -17,3 +17,4 @@ pub mod platform;
 pub mod render_service;
 pub mod settings_service;
 pub mod text_service;
+pub mod uri_policy;

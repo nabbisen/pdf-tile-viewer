@@ -6,6 +6,7 @@
 
 pub mod document;
 pub mod layout;
+pub mod navigation;
 pub mod render;
 pub mod search;
 pub mod settings;

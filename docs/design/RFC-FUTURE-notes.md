@@ -56,6 +56,8 @@ PDFs, or optional credential storage.
 
 ## Future RFC-F04 — Link and Outline Navigation
 
+> Promoted to proposed RFC 026 after the `2.0.0-beta.11` release point.
+
 ### Goal
 
 Support PDF links, bookmarks, table-of-contents navigation, and internal

@@ -16,7 +16,9 @@ Implemented RFCs live in `rfcs/done/`. Proposed 2.0 RC follow-up work lives in
 
 ## Proposed 2.0 RC Follow-Ups
 
-No active proposed 2.0 RC follow-up RFCs.
+| ID | Title | Status |
+|----|-------|--------|
+| 026 | [PDF Link and Outline Navigation](proposed/026-pdf-link-outline-navigation.md) | Proposed |
 
 ---
 

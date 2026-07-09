@@ -8,6 +8,9 @@ Fixtures:
   single-page-basic.pdf   1 page, US Letter (612x792 pt), text "Hello tile viewer".
   multi-page-search.pdf   3 pages; the word "tile" appears on pages 1 and 3
                           (display numbering), page 2 contains unrelated text.
+  navigation-links-outline.pdf
+                          3 pages with outline entries, internal links, URI
+                          links, and blocked action examples for RFC 026.
   not-a-pdf.pdf           wrong magic bytes, for intake-rejection tests.
 
 Carve-out:
@@ -88,6 +91,133 @@ def build_pdf(pages: list[str]) -> bytes:
     return bytes(out)
 
 
+def pdf_string(value: str) -> str:
+    return (
+        value
+        .replace("\\", "\\\\")
+        .replace("(", "\\(")
+        .replace(")", "\\)")
+    )
+
+
+def assemble_objects(objects: list[bytes]) -> bytes:
+    out = bytearray()
+    out += b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n"
+    offsets = [0]
+    for number, body in enumerate(objects, start=1):
+        offsets.append(len(out))
+        out += f"{number} 0 obj\n".encode() + body + b"\nendobj\n"
+
+    xref_pos = len(out)
+    count = len(objects) + 1
+    out += f"xref\n0 {count}\n".encode()
+    out += b"0000000000 65535 f \n"
+    for off in offsets[1:]:
+        out += f"{off:010d} 00000 n \n".encode()
+    out += (
+        f"trailer\n<< /Size {count} /Root 1 0 R >>\n"
+        f"startxref\n{xref_pos}\n%%EOF\n"
+    ).encode()
+    return bytes(out)
+
+
+def content_stream(text: str) -> bytes:
+    stream = f"BT /F1 24 Tf 72 700 Td ({pdf_string(text)}) Tj ET".encode()
+    return b"<< /Length %d >>\nstream\n%s\nendstream" % (len(stream), stream)
+
+
+def build_navigation_pdf() -> bytes:
+    """Assemble a deterministic PDF with RFC 026 navigation metadata."""
+    objects: list[bytes] = [
+        # 1 Catalog, 2 Pages, 3 Font.
+        b"<< /Type /Catalog /Pages 2 0 R /Outlines 10 0 R /PageMode /UseOutlines >>",
+        b"<< /Type /Pages /Kids [4 0 R 5 0 R 6 0 R] /Count 3 >>",
+        b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+        # 4..6 Page objects.
+        (
+            b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] "
+            b"/Resources << /Font << /F1 3 0 R >> >> "
+            b"/Annots [14 0 R 16 0 R] /Contents 7 0 R >>"
+        ),
+        (
+            b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] "
+            b"/Resources << /Font << /F1 3 0 R >> >> "
+            b"/Annots [17 0 R 18 0 R 19 0 R] /Contents 8 0 R >>"
+        ),
+        (
+            b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] "
+            b"/Resources << /Font << /F1 3 0 R >> >> "
+            b"/Annots [15 0 R 20 0 R 21 0 R 22 0 R] /Contents 9 0 R >>"
+        ),
+        # 7..9 Content streams.
+        content_stream("Navigation page one"),
+        content_stream("Navigation page two"),
+        content_stream("Navigation page three"),
+        # 10..13 and 23 Outline tree.
+        b"<< /Type /Outlines /First 11 0 R /Last 23 0 R /Count 4 >>",
+        (
+            b"<< /Title (Chapter 1) /Parent 10 0 R /Next 13 0 R "
+            b"/First 12 0 R /Last 12 0 R /Count 1 "
+            b"/Dest [4 0 R /XYZ 0 792 0] >>"
+        ),
+        b"<< /Title () /Parent 11 0 R /Dest [5 0 R /XYZ 0 792 0] >>",
+        (
+            b"<< /Title (Chapter 2) /Parent 10 0 R /Prev 11 0 R /Next 23 0 R "
+            b"/Dest [6 0 R /XYZ 0 792 0] >>"
+        ),
+        # 14..22 Link annotations.
+        (
+            b"<< /Type /Annot /Subtype /Link /Rect [72 650 240 680] "
+            b"/Border [0 0 0] /Dest [6 0 R /XYZ 0 792 0] >>"
+        ),
+        (
+            b"<< /Type /Annot /Subtype /Link /Rect [72 650 240 680] "
+            b"/Border [0 0 0] /Dest [4 0 R /XYZ 0 792 0] >>"
+        ),
+        (
+            b"<< /Type /Annot /Subtype /Link /Rect [72 600 320 630] "
+            b"/Border [0 0 0] "
+            b"/A << /S /URI /URI (https://example.com/pdf-tile-viewer) >> >>"
+        ),
+        (
+            b"<< /Type /Annot /Subtype /Link /Rect [72 650 320 680] "
+            b"/Border [0 0 0] "
+            b"/A << /S /URI /URI (file:///tmp/pdf-tile-viewer-blocked) >> >>"
+        ),
+        (
+            b"<< /Type /Annot /Subtype /Link /Rect [72 600 320 630] "
+            b"/Border [0 0 0] "
+            b"/A << /S /URI /URI (relative/path) >> >>"
+        ),
+        (
+            b"<< /Type /Annot /Subtype /Link /Rect [72 550 320 580] "
+            b"/Border [0 0 0] "
+            b"/A << /S /Launch /F (blocked.exe) >> >>"
+        ),
+        (
+            b"<< /Type /Annot /Subtype /Link /Rect [72 600 320 630] "
+            b"/Border [0 0 0] "
+            b"/A << /S /GoToR /F (remote.pdf) /D [0 /Fit] >> >>"
+        ),
+        (
+            b"<< /Type /Annot /Subtype /Link /Rect [72 550 320 580] "
+            b"/Border [0 0 0] "
+            b"/A << /S /GoToE /T << /R /C /N (embedded.pdf) >> "
+            b"/D [0 /Fit] >> >>"
+        ),
+        (
+            b"<< /Type /Annot /Subtype /Link /Rect [72 500 320 530] "
+            b"/Border [0 0 0] "
+            b"/A << /S /JavaScript /JS (app.alert\\(1\\)) >> >>"
+        ),
+        (
+            b"<< /Title (Empty URI) /Parent 10 0 R /Prev 13 0 R "
+            b"/A << /S /URI /URI () >> >>"
+        ),
+    ]
+    return assemble_objects(objects)
+
+
 def main() -> None:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -111,12 +241,15 @@ def main() -> None:
     ]
     (OUT_DIR / "fifty-pages-benchmark.pdf").write_bytes(build_pdf(pages_50))
 
+    (OUT_DIR / "navigation-links-outline.pdf").write_bytes(build_navigation_pdf())
+
     (OUT_DIR / "not-a-pdf.pdf").write_bytes(b"GIF89a this is not a pdf\n")
 
     for name in (
         "single-page-basic.pdf",
         "multi-page-search.pdf",
         "fifty-pages-benchmark.pdf",
+        "navigation-links-outline.pdf",
         "not-a-pdf.pdf",
     ):
         print(f"wrote {OUT_DIR / name}")

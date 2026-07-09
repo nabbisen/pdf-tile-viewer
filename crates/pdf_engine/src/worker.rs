@@ -15,6 +15,9 @@ use std::sync::mpsc;
 use std::thread::JoinHandle;
 
 use domain::document::{DocumentError, DocumentId, DocumentPassword, DocumentSession};
+use domain::navigation::{
+    DocumentOutline, DocumentOutlineRequest, NavigationError, PageLinkSet, PageLinksRequest,
+};
 use domain::render::{RenderError, RenderPageRequest, RenderedPageImage};
 use domain::search::{SearchError, SearchHighlightSet, SearchRequest, SearchResultSet};
 use domain::text::{PageTextLayer, TextLayerError, TextLayerRequest};
@@ -22,6 +25,7 @@ use futures_channel::oneshot;
 
 use crate::engine::PdfEngine;
 use crate::loader::{self, PdfiumLoadError, PdfiumLoadReport};
+use crate::navigation;
 use crate::render;
 use crate::search;
 use crate::text_layer;
@@ -52,6 +56,14 @@ enum Command {
     ExtractPageTextLayer {
         request: TextLayerRequest,
         reply: oneshot::Sender<Result<PageTextLayer, TextLayerError>>,
+    },
+    ExtractDocumentOutline {
+        request: DocumentOutlineRequest,
+        reply: oneshot::Sender<Result<DocumentOutline, NavigationError>>,
+    },
+    ExtractPageLinks {
+        request: PageLinksRequest,
+        reply: oneshot::Sender<Result<PageLinkSet, NavigationError>>,
     },
     DebugSessionCount {
         reply: oneshot::Sender<usize>,
@@ -250,6 +262,37 @@ impl EngineHandle {
         }
     }
 
+    pub fn extract_document_outline(
+        &self,
+        request: DocumentOutlineRequest,
+    ) -> impl std::future::Future<
+        Output = Result<Result<DocumentOutline, NavigationError>, EngineGone>,
+    > + use<> {
+        let (reply, rx) = oneshot::channel();
+        let sent = self
+            .sender
+            .send(Command::ExtractDocumentOutline { request, reply });
+        async move {
+            sent.map_err(|_| EngineGone)?;
+            rx.await.map_err(|_| EngineGone)
+        }
+    }
+
+    pub fn extract_page_links(
+        &self,
+        request: PageLinksRequest,
+    ) -> impl std::future::Future<Output = Result<Result<PageLinkSet, NavigationError>, EngineGone>>
+    + use<> {
+        let (reply, rx) = oneshot::channel();
+        let sent = self
+            .sender
+            .send(Command::ExtractPageLinks { request, reply });
+        async move {
+            sent.map_err(|_| EngineGone)?;
+            rx.await.map_err(|_| EngineGone)
+        }
+    }
+
     /// Ask the worker to exit after draining queued commands.
     pub fn shutdown(&self) {
         let _ = self.sender.send(Command::Shutdown);
@@ -291,6 +334,12 @@ fn run_loop(mut engine: PdfEngine, receiver: mpsc::Receiver<Command>) {
             }
             Command::ExtractPageTextLayer { request, reply } => {
                 let _ = reply.send(text_layer::extract_page_text_layer(&engine, &request));
+            }
+            Command::ExtractDocumentOutline { request, reply } => {
+                let _ = reply.send(navigation::extract_document_outline(&engine, &request));
+            }
+            Command::ExtractPageLinks { request, reply } => {
+                let _ = reply.send(navigation::extract_page_links(&engine, &request));
             }
             Command::DebugSessionCount { reply } => {
                 let _ = reply.send(engine.session_count());
