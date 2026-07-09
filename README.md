@@ -47,6 +47,8 @@ _(manga by m. thanks)_
 - 🔧 Scale / pages-per-row changers
 - 🔍 Page zoom view
 - 📝 Text selection in zoom view
+- 🔖 PDF outline / bookmark navigation
+- 🔗 Internal PDF links and copy-only external link inspection
 - 🗺 Text search
 - 🍵 Zen mode
 - 🗄 Preserve some settings (even when app's quitted)

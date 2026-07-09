@@ -27,6 +27,7 @@ Implemented RFCs live in `rfcs/done/`. Proposed 2.0 RC follow-up work lives in
 | RFC | Handoff |
 |-----|---------|
 | 023 | [Single-Page PDF Text Selection Layer](handoffs/023-pdf-text-selection-layer/implementation-handoff.md) |
+| 026 | [PDF Link and Outline Navigation](handoffs/026-pdf-link-outline-navigation/implementation-handoff.md) |
 
 ---
 

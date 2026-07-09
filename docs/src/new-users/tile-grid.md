@@ -38,6 +38,15 @@ scrolls that tile into view. The input accepts 1-based page numbers
 Click any tile to open it in a larger zoom overlay. See
 [features](features.md#zoom-overlay) for details.
 
+## Outlines and PDF links
+
+The viewer toolbar includes an outline button (`☰`). PDFs without a document
+outline show **No outline**. Outline entries, when present, scroll the tile
+grid to their target pages.
+
+PDF link hit areas are intentionally exposed in the zoom overlay rather than
+the tile grid. See [Outlines and PDF Links](outlines-and-links.md) for details.
+
 ## Keyboard navigation
 
 See [Keyboard Shortcuts](../intermediate/shortcuts.md).

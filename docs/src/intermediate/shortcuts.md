@@ -19,6 +19,7 @@ grid area first). They do not fire when focus is inside a text input.
 | Key | Action |
 |-----|--------|
 | `Escape` | Close zoom overlay |
+| `Escape` while external-link dialog is open | Close the dialog |
 | `←` / `PageUp` | Previous page |
 | `→` / `PageDown` | Next page |
 | `Home` | First page |

@@ -10,6 +10,7 @@
 - [Installation](new-users/installation.md)
 - [Opening a PDF](new-users/opening.md)
 - [Navigating the Tile Grid](new-users/tile-grid.md)
+- [Outlines and PDF Links](new-users/outlines-and-links.md)
 - [Searching Text](new-users/search.md)
 - [FAQ](new-users/faq.md)
 

@@ -1,6 +1,7 @@
 # Features
 
-> **Status:** 2.0.0-beta.11 — latest released beta.
+> **Status:** current development branch. Latest released beta:
+> `2.0.0-beta.11`.
 
 ## All pages as a tile grid
 
@@ -32,7 +33,18 @@ linearly.
 - Search highlights remain visible in the zoomed view.
 - Select and copy visible PDF text in the zoomed page when the PDF exposes a
   usable text layer.
+- Activate internal PDF links from the zoomed page, or inspect and copy
+  external PDF link targets without launching another application.
 - Close with Escape or the × button; focus returns to the tile grid.
+
+## Outlines and PDF links
+
+- Open the outline panel from the viewer toolbar. PDFs without bookmarks or a
+  table of contents show **No outline**.
+- Outline entries, when present, scroll the tile grid to their target pages.
+- PDF link hit areas are available in the zoom overlay, not in the tile grid.
+- External links are copy-only; the app does not open them in another
+  application.
 
 ## File opening
 
