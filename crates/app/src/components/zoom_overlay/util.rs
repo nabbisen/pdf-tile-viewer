@@ -179,18 +179,6 @@ pub fn link_activation_at(
     })
 }
 
-pub fn internal_link_target_at(
-    link_rects: &[ZoomPageLinkRect],
-    x: f64,
-    y: f64,
-    page_count: usize,
-) -> Option<PageIndex> {
-    match link_activation_at(link_rects, x, y, page_count) {
-        Some(ZoomLinkActivation::Internal(target)) => Some(target),
-        Some(ZoomLinkActivation::ExternalUri(_)) | None => None,
-    }
-}
-
 pub fn client_point_relative_to_rect(
     client_point: (f64, f64),
     rect_origin: (f64, f64),
@@ -450,7 +438,7 @@ mod tests {
     }
 
     #[test]
-    fn internal_link_target_at_returns_supported_internal_target_only() {
+    fn link_activation_at_returns_supported_targets_only() {
         let rects = vec![
             ZoomPageLinkRect {
                 link: PageLink {
@@ -486,12 +474,17 @@ mod tests {
         ];
 
         assert_eq!(
-            internal_link_target_at(&rects, 30.0, 10.0, 5),
-            Some(PageIndex(3))
+            link_activation_at(&rects, 30.0, 10.0, 5),
+            Some(ZoomLinkActivation::Internal(PageIndex(3)))
         );
-        assert_eq!(internal_link_target_at(&rects, 10.0, 10.0, 5), None);
-        assert_eq!(internal_link_target_at(&rects, 30.0, 10.0, 3), None);
-        assert_eq!(internal_link_target_at(&rects, 90.0, 10.0, 5), None);
+        assert_eq!(
+            link_activation_at(&rects, 10.0, 10.0, 5),
+            Some(ZoomLinkActivation::ExternalUri(
+                "https://example.test".to_string()
+            ))
+        );
+        assert_eq!(link_activation_at(&rects, 30.0, 10.0, 3), None);
+        assert_eq!(link_activation_at(&rects, 90.0, 10.0, 5), None);
     }
 
     #[test]

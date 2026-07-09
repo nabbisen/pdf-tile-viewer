@@ -10,6 +10,10 @@ RFC 026 has been implemented in four reviewed slices:
 - PR 3: zoom-overlay internal PDF link hit areas;
 - PR 4: copy-only external URI confirmation dialog.
 
+After PR 4 cleanup review, an unused internal-link helper was removed from the
+zoom overlay utility module and the active `link_activation_at()` coverage was
+kept.
+
 The RFC remains in `rfcs/proposed/` until final manual QA and owner acceptance
 are complete. This handoff is not release prep and is not a release point.
 
@@ -93,9 +97,22 @@ Implementation reviews:
 
 ## 7. Gate status
 
-Automated Rust gates were run and reviewed during the individual PR slices.
-For a final RFC 026 acceptance point, rerun the agreed current-thread gates and
-record the observed output in the review or release-prep notes.
+Automated Rust gates were run and reviewed during the individual PR slices. The
+following gates were also observed passing after the cleanup-docs slice and
+dead-code warning cleanup:
+
+- `cargo fmt --check`
+- `cargo test -p domain` — 35 passed
+- `cargo test -p app_services` — 53 passed
+- `PDF_TILE_VIEWER_PDFIUM_DIR="$(pwd)/ci/.pdfium" cargo test -p pdf_engine --test smoke` — 14 passed
+- `cargo test -p app` — 19 passed
+- `cargo check --workspace`
+- `RUSTFLAGS="-D warnings" cargo check --quiet --all-targets --all-features`
+- `cargo test --workspace --exclude app`
+- `mdbook build docs`
+
+For a final RFC 026 acceptance point, record manual QA evidence in the review
+or release-prep notes.
 
 Recommended final gates:
 
