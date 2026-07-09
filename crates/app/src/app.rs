@@ -7,6 +7,7 @@ use dioxus::prelude::*;
 
 use app_services::document_service::{self, OpenDocumentOutcome};
 use app_services::history_service::SessionHistory;
+use app_services::navigation_service::NavigationService;
 use app_services::render_service::RenderService;
 use app_services::settings_service::SettingsStore;
 use app_services::text_service::{DEFAULT_TEXT_LAYER_CACHE_BUDGET_BYTES, TextLayerService};
@@ -42,6 +43,7 @@ pub fn App() -> Element {
             .map(|mb| (mb as usize) * 1024 * 1024)
             .unwrap_or(app_services::render_service::DEFAULT_CACHE_BUDGET_BYTES);
         use_context_provider(|| RenderService::new(engine.clone(), budget_bytes));
+        use_context_provider(|| NavigationService::new(engine.clone()));
         use_context_provider(|| {
             TextLayerService::new(engine, DEFAULT_TEXT_LAYER_CACHE_BUDGET_BYTES)
         });

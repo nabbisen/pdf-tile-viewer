@@ -189,7 +189,6 @@ pub enum DestinationView {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ExternalUriTarget {
     pub raw_uri: String,
-    pub truncated: bool,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -220,10 +219,7 @@ pub fn external_uri_target(raw_uri: String, limits: &NavigationResourceLimits) -
     if raw_uri.len() > limits.max_uri_bytes {
         return NavigationTarget::Disabled(DisabledNavigationReason::ExternalUriTooLong);
     }
-    NavigationTarget::ExternalUri(ExternalUriTarget {
-        raw_uri,
-        truncated: false,
-    })
+    NavigationTarget::ExternalUri(ExternalUriTarget { raw_uri })
 }
 
 fn truncate_title(title: String, limits: &NavigationResourceLimits) -> OutlineTitle {

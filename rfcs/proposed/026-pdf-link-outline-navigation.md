@@ -414,7 +414,6 @@ pub enum DestinationView {
 
 pub struct ExternalUriTarget {
     pub raw_uri: String,
-    pub truncated: bool,
 }
 
 pub enum DisabledNavigationReason {

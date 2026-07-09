@@ -5,6 +5,7 @@ mod render;
 use dioxus::document::eval;
 use dioxus::prelude::*;
 
+use app_services::navigation_service::{NavigationService, default_outline_request};
 use app_services::platform::reveal_in_file_manager;
 use app_services::render_service::RenderService;
 use app_services::settings_service::SettingsStore;
@@ -15,6 +16,7 @@ use domain::layout::{
 use domain::search::{PageHighlightSet, PageSearchSummary};
 use domain::settings::{AppSettingsV1, PagesPerRowPreference};
 
+use crate::components::outline_panel::{OutlinePanel, OutlinePanelState};
 use crate::components::search_panel::SearchPanel;
 use crate::components::tile_grid::TileGrid;
 use crate::components::viewer_controls::ViewerControls;
@@ -33,6 +35,7 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
     let locale: Memo<Locale> = use_context();
     let settings: Signal<AppSettingsV1> = use_context();
     let settings_store: SettingsStore = use_context();
+    let navigation_service: NavigationService = use_context();
     let render_service: RenderService = use_context();
 
     let session = view.session.clone();
@@ -50,6 +53,7 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
     });
     let show_page_numbers = use_signal(|| settings.read().viewer.show_page_numbers);
     let mut zen_mode: Signal<bool> = use_signal(|| false);
+    let mut show_outline: Signal<bool> = use_signal(|| false);
     let mut show_search: Signal<bool> = use_signal(|| false);
     let mut viewport_width: Signal<f32> = use_signal(|| DEFAULT_VIEWPORT_PX);
     let mut viewport_height: Signal<f32> = use_signal(|| DEFAULT_VIEWPORT_HEIGHT_PX);
@@ -64,9 +68,36 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
     let mut render_gen: Signal<u64> = use_signal(|| 0u64);
     let mut reveal_error: Signal<Option<String>> = use_signal(|| None);
     let search_state: Signal<SearchState> = use_signal(SearchState::default);
+    let mut outline_state: Signal<OutlinePanelState> = use_signal(|| OutlinePanelState::Idle);
     let zoom_page: Signal<Option<PageIndex>> = use_signal(|| None);
     let page_descriptors = session.pages.clone();
     let rs_for_search = render_service.clone();
+
+    // ── Outline loading (RFC 026 PR2) ─────────────────────────────────────
+    let nav_for_outline = navigation_service.clone();
+    let outline_session = session.clone();
+    use_effect(move || {
+        if !*show_outline.read() {
+            return;
+        }
+
+        let request = default_outline_request(outline_session.id, outline_session.generation);
+        let service = nav_for_outline.clone();
+        outline_state.set(OutlinePanelState::Loading);
+        spawn(async move {
+            match service.get_or_extract_outline(request).await {
+                Ok(outline)
+                    if outline.document_id == request.document_id
+                        && outline.generation == request.generation =>
+                {
+                    outline_state.set(OutlinePanelState::Ready((*outline).clone()));
+                }
+                Ok(_) | Err(_) => {
+                    outline_state.set(OutlinePanelState::Unavailable);
+                }
+            }
+        });
+    });
 
     // ── Measure viewport on mount ─────────────────────────────────────────
     use_effect(move || {
@@ -176,11 +207,8 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
         }
     };
     let default_scale = settings.read().viewer.default_scale;
-    let on_jump = Callback::new(move |idx: usize| {
-        let _ = eval(&format!(
-            "document.getElementById('tile-{idx}')?.scrollIntoView({{behavior:'smooth',block:'start'}})"
-        ));
-    });
+    let on_jump = Callback::new(move |idx: usize| scroll_tile_into_view(PageIndex(idx)));
+    let on_outline_navigate = Callback::new(move |idx: PageIndex| scroll_tile_into_view(idx));
     let reveal_path = doc_path.clone();
     let on_reveal = Callback::new(move |_| {
         if let Some(ref p) = reveal_path
@@ -217,6 +245,7 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
                         if zoom_page.peek().is_some() { zoom_page.clone().set(None); }
                         else if in_zen { zen_mode.set(false); }
                         else if *show_search.peek() { show_search.set(false); }
+                        else if *show_outline.peek() { show_outline.set(false); }
                         else { phase.set(Phase::Dashboard); }
                     }
                     _ => {}
@@ -236,6 +265,14 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
                         {t(locale(), MessageKey::ViewerBackToDashboard)}
                     }
                     h1 { class: "viewer-title", "{display_name}" }
+                    button {
+                        class: if *show_outline.read() { "ghost icon-btn active" } else { "ghost icon-btn" },
+                        title: t(locale(), MessageKey::OutlinePanelLabel),
+                        "aria-label": t(locale(), MessageKey::OutlinePanelLabel),
+                        "aria-expanded": if *show_outline.read() { "true" } else { "false" },
+                        onclick: move |_| show_outline.toggle(),
+                        "☰"
+                    }
                     button {
                         class: if *show_search.read() { "ghost icon-btn active" } else { "ghost icon-btn" },
                         title: t(locale(), MessageKey::SearchButton),
@@ -277,30 +314,40 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
             }
 
             // Tile grid — scroll position feeds the render scheduler.
-            div {
-                id: "viewer-scroll",
-                class: "tile-grid-scroll",
-                onscroll: move |evt: Event<ScrollData>| {
-                    scroll_y.set(evt.scroll_top() as f32);
-                    // Re-trigger render scheduling for newly visible pages.
-                    // We check viewport height from the scroll event too.
-                    let h = evt.client_height() as f32;
-                    if h > 0.0 { viewport_height.set(h); }
-                    let next = *render_gen.peek() + 1;
-                    render_gen.set(next);
-                },
-                TileGrid {
-                    layout: layout.read().clone(),
-                    tile_images,
-                    show_page_numbers: *show_page_numbers.read(),
-                    search_summaries,
-                    search_highlights: search_highlights.clone(),
-                    page_descriptors: session.pages.clone(),
-                    on_tile_click: Some(Callback::new(move |idx: PageIndex| {
-                        zoom_page.clone().set(Some(idx));
-                    })),
-                    // TileGrid no longer owns the scroll container — the viewer does.
-                    scroll_container_id: "viewer-scroll-inner".to_string(),
+            div { class: "viewer-body",
+                if !in_zen && *show_outline.read() {
+                    OutlinePanel {
+                        state: outline_state.read().clone(),
+                        on_close: Callback::new(move |_| show_outline.set(false)),
+                        on_navigate: on_outline_navigate,
+                    }
+                }
+
+                div {
+                    id: "viewer-scroll",
+                    class: "tile-grid-scroll",
+                    onscroll: move |evt: Event<ScrollData>| {
+                        scroll_y.set(evt.scroll_top() as f32);
+                        // Re-trigger render scheduling for newly visible pages.
+                        // We check viewport height from the scroll event too.
+                        let h = evt.client_height() as f32;
+                        if h > 0.0 { viewport_height.set(h); }
+                        let next = *render_gen.peek() + 1;
+                        render_gen.set(next);
+                    },
+                    TileGrid {
+                        layout: layout.read().clone(),
+                        tile_images,
+                        show_page_numbers: *show_page_numbers.read(),
+                        search_summaries,
+                        search_highlights: search_highlights.clone(),
+                        page_descriptors: session.pages.clone(),
+                        on_tile_click: Some(Callback::new(move |idx: PageIndex| {
+                            zoom_page.clone().set(Some(idx));
+                        })),
+                        // TileGrid no longer owns the scroll container — the viewer does.
+                        scroll_container_id: "viewer-scroll-inner".to_string(),
+                    }
                 }
             }
 
@@ -326,4 +373,11 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
             }
         }
     }
+}
+
+fn scroll_tile_into_view(idx: PageIndex) {
+    let _ = eval(&format!(
+        "document.getElementById('tile-{}')?.scrollIntoView({{behavior:'smooth',block:'start'}})",
+        idx.0
+    ));
 }

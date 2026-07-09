@@ -90,10 +90,7 @@ impl ExtractionBudget {
             return NavigationTarget::Disabled(DisabledNavigationReason::ExternalUriTooLong);
         }
         self.string_bytes += raw_uri.len();
-        NavigationTarget::ExternalUri(ExternalUriTarget {
-            raw_uri,
-            truncated: false,
-        })
+        NavigationTarget::ExternalUri(ExternalUriTarget { raw_uri })
     }
 }
 

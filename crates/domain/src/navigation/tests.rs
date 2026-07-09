@@ -85,7 +85,6 @@ fn external_uri_target_keeps_raw_uri_without_authorizing_open() {
         external_uri_target("https://example.com/path".to_string(), &limits),
         NavigationTarget::ExternalUri(ExternalUriTarget {
             raw_uri: "https://example.com/path".to_string(),
-            truncated: false,
         })
     );
 }
