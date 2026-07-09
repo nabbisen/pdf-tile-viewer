@@ -359,6 +359,10 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
                     page_count,
                     search_highlights,
                     page_descriptors,
+                    on_internal_link: Callback::new(move |idx: PageIndex| {
+                        zoom_page.clone().set(Some(idx));
+                        scroll_tile_into_view(idx);
+                    }),
                     on_close: Callback::new(move |_| zoom_page.clone().set(None)),
                 }
             }

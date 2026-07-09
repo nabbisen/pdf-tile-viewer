@@ -16,12 +16,15 @@
 mod util;
 
 use base64::Engine as _;
+use dioxus::document::eval;
 use dioxus::prelude::*;
 
+use app_services::navigation_service::{NavigationService, default_page_links_request};
 use app_services::render_service::RenderService;
 use app_services::text_service::TextLayerService;
 use domain::document::{DocumentGeneration, DocumentId, PageIndex};
 use domain::layout::RectPx;
+use domain::navigation::{NavigationTarget, PageLinkSet};
 use domain::render::{RenderFlags, RenderOutputFormat, RenderPageRequest, ScaleBucket};
 use domain::search::PageHighlightSet;
 use domain::settings::AppSettingsV1;
@@ -32,6 +35,7 @@ use crate::i18n::{Locale, MessageKey, t};
 const ZOOM_SCALE_MIN: f32 = 0.5;
 const ZOOM_SCALE_MAX: f32 = 8.0;
 const ZOOM_SCALE_STEP: f32 = 0.3;
+const LINK_CLICK_DRAG_THRESHOLD_PX: f64 = 4.0;
 
 /// State of the zoom overlay's current page render.
 #[derive(Clone, Debug, PartialEq)]
@@ -53,6 +57,14 @@ pub enum ZoomTextLayerState {
     Unavailable,
 }
 
+/// State of the zoom overlay's current page links.
+#[derive(Clone, Debug, PartialEq)]
+pub enum ZoomPageLinksState {
+    Loading,
+    Ready(PageLinkSet),
+    Unavailable,
+}
+
 #[component]
 pub fn ZoomOverlay(
     document_id: DocumentId,
@@ -63,10 +75,12 @@ pub fn ZoomOverlay(
     search_highlights: Vec<PageHighlightSet>,
     /// PageDescriptors from the session for coordinate transforms.
     page_descriptors: Vec<domain::document::PageDescriptor>,
+    on_internal_link: Callback<PageIndex>,
     on_close: Callback<()>,
 ) -> Element {
     let locale: Memo<Locale> = use_context();
     let settings: Signal<AppSettingsV1> = use_context();
+    let navigation_service: NavigationService = use_context();
     let render_service: RenderService = use_context();
     let text_service: TextLayerService = use_context();
 
@@ -80,8 +94,14 @@ pub fn ZoomOverlay(
     let mut zoom_image: Signal<ZoomImageState> = use_signal(|| ZoomImageState::Loading);
     let mut zoom_text_layer: Signal<ZoomTextLayerState> =
         use_signal(|| ZoomTextLayerState::Loading);
+    let mut zoom_page_links: Signal<ZoomPageLinksState> =
+        use_signal(|| ZoomPageLinksState::Loading);
     let mut image_request_seq: Signal<u64> = use_signal(|| 0);
     let mut text_request_seq: Signal<u64> = use_signal(|| 0);
+    let mut links_request_seq: Signal<u64> = use_signal(|| 0);
+    // Client-viewport coordinates avoid target-relative offsetX/offsetY when
+    // mouse events originate from selectable text spans inside the wrapper.
+    let mut link_pointer_down: Signal<Option<(f64, f64)>> = use_signal(|| None);
 
     let current_idx = page_index.read().unwrap_or(PageIndex(0));
     let display_num = current_idx.display_number();
@@ -142,6 +162,44 @@ pub fn ZoomOverlay(
                         zi.set(ZoomImageState::Failed(format!("{e:?}")));
                     }
                 }
+            }
+        });
+    });
+
+    // ── Page link overlay when page changes (RFC 026 PR3) ────────────────
+    let ns = navigation_service.clone();
+    use_effect(move || {
+        let Some(idx) = *page_index.read() else {
+            return;
+        };
+        let request = default_page_links_request(document_id, generation, idx);
+        let request_id = *links_request_seq.peek() + 1;
+        links_request_seq.set(request_id);
+        zoom_page_links.set(ZoomPageLinksState::Loading);
+
+        let ns2 = ns.clone();
+        let mut link_state = zoom_page_links;
+        let active_page = page_index;
+        spawn(async move {
+            let is_current =
+                || *links_request_seq.peek() == request_id && *active_page.peek() == Some(idx);
+            match ns2.get_or_extract_page_links(request).await {
+                Ok(links)
+                    if is_current()
+                        && util::zoom_page_links_match_overlay(
+                            &links,
+                            document_id,
+                            generation,
+                            idx,
+                        ) =>
+                {
+                    link_state.set(ZoomPageLinksState::Ready((*links).clone()));
+                }
+                Ok(_) => {}
+                Err(_) if is_current() => {
+                    link_state.set(ZoomPageLinksState::Unavailable);
+                }
+                Err(_) => {}
             }
         });
     });
@@ -232,6 +290,19 @@ pub fn ZoomOverlay(
             *width_px,
             *height_px,
         ),
+        _ => Vec::new(),
+    };
+    let page_link_rects = match (&*zoom_image.read(), &*zoom_page_links.read()) {
+        (
+            ZoomImageState::Ready {
+                width_px,
+                height_px,
+                ..
+            },
+            ZoomPageLinksState::Ready(links),
+        ) => {
+            util::zoom_page_link_rects(current_idx, &page_descriptors, links, *width_px, *height_px)
+        }
         _ => Vec::new(),
     };
     let show_text_unavailable = matches!(&*zoom_text_layer.read(), ZoomTextLayerState::Unavailable);
@@ -331,9 +402,60 @@ pub fn ZoomOverlay(
                         match &*zoom_image.read() {
                             ZoomImageState::Ready { uri, width_px, height_px } => rsx! {
                                 div {
+                                    id: "zoom-image-wrap",
                                     class: "zoom-image-wrap",
                                     style: "position: relative; display: inline-block; \
                                             width: {width_px}px; height: {height_px}px;",
+                                    onmousedown: move |evt: Event<MouseData>| {
+                                        let point = evt.client_coordinates();
+                                        link_pointer_down.set(Some((point.x, point.y)));
+                                    },
+                                    onmouseup: {
+                                        let page_link_rects = page_link_rects.clone();
+                                        move |evt: Event<MouseData>| {
+                                            let point = evt.client_coordinates();
+                                            let end = (point.x, point.y);
+                                            let Some(start) = *link_pointer_down.peek() else {
+                                                return;
+                                            };
+                                            link_pointer_down.set(None);
+                                            if util::movement_exceeds_click_threshold(
+                                                start,
+                                                end,
+                                                LINK_CLICK_DRAG_THRESHOLD_PX,
+                                            ) {
+                                                return;
+                                            }
+                                            evt.stop_propagation();
+                                            let on_internal_link = on_internal_link;
+                                            let link_rects = page_link_rects.clone();
+                                            spawn(async move {
+                                                let script =
+                                                    "const el = document.getElementById('zoom-image-wrap');\
+                                                     if (!el) return null;\
+                                                     const r = el.getBoundingClientRect();\
+                                                     return [r.left, r.top];";
+                                                let Ok(Some(rect_origin)) = eval(&script).join::<Option<Vec<f64>>>().await else {
+                                                    return;
+                                                };
+                                                if rect_origin.len() != 2 {
+                                                    return;
+                                                }
+                                                let relative = util::client_point_relative_to_rect(
+                                                    (end.0, end.1),
+                                                    (rect_origin[0], rect_origin[1]),
+                                                );
+                                                if let Some(target) = util::internal_link_target_at(
+                                                    &link_rects,
+                                                    relative.0,
+                                                    relative.1,
+                                                    page_count,
+                                                ) {
+                                                    on_internal_link.call(target);
+                                                }
+                                            });
+                                        }
+                                    },
                                     img {
                                         class: "zoom-img",
                                         src: "{uri}",
@@ -385,6 +507,66 @@ pub fn ZoomOverlay(
                                     if show_text_unavailable {
                                         div { class: "zoom-text-status",
                                             {t(locale(), MessageKey::ZoomTextSelectionUnavailable)}
+                                        }
+                                    }
+                                    if !page_link_rects.is_empty() {
+                                        div { class: "zoom-link-layer",
+                                            for positioned in page_link_rects.iter() {
+                                                {
+                                                    let link = &positioned.link;
+                                                    let rect = positioned.rect;
+                                                    let key = format!("{}-{}", current_idx.0, link.id.0);
+                                                    let (lx, ly, lw, lh) = (rect.x, rect.y, rect.width, rect.height);
+                                                    match &link.target {
+                                                        NavigationTarget::InternalDestination(destination) => {
+                                                            let target = destination.page_index;
+                                                            let enabled = target.0 < page_count;
+                                                            rsx! {
+                                                                button {
+                                                                    key: "{key}",
+                                                                    class: "zoom-link-overlay internal",
+                                                                    disabled: !enabled,
+                                                                    title: t(locale(), MessageKey::ZoomLinkInternal),
+                                                                    "aria-label": t(locale(), MessageKey::ZoomLinkInternal),
+                                                                    style: "left:{lx}px; top:{ly}px; width:{lw}px; height:{lh}px;",
+                                                                    onkeydown: move |evt: Event<KeyboardData>| {
+                                                                        match evt.key() {
+                                                                            Key::Enter => {
+                                                                                evt.stop_propagation();
+                                                                                on_internal_link.call(target);
+                                                                            }
+                                                                            Key::Character(ref value) if value == " " => {
+                                                                                evt.prevent_default();
+                                                                                evt.stop_propagation();
+                                                                                on_internal_link.call(target);
+                                                                            }
+                                                                            _ => {}
+                                                                        }
+                                                                    },
+                                                                }
+                                                            }
+                                                        }
+                                                        NavigationTarget::ExternalUri(_) => rsx! {
+                                                            span {
+                                                                key: "{key}",
+                                                                class: "zoom-link-overlay disabled",
+                                                                title: t(locale(), MessageKey::ZoomLinkExternalDisabled),
+                                                                "aria-label": t(locale(), MessageKey::ZoomLinkExternalDisabled),
+                                                                style: "left:{lx}px; top:{ly}px; width:{lw}px; height:{lh}px;",
+                                                            }
+                                                        },
+                                                        NavigationTarget::Disabled(_) => rsx! {
+                                                            span {
+                                                                key: "{key}",
+                                                                class: "zoom-link-overlay disabled",
+                                                                title: t(locale(), MessageKey::ZoomLinkDisabled),
+                                                                "aria-label": t(locale(), MessageKey::ZoomLinkDisabled),
+                                                                style: "left:{lx}px; top:{ly}px; width:{lw}px; height:{lh}px;",
+                                                            }
+                                                        },
+                                                    }
+                                                }
+                                            }
                                         }
                                     }
                                 }
