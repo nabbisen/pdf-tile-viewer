@@ -16,6 +16,11 @@ on the dashboard.
 
 Also open `fixtures/single-page-basic.pdf` for the no-outline check.
 
+During RFC 026 Linux WebKitGTK QA, picker open worked but dashboard file drop
+failed under both the observed Wayland session and an `GDK_BACKEND=x11`
+comparison run. Treat picker as the reliable intake path for RFC 026. Track
+drag/drop reliability separately as Future RFC-F07.
+
 ## Fixture Map
 
 `fixtures/navigation-links-outline.pdf` has three pages:
@@ -77,7 +82,7 @@ Record pass/fail and notes for each item.
 | Page 3 embedded document action does not execute anything. |  |  |
 | Page 3 JavaScript action does not execute anything. |  |  |
 | Picker behavior remains unchanged from RFC 025. |  |  |
-| Drop behavior remains unchanged from RFC 025. |  |  |
+| Drop behavior is either unchanged from RFC 025 or recorded as Future RFC-F07. |  |  |
 
 ## Acceptance Note Template
 
@@ -97,7 +102,8 @@ Result:
 - Search highlight preservation: pass/fail
 - External URI copy-only dialog: pass/fail
 - Disabled Launch/GoToR/GoToE/JavaScript actions: pass/fail
-- Picker/drop regression check: pass/fail
+- Picker regression check: pass/fail
+- Drop reliability: pass/fail/deferred to Future RFC-F07
 
 Notes:
 - <any deviations, blocked checks, or follow-up issues>

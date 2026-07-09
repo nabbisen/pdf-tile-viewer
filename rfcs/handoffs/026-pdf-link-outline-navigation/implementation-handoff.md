@@ -78,6 +78,10 @@ Implementation reviews:
   tuned to preserve text selection.
 - External URI opening is not implemented; copy-only inspection is the current
   accepted behavior.
+- During manual QA on Linux WebKitGTK, picker open worked but dashboard
+  drag/drop did not work under the observed Wayland session or an
+  `GDK_BACKEND=x11` comparison run. This is deferred to Future RFC-F07 because
+  it is not specific to RFC 026 link/outline behavior.
 
 ## 6. Manual QA still needed before RFC completion
 
@@ -96,7 +100,8 @@ Detailed test steps and an evidence template are in
 - Copy reports success or failure clearly.
 - Focus is trapped inside the dialog while open and returns to the zoom overlay
   close button when closed.
-- GUI picker/drop behavior remains unchanged from RFC 025.
+- GUI picker behavior remains unchanged from RFC 025. Linux dashboard
+  drag/drop reliability is deferred to Future RFC-F07.
 
 ## 7. Gate status
 

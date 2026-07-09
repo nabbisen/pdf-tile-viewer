@@ -99,3 +99,27 @@ To keep this target reachable, the current migration must respect the dependency
 - PDFium-to-WASM build pipeline and size budget, versus adopting a second engine behind the PDF service trait.
 - Offline storage of settings (IndexedDB/localStorage) behind the settings service facade.
 - Whether desktop and web share one `app` crate with target-gated services or split into thin per-target binary crates.
+
+## Future RFC-F07 — Linux Desktop Drag/Drop Reliability
+
+### Goal
+
+Make dashboard file drag/drop reliable on Linux desktop sessions, or document
+the exact toolkit/session combinations where it is unsupported.
+
+### Reason to Defer
+
+During RFC 026 manual QA on Linux WebKitGTK, opening through the file picker
+worked, but dashboard file drop did not work under the observed Wayland session
+or an `GDK_BACKEND=x11` comparison run. This is not specific to PDF link or
+outline navigation, and the picker remains a reliable intake path.
+
+### Future Design Questions
+
+- Is the failure in Dioxus Desktop event routing, Wry/WebKitGTK drag data,
+  compositor/file-manager behavior, or app event wiring?
+- Can a stable `tao::WindowEvent::DroppedFile` path be wired through
+  `use_wry_event_handler` or a custom desktop event handler without weakening
+  the existing picker path?
+- Should Linux docs describe drag/drop as best-effort until the upstream
+  toolkit behavior is verified?
