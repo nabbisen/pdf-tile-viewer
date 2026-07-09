@@ -133,6 +133,47 @@ button.ghost {
   margin-top: 1rem;
 }
 
+/* ── External URI confirmation (RFC 026) ─────────────────── */
+.external-uri-dialog {
+  width: min(32rem, calc(100vw - 2rem));
+  padding: 1rem;
+  border: 1px solid color-mix(in srgb, var(--muted) 35%, transparent);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.32);
+  text-align: left;
+}
+.external-uri-dialog h2 { margin: 0 0 0.4rem; font-size: 1.1rem; }
+.external-uri-dialog p { margin: 0.3rem 0 0.8rem; }
+.external-uri-label {
+  display: block;
+  margin: 0.8rem 0 0.25rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.external-uri-value {
+  display: block;
+  max-height: 8rem;
+  overflow: auto;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  padding: 0.55rem;
+  border: 1px solid color-mix(in srgb, var(--muted) 35%, transparent);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  font-size: 0.85rem;
+}
+.external-uri-status { color: var(--accent); font-size: 0.85rem; }
+.external-uri-status.error { color: var(--danger); }
+.external-uri-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
 /* ── Viewer layout ─────────────────────────────────────────── */
 .viewer { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 .viewer-title { font-size: 1rem; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 40vw; }
@@ -442,7 +483,9 @@ button.zoom-link-overlay {
   pointer-events: none;
 }
 button.zoom-link-overlay.internal:hover,
-button.zoom-link-overlay.internal:focus-visible {
+button.zoom-link-overlay.external:hover,
+button.zoom-link-overlay.internal:focus-visible,
+button.zoom-link-overlay.external:focus-visible {
   border-color: var(--accent);
   background: color-mix(in srgb, var(--accent) 18%, transparent);
 }

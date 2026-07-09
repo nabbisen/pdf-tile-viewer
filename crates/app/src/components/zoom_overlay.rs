@@ -22,9 +22,10 @@ use dioxus::prelude::*;
 use app_services::navigation_service::{NavigationService, default_page_links_request};
 use app_services::render_service::RenderService;
 use app_services::text_service::TextLayerService;
+use app_services::uri_policy::{ExternalUriOpenDecision, validate_external_uri_for_open};
 use domain::document::{DocumentGeneration, DocumentId, PageIndex};
 use domain::layout::RectPx;
-use domain::navigation::{NavigationTarget, PageLinkSet};
+use domain::navigation::{NavigationResourceLimits, NavigationTarget, PageLinkSet};
 use domain::render::{RenderFlags, RenderOutputFormat, RenderPageRequest, ScaleBucket};
 use domain::search::PageHighlightSet;
 use domain::settings::AppSettingsV1;
@@ -65,6 +66,20 @@ pub enum ZoomPageLinksState {
     Unavailable,
 }
 
+#[derive(Clone, Debug, PartialEq)]
+struct ExternalUriDialogState {
+    raw_uri: String,
+    copy_status: ExternalUriCopyStatus,
+    dialog_id: u64,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum ExternalUriCopyStatus {
+    Idle,
+    Copied,
+    Failed,
+}
+
 #[component]
 pub fn ZoomOverlay(
     document_id: DocumentId,
@@ -99,6 +114,8 @@ pub fn ZoomOverlay(
     let mut image_request_seq: Signal<u64> = use_signal(|| 0);
     let mut text_request_seq: Signal<u64> = use_signal(|| 0);
     let mut links_request_seq: Signal<u64> = use_signal(|| 0);
+    let mut external_uri_dialog_seq: Signal<u64> = use_signal(|| 0);
+    let mut external_uri_dialog: Signal<Option<ExternalUriDialogState>> = use_signal(|| None);
     // Client-viewport coordinates avoid target-relative offsetX/offsetY when
     // mouse events originate from selectable text spans inside the wrapper.
     let mut link_pointer_down: Signal<Option<(f64, f64)>> = use_signal(|| None);
@@ -389,6 +406,7 @@ pub fn ZoomOverlay(
                             }
                         }
                         button {
+                            id: "zoom-close-button",
                             class: "ghost zoom-close",
                             autofocus: true,
                             "aria-label": t(locale(), MessageKey::ZoomClose),
@@ -445,13 +463,26 @@ pub fn ZoomOverlay(
                                                     (end.0, end.1),
                                                     (rect_origin[0], rect_origin[1]),
                                                 );
-                                                if let Some(target) = util::internal_link_target_at(
+                                                if let Some(activation) = util::link_activation_at(
                                                     &link_rects,
                                                     relative.0,
                                                     relative.1,
                                                     page_count,
                                                 ) {
-                                                    on_internal_link.call(target);
+                                                    match activation {
+                                                        util::ZoomLinkActivation::Internal(target) => {
+                                                            on_internal_link.call(target);
+                                                        }
+                                                        util::ZoomLinkActivation::ExternalUri(raw_uri) => {
+                                                            let dialog_id = *external_uri_dialog_seq.peek() + 1;
+                                                            external_uri_dialog_seq.set(dialog_id);
+                                                            external_uri_dialog.set(Some(ExternalUriDialogState {
+                                                                raw_uri,
+                                                                copy_status: ExternalUriCopyStatus::Idle,
+                                                                dialog_id,
+                                                            }));
+                                                        }
+                                                    }
                                                 }
                                             });
                                         }
@@ -546,15 +577,44 @@ pub fn ZoomOverlay(
                                                                 }
                                                             }
                                                         }
-                                                        NavigationTarget::ExternalUri(_) => rsx! {
-                                                            span {
+                                                        NavigationTarget::ExternalUri(uri) => {
+                                                            let raw_uri = uri.raw_uri.clone();
+                                                            rsx! {
+                                                            button {
                                                                 key: "{key}",
-                                                                class: "zoom-link-overlay disabled",
+                                                                class: "zoom-link-overlay external",
                                                                 title: t(locale(), MessageKey::ZoomLinkExternalDisabled),
                                                                 "aria-label": t(locale(), MessageKey::ZoomLinkExternalDisabled),
                                                                 style: "left:{lx}px; top:{ly}px; width:{lw}px; height:{lh}px;",
+                                                                onkeydown: move |evt: Event<KeyboardData>| {
+                                                                    match evt.key() {
+                                                                        Key::Enter => {
+                                                                            evt.stop_propagation();
+                                                                            let dialog_id = *external_uri_dialog_seq.peek() + 1;
+                                                                            external_uri_dialog_seq.set(dialog_id);
+                                                                            external_uri_dialog.set(Some(ExternalUriDialogState {
+                                                                                raw_uri: raw_uri.clone(),
+                                                                                copy_status: ExternalUriCopyStatus::Idle,
+                                                                                dialog_id,
+                                                                            }));
+                                                                        }
+                                                                        Key::Character(ref value) if value == " " => {
+                                                                            evt.prevent_default();
+                                                                            evt.stop_propagation();
+                                                                            let dialog_id = *external_uri_dialog_seq.peek() + 1;
+                                                                            external_uri_dialog_seq.set(dialog_id);
+                                                                            external_uri_dialog.set(Some(ExternalUriDialogState {
+                                                                                raw_uri: raw_uri.clone(),
+                                                                                copy_status: ExternalUriCopyStatus::Idle,
+                                                                                dialog_id,
+                                                                            }));
+                                                                        }
+                                                                        _ => {}
+                                                                    }
+                                                                },
                                                             }
-                                                        },
+                                                            }
+                                                        }
                                                         NavigationTarget::Disabled(_) => rsx! {
                                                             span {
                                                                 key: "{key}",
@@ -603,5 +663,164 @@ pub fn ZoomOverlay(
                     }
                 }
             }
+            if let Some(dialog) = external_uri_dialog.read().clone() {
+                ExternalUriDialog {
+                    raw_uri: dialog.raw_uri,
+                    copy_status: dialog.copy_status,
+                    dialog_id: dialog.dialog_id,
+                    on_copy: Callback::new(move |(dialog_id, raw_uri): (u64, String)| {
+                        external_uri_dialog.set(Some(ExternalUriDialogState {
+                            raw_uri: raw_uri.clone(),
+                            copy_status: ExternalUriCopyStatus::Idle,
+                            dialog_id,
+                        }));
+                        spawn(async move {
+                            let next_status = if copy_text_to_clipboard(raw_uri.clone()).await {
+                                ExternalUriCopyStatus::Copied
+                            } else {
+                                ExternalUriCopyStatus::Failed
+                            };
+                            let still_current = external_uri_dialog
+                                .peek()
+                                .as_ref()
+                                .is_some_and(|state| {
+                                    state.dialog_id == dialog_id && state.raw_uri == raw_uri
+                                });
+                            if !still_current {
+                                return;
+                            }
+                            external_uri_dialog.set(Some(ExternalUriDialogState {
+                                raw_uri,
+                                copy_status: next_status,
+                                dialog_id,
+                            }));
+                        });
+                    }),
+                    on_close: Callback::new(move |_| {
+                        external_uri_dialog.set(None);
+                        focus_zoom_close_button();
+                    }),
+                }
+            }
         }
+}
+
+#[component]
+fn ExternalUriDialog(
+    raw_uri: String,
+    copy_status: ExternalUriCopyStatus,
+    dialog_id: u64,
+    on_copy: Callback<(u64, String)>,
+    on_close: Callback<()>,
+) -> Element {
+    let locale: Memo<Locale> = use_context();
+    let open_decision =
+        validate_external_uri_for_open(&raw_uri, &NavigationResourceLimits::default());
+    let policy_message = match open_decision {
+        ExternalUriOpenDecision::Allowed { .. } => t(locale(), MessageKey::ExternalUriCopyOnlyBody),
+        ExternalUriOpenDecision::Rejected(_) => t(locale(), MessageKey::ExternalUriRejectedBody),
+    };
+
+    rsx! {
+        div {
+            class: "modal-backdrop",
+            role: "presentation",
+            onkeydown: move |evt: Event<KeyboardData>| {
+                evt.stop_propagation();
+                match evt.key() {
+                    Key::Escape => on_close.call(()),
+                    Key::Tab => {
+                        evt.prevent_default();
+                        trap_external_uri_dialog_focus(evt.modifiers().shift());
+                    }
+                    _ => {}
+                }
+            },
+            section {
+                class: "external-uri-dialog",
+                role: "dialog",
+                "aria-modal": "true",
+                "aria-labelledby": "external-uri-dialog-title",
+                onmounted: move |_| {
+                    focus_external_uri_cancel_button();
+                },
+                h2 {
+                    id: "external-uri-dialog-title",
+                    {t(locale(), MessageKey::ExternalUriDialogTitle)}
+                }
+                p { class: "muted", "{policy_message}" }
+                p { class: "muted", {t(locale(), MessageKey::ExternalUriOpenUnavailable)} }
+                label {
+                    class: "external-uri-label",
+                    r#for: "external-uri-value",
+                    {t(locale(), MessageKey::ExternalUriTargetLabel)}
+                }
+                code {
+                    id: "external-uri-value",
+                    class: "external-uri-value",
+                    "{raw_uri}"
+                }
+                match copy_status {
+                    ExternalUriCopyStatus::Idle => rsx! {},
+                    ExternalUriCopyStatus::Copied => rsx! {
+                        p { class: "external-uri-status", role: "status",
+                            {t(locale(), MessageKey::ExternalUriCopyDone)}
+                        }
+                    },
+                    ExternalUriCopyStatus::Failed => rsx! {
+                        p { class: "external-uri-status error", role: "alert",
+                            {t(locale(), MessageKey::ExternalUriCopyFailed)}
+                        }
+                    },
+                }
+                div { class: "external-uri-actions",
+                    button {
+                        id: "external-uri-cancel",
+                        class: "ghost",
+                        autofocus: true,
+                        onclick: move |_| on_close.call(()),
+                        {t(locale(), MessageKey::ExternalUriCancel)}
+                    }
+                    button {
+                        id: "external-uri-copy",
+                        class: "primary",
+                        onclick: move |_| on_copy.call((dialog_id, raw_uri.clone())),
+                        {t(locale(), MessageKey::ExternalUriCopy)}
+                    }
+                }
+            }
+        }
+    }
+}
+
+fn focus_external_uri_cancel_button() {
+    let _ = eval("document.getElementById('external-uri-cancel')?.focus();");
+}
+
+fn focus_zoom_close_button() {
+    let _ = eval("setTimeout(() => document.getElementById('zoom-close-button')?.focus(), 0);");
+}
+
+fn trap_external_uri_dialog_focus(backward: bool) {
+    let step = if backward { "-1" } else { "1" };
+    let script = format!(
+        "const ids = ['external-uri-cancel', 'external-uri-copy'];\
+         const active = document.activeElement && document.activeElement.id;\
+         const current = ids.indexOf(active);\
+         const next = current < 0 ? 0 : (current + ({step}) + ids.length) % ids.length;\
+         document.getElementById(ids[next])?.focus();"
+    );
+    let _ = eval(&script);
+}
+
+async fn copy_text_to_clipboard(text: String) -> bool {
+    let Ok(quoted) = serde_json::to_string(&text) else {
+        return false;
+    };
+    let script = format!(
+        "const text = {quoted};\
+         if (!navigator.clipboard || !navigator.clipboard.writeText) return false;\
+         return navigator.clipboard.writeText(text).then(() => true).catch(() => false);"
+    );
+    eval(&script).join::<bool>().await.unwrap_or(false)
 }

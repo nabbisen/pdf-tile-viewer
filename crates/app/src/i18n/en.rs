@@ -77,8 +77,21 @@ pub fn message(key: MessageKey) -> &'static str {
         MessageKey::ZoomScaleLabel => "Zoom",
         MessageKey::ZoomTextSelectionUnavailable => "Text selection is unavailable for this page.",
         MessageKey::ZoomLinkInternal => "Go to linked page",
-        MessageKey::ZoomLinkExternalDisabled => "External link support is not enabled yet",
+        MessageKey::ZoomLinkExternalDisabled => "External link",
         MessageKey::ZoomLinkDisabled => "Unsupported PDF link target",
+        MessageKey::ExternalUriDialogTitle => "External link",
+        MessageKey::ExternalUriCopyOnlyBody => {
+            "This PDF link points outside the document. Opening external links is not enabled yet."
+        }
+        MessageKey::ExternalUriRejectedBody => {
+            "This PDF link is not openable by policy. You can copy the raw target."
+        }
+        MessageKey::ExternalUriOpenUnavailable => "No external application will be launched.",
+        MessageKey::ExternalUriTargetLabel => "Target",
+        MessageKey::ExternalUriCopy => "Copy",
+        MessageKey::ExternalUriCopyDone => "Copied.",
+        MessageKey::ExternalUriCopyFailed => "Copy failed.",
+        MessageKey::ExternalUriCancel => "Cancel",
         MessageKey::ZoomModeEnter => "Zoom",
         MessageKey::MoreControls => "More controls",
         MessageKey::ColumnsLabel => "Columns",

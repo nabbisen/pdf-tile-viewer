@@ -57,6 +57,12 @@ pub struct ZoomPageLinkRect {
     pub rect: RectPx,
 }
 
+#[derive(Clone, Debug, PartialEq)]
+pub enum ZoomLinkActivation {
+    Internal(PageIndex),
+    ExternalUri(String),
+}
+
 /// Compute selectable text segment rects for the zoom view using the same
 /// page-space transform as search highlights.
 pub fn zoom_text_segment_rects(
@@ -151,21 +157,38 @@ pub fn zoom_page_links_match_overlay(
         && links.page_index == page_index
 }
 
+pub fn link_activation_at(
+    link_rects: &[ZoomPageLinkRect],
+    x: f64,
+    y: f64,
+    page_count: usize,
+) -> Option<ZoomLinkActivation> {
+    link_rects.iter().find_map(|positioned| {
+        if !rect_contains_point(positioned.rect, x as f32, y as f32) {
+            return None;
+        }
+        match &positioned.link.target {
+            NavigationTarget::InternalDestination(destination) => (destination.page_index.0
+                < page_count)
+                .then_some(ZoomLinkActivation::Internal(destination.page_index)),
+            NavigationTarget::ExternalUri(uri) => {
+                Some(ZoomLinkActivation::ExternalUri(uri.raw_uri.clone()))
+            }
+            NavigationTarget::Disabled(_) => None,
+        }
+    })
+}
+
 pub fn internal_link_target_at(
     link_rects: &[ZoomPageLinkRect],
     x: f64,
     y: f64,
     page_count: usize,
 ) -> Option<PageIndex> {
-    link_rects.iter().find_map(|positioned| {
-        if !rect_contains_point(positioned.rect, x as f32, y as f32) {
-            return None;
-        }
-        let NavigationTarget::InternalDestination(destination) = &positioned.link.target else {
-            return None;
-        };
-        (destination.page_index.0 < page_count).then_some(destination.page_index)
-    })
+    match link_activation_at(link_rects, x, y, page_count) {
+        Some(ZoomLinkActivation::Internal(target)) => Some(target),
+        Some(ZoomLinkActivation::ExternalUri(_)) | None => None,
+    }
 }
 
 pub fn client_point_relative_to_rect(
@@ -469,6 +492,30 @@ mod tests {
         assert_eq!(internal_link_target_at(&rects, 10.0, 10.0, 5), None);
         assert_eq!(internal_link_target_at(&rects, 30.0, 10.0, 3), None);
         assert_eq!(internal_link_target_at(&rects, 90.0, 10.0, 5), None);
+    }
+
+    #[test]
+    fn link_activation_at_returns_external_uri_without_authorizing_open() {
+        let rects = vec![ZoomPageLinkRect {
+            link: PageLink {
+                id: PageLinkId(1),
+                rect: page_rect(),
+                target: NavigationTarget::ExternalUri(domain::navigation::ExternalUriTarget {
+                    raw_uri: "relative/path".to_string(),
+                }),
+            },
+            rect: RectPx {
+                x: 0.0,
+                y: 0.0,
+                width: 20.0,
+                height: 20.0,
+            },
+        }];
+
+        assert_eq!(
+            link_activation_at(&rects, 10.0, 10.0, 5),
+            Some(ZoomLinkActivation::ExternalUri("relative/path".to_string()))
+        );
     }
 
     #[test]

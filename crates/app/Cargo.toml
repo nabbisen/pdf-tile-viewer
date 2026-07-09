@@ -19,3 +19,4 @@ packaging                   = { workspace = true }
 dioxus                      = { workspace = true, features = ["desktop", "document"] }
 
 base64                      = { workspace = true }
+serde_json                  = { workspace = true }

@@ -76,8 +76,21 @@ pub fn message(key: MessageKey) -> Option<&'static str> {
         MessageKey::ZoomScaleLabel => "ズーム",
         MessageKey::ZoomTextSelectionUnavailable => "このページではテキスト選択を利用できません。",
         MessageKey::ZoomLinkInternal => "リンク先ページへ移動",
-        MessageKey::ZoomLinkExternalDisabled => "外部リンクのサポートはまだ有効ではありません",
+        MessageKey::ZoomLinkExternalDisabled => "外部リンク",
         MessageKey::ZoomLinkDisabled => "未対応の PDF リンク先です",
+        MessageKey::ExternalUriDialogTitle => "外部リンク",
+        MessageKey::ExternalUriCopyOnlyBody => {
+            "この PDF リンクはドキュメント外を指しています。外部リンクを開く機能はまだ有効ではありません。"
+        }
+        MessageKey::ExternalUriRejectedBody => {
+            "この PDF リンクはポリシーにより開けません。リンク先の文字列はコピーできます。"
+        }
+        MessageKey::ExternalUriOpenUnavailable => "外部アプリケーションは起動されません。",
+        MessageKey::ExternalUriTargetLabel => "リンク先",
+        MessageKey::ExternalUriCopy => "コピー",
+        MessageKey::ExternalUriCopyDone => "コピーしました。",
+        MessageKey::ExternalUriCopyFailed => "コピーに失敗しました。",
+        MessageKey::ExternalUriCancel => "キャンセル",
         MessageKey::ZoomModeEnter => "ズーム",
         MessageKey::MoreControls => "その他の操作",
         MessageKey::ColumnsLabel => "列数",

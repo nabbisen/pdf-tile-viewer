@@ -60,6 +60,7 @@ dependencies = [
  "domain",
  "packaging",
  "pdf_engine",
+ "serde_json",
 ]
 
 [[package]]
