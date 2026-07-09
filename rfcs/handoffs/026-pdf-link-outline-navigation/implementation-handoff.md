@@ -81,6 +81,9 @@ Implementation reviews:
 
 ## 6. Manual QA still needed before RFC completion
 
+Detailed test steps and an evidence template are in
+`rfcs/handoffs/026-pdf-link-outline-navigation/manual-qa-checklist.md`.
+
 - PDF with no outline opens normally.
 - PDF with outline shows the outline panel and navigates to expected pages.
 - Nested outline entries expand, collapse, and keep stable indentation.
