@@ -1,6 +1,6 @@
 # Installation
 
-> Latest release artifacts are available for `2.0.0-beta.11`.
+> Latest release artifacts are available for `2.0.0`.
 > Building from source is also supported; a packaging script for Linux is provided.
 
 ## Build from source
@@ -52,6 +52,6 @@ extraction directory.
 
 ## Security note
 
-This release is **unsigned**. On macOS or Windows the OS may show a security
+The `2.0.0` release is **unsigned**. On macOS or Windows the OS may show a security
 prompt the first time you run the executable. See `NOTICE` for PDFium
 provenance and version information.

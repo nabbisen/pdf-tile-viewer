@@ -70,7 +70,7 @@ cp README.md                        "${STAGE}/"
 cat > "${STAGE}/notes.txt" << NOTES
 PDF Tile Viewer v${APP_VERSION} — Linux x86-64
 
-This is an unsigned development build.
+This is an unsigned build.
 PDFium: ${PDFIUM_RELEASE_TAG} (dynamic, bundled in resources/)
 
 Launch:

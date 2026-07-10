@@ -1,7 +1,6 @@
 # Features
 
-> **Status:** current development branch. Latest released beta:
-> `2.0.0-beta.11`.
+> **Status:** `2.0.0` release documentation.
 
 ## All pages as a tile grid
 

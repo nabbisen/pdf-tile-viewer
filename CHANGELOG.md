@@ -11,6 +11,20 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [2.0.0]
+
+### Added
+
+- Added PDF outline/bookmark navigation and zoom-overlay PDF link activation
+  (RFC 026). Internal document links navigate in-app; external URI targets are
+  inspectable and copy-only.
+
+### Fixed
+
+- Centered icon-only toolbar buttons in the main viewer.
+
+---
+
 ## [2.0.0-beta.11]
 
 ### Added

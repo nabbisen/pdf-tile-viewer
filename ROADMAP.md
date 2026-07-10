@@ -31,9 +31,9 @@ RFC designs live in `rfcs/proposed/`; the ADR and detailed roadmap are in
 | `2.0.0-alpha.1` | Vertical slice: open PDF, render page 1 |
 | `2.0.0-alpha.2` | Tile rendering, scale controls (done) |
 | `2.0.0-beta.1` | Search, highlights, zoomed page viewer, file history |
-| `2.0.0-beta.11` | Latest released beta; password-protected PDF opening |
+| `2.0.0-beta.11` | Final beta before 2.0.0; password-protected PDF opening |
 | `2.0.0 RC` | Release-candidate validation after RFC 026 follow-up acceptance |
-| `2.0.0` | Final release — pending confirmation |
+| `2.0.0` | Final release prep in progress |
 | `2.1.0` | Post-2.0 candidates: settings/history policy, picker/zoom polish, optional platform investigations |
 
 ---
