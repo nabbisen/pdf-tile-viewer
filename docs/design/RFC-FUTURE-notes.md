@@ -102,6 +102,8 @@ To keep this target reachable, the current migration must respect the dependency
 
 ## Future RFC-F07 — Linux Desktop Drag/Drop Reliability
 
+> Proposed as [RFC 027](../../rfcs/proposed/027-linux-dashboard-drag-drop-reliability.md).
+
 ### Goal
 
 Make dashboard file drag/drop reliable on Linux desktop sessions, or document
@@ -126,8 +128,10 @@ outline navigation, and the picker remains a reliable intake path.
 
 ## Future RFC-F08 — File Picker Initial Directory Memory
 
-Planning status: deferred candidate, not part of RFC 026. This can be promoted
-independently if the owner decides it should land before v2.1.
+> Proposed as [RFC 028](../../rfcs/proposed/028-file-picker-initial-directory-memory.md).
+
+Planning status: deferred candidate, not part of RFC 026 or the 2.0.0 final
+release gate.
 
 ### Goal
 
@@ -150,19 +154,21 @@ default, while persistence would overlap with history/settings policy.
 
 ## Future RFC-F09 — Toolbar Icon Alignment Polish
 
-Planning status: deferred candidate, not part of RFC 026. This can be promoted
-independently if the owner decides it should land before v2.1.
+> Resolved as a small pre-2.0 polish fix after RFC 026.
+
+Planning status: resolved; no separate RFC draft is needed unless future icon
+system changes are proposed.
 
 ### Goal
 
 Fix button icon alignment in the main viewer toolbar so icon-only controls are
 visually centered and consistent across themes/platforms.
 
-### Reason to Defer
+### Resolution
 
-This is a focused UI polish issue and should not delay RFC 026 acceptance.
+Icon-only toolbar buttons now use fixed square inline-flex centering.
 
-### Future Design Questions
+### Deferred Design Questions
 
 - Should icon buttons have a single fixed square size and flex centering?
 - Are emoji glyphs causing platform-dependent alignment, and should these
@@ -170,8 +176,10 @@ This is a focused UI polish issue and should not delay RFC 026 acceptance.
 
 ## Future RFC-F10 — Zoom Scale Persistence
 
-Planning status: deferred candidate, not part of RFC 026. This can be promoted
-independently if the owner decides it should land before v2.1.
+> Proposed as [RFC 029](../../rfcs/proposed/029-zoom-overlay-scale-preservation.md).
+
+Planning status: deferred candidate, not part of RFC 026 or the 2.0.0 final
+release gate.
 
 ### Goal
 
@@ -192,8 +200,10 @@ separately from PDF link/outline support.
 
 ## Future RFC-F11 — Smooth Zoom-Scale Transition
 
-Planning status: deferred candidate, not part of RFC 026. This can be promoted
-independently if the owner decides it should land before v2.1.
+> Proposed as [RFC 030](../../rfcs/proposed/030-smooth-zoom-scale-transition.md).
+
+Planning status: deferred candidate, not part of RFC 026 or the 2.0.0 final
+release gate.
 
 ### Goal
 
@@ -216,8 +226,10 @@ temporarily show scaled raster content before the final render arrives.
 
 ## Future RFC-F12 — Settings Storage With `app-json-settings`
 
-Planning status: deferred new-function candidate, likely v2.1 or later unless
-the owner explicitly promotes it.
+> Proposed as [RFC 031](../../rfcs/proposed/031-settings-storage-app-json-settings.md).
+
+Planning status: deferred new-function candidate for v2.1 or later. It is not
+part of the 2.0.0 final release gate.
 
 ### Goal
 
@@ -238,8 +250,10 @@ It needs explicit design before implementation.
 
 ## Future RFC-F13 — Persistent History With Privacy Controls
 
-Planning status: deferred new-function candidate, likely v2.1 or later unless
-the owner explicitly promotes it.
+> Proposed as [RFC 032](../../rfcs/proposed/032-persistent-document-history-privacy.md).
+
+Planning status: deferred new-function candidate for v2.1 or later. It is not
+part of the 2.0.0 final release gate.
 
 ### Goal
 

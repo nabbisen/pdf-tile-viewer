@@ -18,7 +18,12 @@ Implemented RFCs live in `rfcs/done/`. Proposed follow-up work lives in
 
 | ID | Title | Status |
 |----|-------|--------|
-| _None_ |  |  |
+| 027 | [Linux Dashboard Drag/Drop Reliability](proposed/027-linux-dashboard-drag-drop-reliability.md) | Proposed — post-2.0 candidate |
+| 028 | [File Picker Initial Directory Memory](proposed/028-file-picker-initial-directory-memory.md) | Proposed — post-2.0 candidate |
+| 029 | [Zoom Overlay Scale Preservation](proposed/029-zoom-overlay-scale-preservation.md) | Proposed — post-2.0 candidate |
+| 030 | [Smooth Zoom-Scale Transition](proposed/030-smooth-zoom-scale-transition.md) | Proposed — post-2.0 candidate |
+| 031 | [Settings Storage With `app-json-settings`](proposed/031-settings-storage-app-json-settings.md) | Proposed — v2.1 candidate |
+| 032 | [Persistent Document History With Privacy Controls](proposed/032-persistent-document-history-privacy.md) | Proposed — v2.1 candidate |
 
 ---
 

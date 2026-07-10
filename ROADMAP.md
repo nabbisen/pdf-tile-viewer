@@ -31,25 +31,36 @@ RFC designs live in `rfcs/proposed/`; the ADR and detailed roadmap are in
 | `2.0.0-alpha.1` | Vertical slice: open PDF, render page 1 |
 | `2.0.0-alpha.2` | Tile rendering, scale controls (done) |
 | `2.0.0-beta.1` | Search, highlights, zoomed page viewer, file history |
-| `2.0.0-beta.8` | Latest released beta; zoom-overlay PDF text selection |
-| `2.0.0-rc.1` | Future release candidate after maintainer validation |
+| `2.0.0-beta.11` | Latest released beta; password-protected PDF opening |
+| `2.0.0 RC` | Release-candidate validation after RFC 026 follow-up acceptance |
 | `2.0.0` | Final release — pending confirmation |
-| `2.1.0` | Large-PDF cache policy, optional static PDFium linking |
+| `2.1.0` | Post-2.0 candidates: settings/history policy, picker/zoom polish, optional platform investigations |
 
 ---
 
-## Future themes (post-2.0)
+## Future themes and v2.1 candidates
+
+These items are **not 2.0.0 blockers**. They belong to the post-2.0 planning
+queue. Proposed RFCs live in `rfcs/proposed/`.
 
 Tracked in `docs/design/RFC-FUTURE-notes.md`:
 
 - **F01** Static PDFium linking (single binary, no external .so)
-- **F02** Password-protected PDF open flow
-- **F04** Link and outline navigation
 - **F05** Native renderer / non-WebView UI investigation
 - **F06** Offline web app target (Dioxus Web / WASM)
+- **RFC 027 / F07** Linux dashboard drag/drop reliability
+- **RFC 028 / F08** File picker initial directory memory
+- **F09** Toolbar icon alignment polish — resolved as a small pre-2.0 fix
+- **RFC 029 / F10** Zoom overlay scale preservation
+- **RFC 030 / F11** Smooth zoom-scale transition
+- **RFC 031 / F12** Settings storage with `app-json-settings`
+- **RFC 032 / F13** Persistent document history with privacy controls
 
-Future RFC-F03, text selection, has been implemented as RFC 023 in
-`2.0.0-beta.8`.
+Implemented former future themes:
+
+- **F02** Password-protected PDF open flow — RFC 025 (`2.0.0-beta.11`)
+- **F03** Text selection — RFC 023 (`2.0.0-beta.8`)
+- **F04** Link and outline navigation — RFC 026
 
 ---
 
