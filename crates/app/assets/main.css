@@ -193,7 +193,19 @@ button.ghost {
 .control-label { font-size: 0.75rem; color: var(--muted); white-space: nowrap; }
 .scale-slider { width: 80px; accent-color: var(--accent); }
 .scale-label { font-size: 0.75rem; min-width: 2.8rem; text-align: right; }
-.icon-btn { width: 1.6rem; height: 1.6rem; padding: 0; font-size: 1rem; line-height: 1; }
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 1.6rem;
+  width: 1.6rem;
+  height: 1.6rem;
+  padding: 0;
+  font-size: 1rem;
+  line-height: 1;
+  text-align: center;
+  vertical-align: middle;
+}
 .pages-per-row-input { width: 3rem; padding: 0.2rem 0.3rem; border: 1px solid var(--muted); border-radius: 4px; background: var(--bg); color: var(--fg); }
 .jump-input { width: 3.5rem; padding: 0.2rem 0.3rem; border: 1px solid var(--muted); border-radius: 4px; background: var(--bg); color: var(--fg); }
 .jump-error { font-size: 0.75rem; }
