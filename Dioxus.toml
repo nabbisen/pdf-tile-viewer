@@ -1,0 +1,6 @@
+[application]
+name = "pdf-tile-viewer"
+default_platform = "desktop"
+
+[web.app]
+title = "PDF Tile Viewer"

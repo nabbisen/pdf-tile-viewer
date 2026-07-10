@@ -1,0 +1,157 @@
+name: Microsoft Store (MSIX)
+
+# Build a Windows MSIX package for Microsoft Store submission.
+#
+# This is a SEPARATE release pathway from the cross-platform executable
+# release (release.yml). Store submission is a deliberate, credential-gated
+# act with its own certification cycle, so it is MANUAL ONLY
+# (workflow_dispatch) — never automatic on a tag.
+#
+# Pathway summary:
+#   release.yml  → tag-triggered → .tar.gz/.zip per OS → GitHub Release
+#   this file    → manual        → .msix              → Partner Center (Windows)
+#
+# The signed .msix is produced as a workflow artifact. Uploading to Partner
+# Center is left as a manual or separately-credentialed step, because Store
+# publishing requires Partner Center secrets and human review of the listing.
+
+on:
+  workflow_dispatch:
+    inputs:
+      msix_revision:
+        description: "MSIX 4th version part (revision). Bump if re-submitting the same semver."
+        required: false
+        default: "0"
+
+env:
+  CARGO_TERM_COLOR: always
+  PDFIUM_RELEASE_TAG: chromium/7920
+  RUST_TARGET: x86_64-pc-windows-msvc
+  PLATFORM_SEGMENT: windows-x86_64
+
+jobs:
+  msix:
+    name: build MSIX
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install Rust
+        run: |
+          rustup toolchain install stable --profile minimal
+          rustup default stable
+          rustup target add ${{ env.RUST_TARGET }}
+
+      - name: Resolve version
+        id: version
+        shell: bash
+        run: |
+          v=$(grep '^version' Cargo.toml | head -1 | sed 's/.*= *"//;s/".*//')
+          core="${v%%-*}"
+          echo "full=$v" >> "$GITHUB_OUTPUT"
+          echo "core=$core" >> "$GITHUB_OUTPUT"
+          echo "Cargo version: $v  (MSIX core: $core)"
+
+      - name: Fetch PDFium (win-x64)
+        shell: bash
+        run: |
+          set -euo pipefail
+          dest="resources/pdfium/${PLATFORM_SEGMENT}"
+          mkdir -p "$dest"
+          url="https://github.com/bblanchon/pdfium-binaries/releases/download/${PDFIUM_RELEASE_TAG}/pdfium-win-x64.tgz"
+          curl -fSL --retry 3 -o pdfium.tgz "$url"
+          mkdir -p pdfium-extract
+          tar -xzf pdfium.tgz -C pdfium-extract
+          if [ -f "pdfium-extract/bin/pdfium.dll" ]; then
+            cp "pdfium-extract/bin/pdfium.dll" "$dest/"
+          else
+            cp "pdfium-extract/lib/pdfium.dll" "$dest/"
+          fi
+          ls -l "$dest"
+
+      - name: Build release binary
+        shell: bash
+        env:
+          NO_STRIP: "1"
+        run: cargo build --release -p app --target ${{ env.RUST_TARGET }}
+
+      - name: Verify PDFium binding (smoke test)
+        shell: bash
+        env:
+          PDF_TILE_VIEWER_PDFIUM_DIR: ${{ github.workspace }}/resources/pdfium/${{ env.PLATFORM_SEGMENT }}
+        run: cargo test -p pdf_engine --test smoke --release --target ${{ env.RUST_TARGET }} -- --test-threads=1
+
+      - name: Stage MSIX package root
+        shell: bash
+        env:
+          MSIX_REVISION: ${{ github.event.inputs.msix_revision }}
+        run: |
+          bash ci/stage-msix.sh \
+            "target/${RUST_TARGET}/release/pdf-tile-viewer.exe" \
+            "resources/pdfium/${PLATFORM_SEGMENT}/pdfium.dll" \
+            "dist/msix-root"
+
+      - name: Locate Windows SDK tools (makeappx, signtool)
+        id: sdk
+        shell: pwsh
+        run: |
+          $sdkRoot = "C:\Program Files (x86)\Windows Kits\10\bin"
+          $makeappx = Get-ChildItem -Path $sdkRoot -Recurse -Filter makeappx.exe -ErrorAction SilentlyContinue |
+            Where-Object { $_.FullName -match "x64" } |
+            Sort-Object FullName -Descending | Select-Object -First 1
+          if (-not $makeappx) { throw "makeappx.exe not found in Windows SDK" }
+          $binDir = Split-Path $makeappx.FullName
+          echo "bin_dir=$binDir" >> $env:GITHUB_OUTPUT
+          echo "Found SDK tools in: $binDir"
+
+      - name: Build MSIX package
+        shell: pwsh
+        run: |
+          $ver = "${{ steps.version.outputs.core }}"
+          $rev = "${{ github.event.inputs.msix_revision }}"
+          if (-not $rev) { $rev = "0" }
+          $out = "dist/pdf-tile-viewer-$ver.$rev.msix"
+          & "${{ steps.sdk.outputs.bin_dir }}\makeappx.exe" pack `
+            /d "dist/msix-root" `
+            /p $out `
+            /overwrite
+          echo "MSIX_PATH=$out" >> $env:GITHUB_ENV
+          Get-ChildItem $out
+
+      # ── Optional code signing ─────────────────────────────────────────────
+      # Provide these repository secrets to enable signing:
+      #   MSIX_CERT_BASE64    — base64 of a .pfx code-signing certificate
+      #   MSIX_CERT_PASSWORD  — its password
+      # Without them the MSIX is produced UNSIGNED (Partner Center re-signs
+      # Store submissions with the Store certificate, so an unsigned package
+      # is acceptable for Store upload; sideloading would require signing).
+      - name: Sign MSIX (if certificate provided)
+        if: ${{ secrets.MSIX_CERT_BASE64 != '' }}
+        shell: pwsh
+        env:
+          MSIX_CERT_BASE64: ${{ secrets.MSIX_CERT_BASE64 }}
+          MSIX_CERT_PASSWORD: ${{ secrets.MSIX_CERT_PASSWORD }}
+        run: |
+          $pfx = "cert.pfx"
+          [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:MSIX_CERT_BASE64))
+          & "${{ steps.sdk.outputs.bin_dir }}\signtool.exe" sign `
+            /fd SHA256 `
+            /a /f $pfx `
+            /p $env:MSIX_CERT_PASSWORD `
+            "$env:MSIX_PATH"
+          Remove-Item $pfx
+
+      - name: Upload MSIX artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pdf-tile-viewer-msix
+          path: dist/*.msix
+          retention-days: 14
+
+      - name: Submission reminder
+        shell: bash
+        run: |
+          echo "::notice::MSIX built. Upload dist/*.msix to Microsoft Partner"
+          echo "::notice::Center manually, or wire a Store-submission action with"
+          echo "::notice::Partner Center credentials. Store publish is a"
+          echo "::notice::deliberate, human-reviewed step and is NOT automated here."

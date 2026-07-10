@@ -1,87 +1,251 @@
-name: Deploy
-on:
-  release:
-    types: [created]
+name: Release
 
-defaults:
-  run:
-    shell: bash
+# Triggered by a semver version tag (e.g. 2.0.0-beta.11; no "v" prefix,
+# per project convention). Builds the RFC 014
+# artifact matrix — Linux x64, Windows x64, macOS arm64, macOS x64 — each
+# with its bundled PDFium dynamic library, then publishes a GitHub Release.
+#
+# IMPORTANT: pushing a tag is the explicit, human-initiated act that starts
+# a release. This workflow does not run on branch pushes. A pre-release tag
+# (containing '-alpha', '-beta', or '-rc') is marked as a GitHub pre-release.
+#
+# RFC 018 packaged-artifact smoke runs a host helper that binds the packaged
+# PDFium library. Each runner OS/architecture must therefore match the
+# artifact/PDFium architecture it builds.
+
+on:
+  push:
+    tags:
+      # Semver tags WITHOUT a leading "v" (project convention), e.g.
+      # 2.0.0, 2.0.0-beta.11, 2.1.0-beta.1.
+      - "[0-9]+.[0-9]+.[0-9]+"
+      - "[0-9]+.[0-9]+.[0-9]+-*"
 
 permissions:
-  contents: write
+  contents: write # required to create a Release and upload assets
+
 env:
-  PRODUCT_BASENAME: pdf-tile-viewer
+  CARGO_TERM_COLOR: always
+  PDFIUM_RELEASE_TAG: chromium/7920
 
 jobs:
-  release:
-    name: Deploy Release
+  build:
+    name: build ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
-        target:
-          - x86_64-unknown-linux-gnu
-          # - aarch64-unknown-linux-gnu
-          # - x86_64-unknown-linux-musl
-          # - aarch64-unknown-linux-musl
-          - aarch64-apple-darwin
-          - x86_64-pc-windows-msvc
         include:
-          - target: x86_64-unknown-linux-gnu
+          - name: linux-x64
             os: ubuntu-latest
-            tag: linux-x64-gnu
-          # - target: aarch64-unknown-linux-gnu
-          #   os: ubuntu-latest
-          #   tag: linux-aarch64-gnu
-          # - target: x86_64-unknown-linux-musl
-          #   os: ubuntu-24.04
-          #   tag: linux-x86_64-musl
-          # - target: aarch64-unknown-linux-musl
-          #   os: ubuntu-24.04
-          #   tag: linux-aarch64-musl
-          - target: aarch64-apple-darwin
-            os: macos-latest
-            tag: macos-arm64
-          - target: x86_64-pc-windows-msvc
+            rust_target: x86_64-unknown-linux-gnu
+            pdfium_target: linux-x64
+            platform_segment: linux-x86_64
+            lib_file: libpdfium.so
+            bin_file: pdf-tile-viewer
+          - name: windows-x64
             os: windows-latest
-            tag: windows-x64
+            rust_target: x86_64-pc-windows-msvc
+            pdfium_target: win-x64
+            platform_segment: windows-x86_64
+            lib_file: pdfium.dll
+            bin_file: pdf-tile-viewer.exe
+          - name: macos-arm64
+            os: macos-latest
+            rust_target: aarch64-apple-darwin
+            pdfium_target: mac-arm64
+            platform_segment: macos-aarch64
+            lib_file: libpdfium.dylib
+            bin_file: pdf-tile-viewer
+          - name: macos-x64
+            os: macos-13
+            rust_target: x86_64-apple-darwin
+            pdfium_target: mac-x64
+            platform_segment: macos-x86_64
+            lib_file: libpdfium.dylib
+            bin_file: pdf-tile-viewer
+
     steps:
-      - uses: actions/checkout@v4
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-      - name: Install Node.js packages
-        run: npm install
-      - name: Install tauri requirements on Linux
-        if: matrix.target == 'x86_64-unknown-linux-gnu'
+      - uses: actions/checkout@v7
+
+      - name: Install Rust
+        run: |
+          rustup toolchain install stable --profile minimal
+          rustup default stable
+          rustup target add ${{ matrix.rust_target }}
+
+      - name: Install Linux GUI dependencies
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            libwebkit2gtk-4.1-dev \
-            build-essential \
-            curl \
-            wget \
-            file \
-            libxdo-dev \
-            libssl-dev \
-            libayatana-appindicator3-dev \
-            librsvg2-dev
-      - name: Install Rust
-        run: bash .github/workflows/scripts/install-rust.sh stable ${{ matrix.target }}
-      - name: Build asset
-        run: bash .github/workflows/scripts/make-release-asset.sh ${{ matrix.os }} ${{ matrix.target }} ${{ matrix.tag }} $PRODUCT_BASENAME
-      - name: Update release with new asset
+            libwebkit2gtk-4.1-dev libgtk-3-dev libxdo-dev libssl-dev pkg-config
+
+      - name: Resolve app version
+        id: version
+        shell: bash
+        run: |
+          v=$(grep '^version' Cargo.toml | head -1 | sed 's/.*= *"//;s/".*//')
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+          echo "App version: $v"
+
+      # ── Fetch the platform PDFium and place it where the build expects ──────
+      - name: Fetch PDFium (${{ matrix.pdfium_target }})
+        shell: bash
+        run: |
+          set -euo pipefail
+          dest="resources/pdfium/${{ matrix.platform_segment }}"
+          mkdir -p "$dest"
+          url="https://github.com/bblanchon/pdfium-binaries/releases/download/${PDFIUM_RELEASE_TAG}/pdfium-${{ matrix.pdfium_target }}.tgz"
+          echo "Fetching $url"
+          curl -fSL --retry 3 -o /tmp/pdfium.tgz "$url"
+          mkdir -p /tmp/pdfium-extract
+          tar -xzf /tmp/pdfium.tgz -C /tmp/pdfium-extract
+          # bblanchon archives place the library under lib/ (unix) or bin/ (windows)
+          if [ -f "/tmp/pdfium-extract/lib/${{ matrix.lib_file }}" ]; then
+            cp "/tmp/pdfium-extract/lib/${{ matrix.lib_file }}" "$dest/"
+          else
+            cp "/tmp/pdfium-extract/bin/${{ matrix.lib_file }}" "$dest/"
+          fi
+          ls -l "$dest"
+
+      # ── Build ───────────────────────────────────────────────────────────────
+      - name: Build release binary
+        shell: bash
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload $APP_TAG $APP_ASSET
-#  publish:
-#    name: Publish to crates.io
-#    runs-on: ubuntu-latest
-#    steps:
-#      - uses: actions/checkout@master
-#      - name: Install Rust (rustup)
-#        run: rustup update stable --no-self-update && rustup default stable
-#      - name: Publish
-#        env:
-#          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-#        run: cargo publish --no-verify
+          NO_STRIP: "1"
+        run: cargo build --release -p app --target ${{ matrix.rust_target }}
+
+      # ── Engine smoke test against the fetched PDFium (RFC 014 §7) ───────────
+      - name: Verify PDFium binding (smoke test)
+        shell: bash
+        env:
+          PDF_TILE_VIEWER_PDFIUM_DIR: ${{ github.workspace }}/resources/pdfium/${{ matrix.platform_segment }}
+        run: cargo test -p pdf_engine --test smoke --release --target ${{ matrix.rust_target }} -- --test-threads=1
+
+      # ── Stage the artifact (RFC 014 §6 required contents) ──────────────────
+      - name: Stage artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          name="pdf-tile-viewer-v${{ steps.version.outputs.version }}-${{ matrix.name }}"
+          stage="dist/$name"
+          mkdir -p "$stage/bin" "$stage/resources/pdfium/${{ matrix.platform_segment }}"
+          cp "target/${{ matrix.rust_target }}/release/${{ matrix.bin_file }}" "$stage/bin/"
+          cp "resources/pdfium/${{ matrix.platform_segment }}/${{ matrix.lib_file }}" \
+             "$stage/resources/pdfium/${{ matrix.platform_segment }}/"
+          cp LICENSE NOTICE CHANGELOG.md README.md "$stage/"
+          cat > "$stage/notes.txt" <<EOF
+          PDF Tile Viewer v${{ steps.version.outputs.version }} — ${{ matrix.name }}
+
+          Unsigned build. PDFium ${PDFIUM_RELEASE_TAG} bundled in resources/.
+
+          Launch from the extracted directory:
+            ./bin/${{ matrix.bin_file }}
+
+          Keep the bundled resources/ directory at the top level of the extracted archive.
+          Do not move the executable away from the extracted resources/ directory.
+          Report issues: https://github.com/nabbisen/pdf-tile-viewer/issues
+          EOF
+          echo "stage_dir=$stage" >> "$GITHUB_ENV"
+          echo "artifact_name=$name" >> "$GITHUB_ENV"
+
+      - name: Build package artifact smoke helper
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustc -vV
+          cargo build --release -p app_services --bin package_artifact_smoke
+
+      # ── Compress: .zip on Windows, .tar.gz elsewhere ───────────────────────
+      - name: Compress artifact (tar.gz)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+          tar -czf "dist/${artifact_name}.tar.gz" -C "${stage_dir}" .
+          ls -lh "dist/${artifact_name}.tar.gz"
+
+      - name: Compress artifact (zip)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Compress-Archive -Path "dist/$env:artifact_name/*" -DestinationPath "dist/$env:artifact_name.zip"
+          Get-ChildItem "dist/$env:artifact_name.zip"
+
+      - name: Smoke final artifact layout (tar.gz)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+          PACKAGE_ARTIFACT_SMOKE_BIN="target/release/package_artifact_smoke" \
+            bash ci/smoke-release-artifact.sh "dist/${artifact_name}.tar.gz"
+
+      - name: Smoke final artifact layout (zip)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+          PACKAGE_ARTIFACT_SMOKE_BIN="target/release/package_artifact_smoke.exe" \
+            bash ci/smoke-release-artifact.sh "dist/${artifact_name}.zip"
+
+      - name: Upload artifact for release job
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ env.artifact_name }}
+          path: |
+            dist/${{ env.artifact_name }}.tar.gz
+            dist/${{ env.artifact_name }}.zip
+          if-no-files-found: ignore
+          retention-days: 7
+
+  # ── Source archive (matches ci/archive-source.sh layout) ─────────────────
+  source:
+    name: source archive
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build source archive
+        run: bash ci/archive-source.sh dist
+      - name: Upload source archive
+        uses: actions/upload-artifact@v7
+        with:
+          name: source-archive
+          path: dist/*.tar.gz
+          retention-days: 7
+
+  # ── Publish the GitHub Release with all collected artifacts ──────────────
+  release:
+    name: publish release
+    needs: [build, source]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v8
+        with:
+          path: artifacts
+
+      - name: Flatten artifact directory
+        run: |
+          mkdir -p release-files
+          find artifacts -type f \( -name '*.tar.gz' -o -name '*.zip' \) \
+            -exec cp {} release-files/ \;
+          ls -lh release-files
+
+      - name: Determine pre-release status
+        id: prerelease
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          if [[ "$tag" == *-alpha* || "$tag" == *-beta* || "$tag" == *-rc* ]]; then
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          files: release-files/*
+          prerelease: ${{ steps.prerelease.outputs.prerelease }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true

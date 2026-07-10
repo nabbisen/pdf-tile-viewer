@@ -1,0 +1,24 @@
+[package]
+name        = "app_services"
+description = "App-level orchestration: document/file intake, settings persistence, session history, platform integration."
+version.workspace       = true
+edition.workspace       = true
+license.workspace       = true
+authors.workspace       = true
+
+[features]
+default                 = []
+# Native file dialogs (pulls GUI toolkit deps on Linux); enabled by the app crate.
+native-dialogs          = ["dep:rfd"]
+
+[dependencies]
+domain                      = { workspace = true }
+pdf_engine                  = { workspace = true }
+packaging                   = { workspace = true }
+
+dirs                        = { workspace = true }
+rfd                         = { workspace = true, optional = true }
+
+serde_json                  = { workspace = true }
+
+[dev-dependencies]

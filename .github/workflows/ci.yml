@@ -1,0 +1,78 @@
+name: CI
+
+# Continuous integration: formatting, type-check, and tests on every push
+# to main and every pull request. Mirrors the local gate documented in
+# docs/src/contributors/testing.md.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancel superseded runs on the same ref to save CI minutes.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  # Pinned so smoke tests are reproducible (RFC 003 §10 / fetch-pdfium.sh).
+  PDFIUM_RELEASE_TAG: chromium/7920
+
+jobs:
+  fmt:
+    name: rustfmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install Rust (with rustfmt)
+        run: |
+          rustup toolchain install stable --profile minimal --component rustfmt
+          rustup default stable
+      - name: cargo fmt --check
+        run: cargo fmt --all --check
+
+  test:
+    name: check & test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install Rust
+        run: |
+          rustup toolchain install stable --profile minimal
+          rustup default stable
+
+      - name: Cache cargo registry and target
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+
+      - name: Install GUI system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev libgtk-3-dev libxdo-dev libssl-dev pkg-config
+
+      # Library crates do not need PDFium and build without the GUI deps,
+      # but the app crate is in default-members, so the deps above are
+      # required for the workspace check.
+      - name: cargo check (workspace)
+        run: cargo check --workspace
+
+      - name: Library + service unit tests (no PDFium)
+        run: cargo test --workspace --exclude app
+
+      - name: Fetch pinned PDFium (linux-x64)
+        run: bash ci/fetch-pdfium.sh linux-x64
+
+      - name: Engine smoke tests (with PDFium)
+        env:
+          PDF_TILE_VIEWER_PDFIUM_DIR: ${{ github.workspace }}/ci/.pdfium
+        run: cargo test -p pdf_engine --test smoke
