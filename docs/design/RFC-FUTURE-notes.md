@@ -56,17 +56,17 @@ PDFs, or optional credential storage.
 
 ## Future RFC-F04 — Link and Outline Navigation
 
-> Promoted to proposed RFC 026 after the `2.0.0-beta.11` release point.
+> Implemented as RFC 026 after the `2.0.0-beta.11` release point.
 
 ### Goal
 
 Support PDF links, bookmarks, table-of-contents navigation, and internal
 destinations.
 
-### Reason to Defer
+### Resolution
 
-Useful, but not central to the tile overview workflow. It also introduces
-external action/security policy decisions.
+RFC 026 added outline/bookmark navigation, same-document zoom-overlay link
+navigation, and conservative copy-only handling for external URI actions.
 
 ## Future RFC-F05 — Native Renderer / Non-WebView UI Investigation
 

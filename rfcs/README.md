@@ -1,6 +1,6 @@
 # RFC Index — PDF Tile Viewer
 
-Implemented RFCs live in `rfcs/done/`. Proposed 2.0 RC follow-up work lives in
+Implemented RFCs live in `rfcs/done/`. Proposed follow-up work lives in
 `rfcs/proposed/`. The lifecycle policy is in
 `rfcs/done/000-rfc-lifecycle-policy.md`.
 
@@ -14,11 +14,11 @@ Implemented RFCs live in `rfcs/done/`. Proposed 2.0 RC follow-up work lives in
 
 ---
 
-## Proposed 2.0 RC Follow-Ups
+## Proposed Follow-Ups
 
 | ID | Title | Status |
 |----|-------|--------|
-| 026 | [PDF Link and Outline Navigation](proposed/026-pdf-link-outline-navigation.md) | Proposed |
+| _None_ |  |  |
 
 ---
 
@@ -60,11 +60,11 @@ Implemented RFCs live in `rfcs/done/`. Proposed 2.0 RC follow-up work lives in
 | 023 | [Single-Page PDF Text Selection Layer](done/023-pdf-text-selection-layer.md) | 2.0.0-beta.8 |
 | 024 | [Encrypted PDF Detection Hardening](done/024-encrypted-pdf-detection-hardening.md) | 2.0.0-beta.10 |
 | 025 | [Password-Protected PDF Opening Workflow](done/025-password-protected-pdf-opening.md) | 2.0.0-beta.11 |
+| 026 | [PDF Link and Outline Navigation](done/026-pdf-link-outline-navigation.md) | 2.0.0-beta.11 follow-up |
 
 ---
 
 ## Future themes
 
-See `docs/design/RFC-FUTURE-notes.md` for post-2.0 ideas (static PDFium
-linking, link navigation, native renderer investigation, and offline WASM
-target).
+See `docs/design/RFC-FUTURE-notes.md` for deferred candidates, including
+post-2.0 ideas and possible v2.1 themes.

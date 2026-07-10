@@ -3,11 +3,12 @@ project: PDF Tile Viewer
 document_family: Dioxus + embedded/bundled PDFium migration RFCs
 language: English
 date: 2026-07-07
-status: Proposed
+status: Implemented
 baseline: PDF Tile Viewer 2.0.0-beta.11
 depends_on: RFC 012, RFC 016, RFC 023, RFC 025
 review: .git-exclude/reviewed/pdf_tile_viewer_rfc026_pdf_link_outline_navigation_design_review.md
 rereview: .git-exclude/reviewed/pdf_tile_viewer_rfc026_pdf_link_outline_navigation_design_rereview.md
+implementation_review: .git-exclude/reviewed/pdf_tile_viewer_rfc026_pdf_link_outline_navigation_final_qa_followup_review.md
 ---
 
 # RFC 026 — PDF Link and Outline Navigation
@@ -33,8 +34,8 @@ remain constrained by RFC 016: the app must not auto-open external links, must
 not execute embedded JavaScript, must not launch files, and must require
 explicit user action before any external URI is opened.
 
-This is not release work. The latest released version at the time of this RFC
-draft is `2.0.0-beta.11`; RFC 026 is proposed follow-up work after that
+This was not release work. The latest released version at the time of this RFC
+draft was `2.0.0-beta.11`; RFC 026 was accepted as follow-up work after that
 release point.
 
 ## 2. Motivation
@@ -896,55 +897,56 @@ Review point: optional, depending on the size of the docs-only cleanup.
 
 Design acceptance:
 
-- [ ] RFC 026 explicitly preserves RFC 016 external action policy.
-- [ ] Link hit areas are scoped to zoom overlay, not tile grid.
-- [ ] Outline navigation and page links share a domain destination model.
-- [ ] External URI behavior requires explicit user confirmation.
-- [ ] External URI opening policy has a single authoritative enforcement point
+- [x] RFC 026 explicitly preserves RFC 016 external action policy.
+- [x] Link hit areas are scoped to zoom overlay, not tile grid.
+- [x] Outline navigation and page links share a domain destination model.
+- [x] External URI behavior requires explicit user confirmation.
+- [x] External URI opening policy has a single authoritative enforcement point
       in `app_services`; platform integration is only a narrow opener for
       already-validated URIs.
-- [ ] Cached extracted URI data is not treated as open authorization.
-- [ ] Resource limits are specified for outline nodes, depth, title length,
+- [x] Cached extracted URI data is not treated as open authorization.
+- [x] Resource limits are specified for outline nodes, depth, title length,
       URI length, links per page, and cache size.
-- [ ] Missing/empty title fallback is assigned to UI/i18n, not `pdf_engine`.
-- [ ] Launch, JavaScript, remote, embedded, and unsupported actions are not
+- [x] Missing/empty title fallback is assigned to UI/i18n, not `pdf_engine`.
+- [x] Launch, JavaScript, remote, embedded, and unsupported actions are not
       executable.
-- [ ] Implementation handoff and PR plan are included.
+- [x] Implementation handoff and PR plan are included.
 
 Implementation acceptance:
 
-- [ ] PDF with no outline opens normally.
-- [ ] PDF with outline shows outline toggle/panel.
-- [ ] Outline entry navigates to the expected page.
-- [ ] Nested outline entries render with stable indentation.
-- [ ] Over-limit outline trees degrade without failing document open.
-- [ ] Over-limit link pages degrade without failing zoom overlay rendering.
-- [ ] Missing, empty, and truncated outline titles use localized UI text.
-- [ ] Zoom-overlay internal link navigates to the expected page.
-- [ ] Zoom-overlay text selection still works on a page with links.
-- [ ] Search highlights still render in tile view and zoom overlay.
-- [ ] URI link activation shows confirmation before any open.
-- [ ] Cancelling URI confirmation leaves app state unchanged.
-- [ ] URI copy action works if implemented.
-- [ ] `https`, `http`, and `mailto` are the only externally openable schemes.
-- [ ] `file` and custom schemes are not externally opened.
-- [ ] Relative, empty, control-character, invalid, and over-limit URIs are not
+- [x] PDF with no outline opens normally.
+- [x] PDF with outline shows outline toggle/panel.
+- [x] Outline entry navigates to the expected page.
+- [x] Nested outline entries render with stable indentation.
+- [x] Over-limit outline trees degrade without failing document open.
+- [x] Over-limit link pages degrade without failing zoom overlay rendering.
+- [x] Missing, empty, and truncated outline titles use localized UI text.
+- [x] Zoom-overlay internal link navigates to the expected page.
+- [x] Zoom-overlay text selection still works on a page with links.
+- [x] Search highlights still render in tile view and zoom overlay.
+- [x] URI link activation shows confirmation before any open.
+- [x] Cancelling URI confirmation leaves app state unchanged.
+- [x] URI copy action works if implemented.
+- [x] `https`, `http`, and `mailto` are the only externally openable schemes.
+- [x] `file` and custom schemes are not externally opened.
+- [x] Relative, empty, control-character, invalid, and over-limit URIs are not
       externally opened.
-- [ ] URI open revalidation happens immediately before platform open.
-- [ ] URI open path does not invoke a shell.
-- [ ] Launch actions are not executed.
-- [ ] Remote and embedded document actions are not executed.
-- [ ] Unsupported actions are not executed.
-- [ ] Stale outline/link extraction results are ignored after document change.
-- [ ] All new user-facing strings are localized.
-- [ ] Automated tests covering domain policy and PDF engine extraction pass.
-- [ ] Manual GUI picker/drop behavior remains unchanged from RFC 025.
+- [x] URI open revalidation happens immediately before platform open.
+- [x] URI open path does not invoke a shell.
+- [x] Launch actions are not executed.
+- [x] Remote and embedded document actions are not executed.
+- [x] Unsupported actions are not executed.
+- [x] Stale outline/link extraction results are ignored after document change.
+- [x] All new user-facing strings are localized.
+- [x] Automated tests covering domain policy and PDF engine extraction pass.
+- [x] Manual GUI picker behavior remains unchanged from RFC 025; dashboard
+      file drop is deferred to Future RFC-F07.
 
 Release-point acceptance:
 
-- [ ] The work is not described as released until the owner explicitly says the
+- [x] The work is not described as released until the owner explicitly says the
       release happened.
-- [ ] Release prep is not performed as part of RFC 026 unless separately
+- [x] Release prep is not performed as part of RFC 026 unless separately
       requested.
 
 ## 22. Risks and Mitigations

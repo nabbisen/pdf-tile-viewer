@@ -137,7 +137,5 @@ mdbook build docs
 
 ## 8. Next step
 
-Review the final RFC 026 follow-up diff. After acceptance and commit, move
-`rfcs/proposed/026-pdf-link-outline-navigation.md` to `rfcs/done/` and update
-`rfcs/README.md`. Release preparation should remain a separate owner-requested
-step.
+RFC 026 has been accepted and moved to `rfcs/done/`. Release preparation should
+remain a separate owner-requested step.
