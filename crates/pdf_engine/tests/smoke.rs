@@ -432,6 +432,46 @@ fn navigation_page_links_extract_internal_uri_and_disabled_actions() {
         )),
         "launch action must not be executable"
     );
+
+    let page_three_links = block_on(engine.extract_page_links(PageLinksRequest {
+        document_id: session.id,
+        generation: session.generation,
+        page_index: PageIndex(2),
+        limits: NavigationResourceLimits::default(),
+    }))
+    .unwrap()
+    .unwrap();
+
+    assert_eq!(page_three_links.links.len(), 4);
+    assert!(
+        page_three_links.links.iter().any(|link| matches!(
+            &link.target,
+            NavigationTarget::InternalDestination(destination)
+                if destination.page_index == PageIndex(0)
+        )),
+        "page 3 should include an internal link back to page 1"
+    );
+    assert!(
+        page_three_links.links.iter().any(|link| matches!(
+            &link.target,
+            NavigationTarget::Disabled(DisabledNavigationReason::RemoteDestination)
+        )),
+        "remote document action must not become internal navigation"
+    );
+    assert!(
+        page_three_links.links.iter().any(|link| matches!(
+            &link.target,
+            NavigationTarget::Disabled(DisabledNavigationReason::EmbeddedDestination)
+        )),
+        "embedded document action must not become internal navigation"
+    );
+    assert!(
+        page_three_links.links.iter().any(|link| matches!(
+            &link.target,
+            NavigationTarget::Disabled(DisabledNavigationReason::UnsupportedAction)
+        )),
+        "JavaScript action must not be executable"
+    );
 }
 
 #[test]

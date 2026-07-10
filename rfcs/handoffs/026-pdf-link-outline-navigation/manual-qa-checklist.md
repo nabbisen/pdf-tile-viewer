@@ -27,21 +27,22 @@ drag/drop reliability separately as Future RFC-F07.
 
 - Page 1 text: `Navigation page one`
   - Outline target: `Chapter 1`
-  - Internal link rectangle: left side, below the page title, jumps to page 3.
-  - External link rectangle: left side, below the internal link, target
+  - `Internal link to page 3` jumps to page 3.
+  - `External https link` opens the external-link dialog with target
     `https://example.com/pdf-tile-viewer`.
 - Page 2 text: `Navigation page two`
   - Outline target: nested empty-title child under `Chapter 1`.
-  - External link rectangles: `file:///tmp/pdf-tile-viewer-blocked` and
-    `relative/path`.
-  - Disabled launch-action rectangle below those URI rectangles.
+  - `Blocked file URI` targets `file:///tmp/pdf-tile-viewer-blocked`.
+  - `Relative URI` targets `relative/path`.
+  - `Blocked launch action` is a disabled launch-action annotation.
 - Page 3 text: `Navigation page three`
   - Outline target: `Chapter 2`.
-  - Internal link rectangle: left side, below the page title, jumps to page 1.
-  - Disabled remote, embedded, and JavaScript action rectangles below it.
+  - `Internal link to page 1` jumps to page 1.
+  - `Blocked remote document`, `Blocked embedded document`, and
+    `Blocked JavaScript action` are disabled action annotations.
 
-The rectangles are PDF annotations and may not have visible text labels. Click
-or keyboard-activate the link hit areas in the zoom overlay, not the tile grid.
+Click or keyboard-activate the visible label areas in the zoom overlay, not the
+tile grid.
 If the JavaScript annotation is not surfaced as an interactive hit area by the
 current PDFium binding, record that as pass as long as no script, dialog,
 external app, or other visible action executes.
@@ -52,37 +53,37 @@ Record pass/fail and notes for each item.
 
 | Item | Result | Notes |
 |------|--------|-------|
-| `single-page-basic.pdf` opens normally. |  |  |
-| Outline button opens the panel for `single-page-basic.pdf`. |  |  |
-| No-outline panel shows `No outline`. |  |  |
-| `navigation-links-outline.pdf` opens normally. |  |  |
-| Outline panel shows `Chapter 1`, nested untitled entry, `Chapter 2`, and `Empty URI`. |  |  |
-| `Chapter 1` scrolls to page 1. |  |  |
-| Nested untitled entry scrolls to page 2. |  |  |
-| `Chapter 2` scrolls to page 3. |  |  |
-| `Empty URI` is disabled or otherwise does not navigate/open anything. |  |  |
-| Nested outline entry expands/collapses with stable indentation. |  |  |
-| Tile-grid search still renders match borders/badges/highlights. |  |  |
-| Zoom-overlay search highlights still render. |  |  |
-| Page 1 internal link in zoom overlay navigates to page 3. |  |  |
-| Page 3 internal link in zoom overlay navigates to page 1. |  |  |
-| Selecting visible text in zoom overlay still works on a page with links. |  |  |
-| Dragging over linked text does not accidentally activate a link. |  |  |
-| Page 1 HTTPS link opens the external-link confirmation dialog. |  |  |
-| HTTPS dialog shows the raw target and says no external app will be launched. |  |  |
-| Copy on the HTTPS dialog reports success or clear failure. |  |  |
-| Cancel closes the HTTPS dialog without changing document state. |  |  |
-| Escape closes the HTTPS dialog without reaching the zoom overlay. |  |  |
-| Tab/Shift+Tab stay inside the external-link dialog while it is open. |  |  |
-| Closing the external-link dialog returns focus to the zoom overlay close button. |  |  |
-| Page 2 `file:` link shows the dialog as policy-blocked/copy-only and opens no app. |  |  |
-| Page 2 relative link shows the dialog as policy-blocked/copy-only and opens no app. |  |  |
-| Page 2 launch action does not execute anything. |  |  |
-| Page 3 remote document action does not execute anything. |  |  |
-| Page 3 embedded document action does not execute anything. |  |  |
-| Page 3 JavaScript action does not execute anything. |  |  |
-| Picker behavior remains unchanged from RFC 025. |  |  |
-| Drop behavior is either unchanged from RFC 025 or recorded as Future RFC-F07. |  |  |
+| `single-page-basic.pdf` opens normally. | Success | Picker path. |
+| Outline button opens the panel for `single-page-basic.pdf`. | Success |  |
+| No-outline panel shows `No outline`. | Success |  |
+| `navigation-links-outline.pdf` opens normally. | Success |  |
+| Outline panel shows `Chapter 1`, nested untitled entry, `Chapter 2`, and `Empty URI`. | Success |  |
+| `Chapter 1` scrolls to page 1. | Success |  |
+| Nested untitled entry scrolls to page 2. | Success |  |
+| `Chapter 2` scrolls to page 3. | Success |  |
+| `Empty URI` is disabled or otherwise does not navigate/open anything. | Success |  |
+| Nested outline entry expands/collapses with stable indentation. | Success |  |
+| Tile-grid search still renders match borders/badges/highlights. | Success |  |
+| Zoom-overlay search highlights still render. | Success |  |
+| Page 1 internal link in zoom overlay navigates to page 3. | Success | First pass found weak visual affordance; retest passed after underline/link-color styling. |
+| Page 3 internal link in zoom overlay navigates to page 1. | Success | First pass found weak visual affordance; retest passed after underline/link-color styling. |
+| Selecting visible text in zoom overlay still works on a page with links. | Success |  |
+| Dragging over linked text does not accidentally activate a link. | Success |  |
+| Page 1 HTTPS link opens the external-link confirmation dialog. | Success |  |
+| HTTPS dialog shows the raw target and says no external app will be launched. | Success |  |
+| Copy on the HTTPS dialog reports success or clear failure. | Success |  |
+| Cancel closes the HTTPS dialog without changing document state. | Success |  |
+| Escape closes the HTTPS dialog without reaching the zoom overlay. | Success |  |
+| Tab/Shift+Tab stay inside the external-link dialog while it is open. | Success | First pass found weak initial focus styling; retest passed after dialog focus-ring adjustment. |
+| Closing the external-link dialog returns focus to the zoom overlay close button. | Success |  |
+| Page 2 `Blocked file URI` link shows the dialog as policy-blocked/copy-only and opens no app. | Success | Target is `file:///tmp/pdf-tile-viewer-blocked`. |
+| Page 2 `Relative URI` link shows the dialog as policy-blocked/copy-only and opens no app. | Success | Target is `relative/path`. |
+| Page 2 launch action does not execute anything. | Success | Visible label was `Blocked launch action`. |
+| Page 3 remote document action does not execute anything. | Success | First pass incorrectly navigated to page 1; retest passed after action-priority fix. |
+| Page 3 embedded document action does not execute anything. | Success | First pass incorrectly navigated to page 1; retest passed after action-priority fix. |
+| Page 3 JavaScript action does not execute anything. | Success | Visible label was `Blocked JavaScript action`. |
+| Picker behavior remains unchanged from RFC 025. | Success | Valid PDFs opened through picker; non-`.pdf` file was rejected. |
+| Drop behavior is either unchanged from RFC 025 or recorded as Future RFC-F07. | Deferred | Linux WebKitGTK drop failed; tracked as Future RFC-F07. |
 
 ## Acceptance Note Template
 
@@ -106,5 +107,7 @@ Result:
 - Drop reliability: pass/fail/deferred to Future RFC-F07
 
 Notes:
-- <any deviations, blocked checks, or follow-up issues>
+- Dashboard file drop is deferred to Future RFC-F07 after failing on Linux
+  WebKitGTK under both Wayland and `GDK_BACKEND=x11`; picker remains the
+  reliable intake path.
 ```

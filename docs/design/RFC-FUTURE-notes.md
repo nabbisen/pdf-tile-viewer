@@ -123,3 +123,138 @@ outline navigation, and the picker remains a reliable intake path.
   the existing picker path?
 - Should Linux docs describe drag/drop as best-effort until the upstream
   toolkit behavior is verified?
+
+## Future RFC-F08 — File Picker Initial Directory Memory
+
+Planning status: deferred candidate, not part of RFC 026. This can be promoted
+independently if the owner decides it should land before v2.1.
+
+### Goal
+
+Remember the parent directory of the last successfully picked PDF in memory
+during the current app session, and use it as the starting directory for the
+next **Open PDF...** picker.
+
+### Reason to Defer
+
+This is a convenience improvement, not an RFC 026 blocker. It should be
+designed with privacy in mind: session-memory-only behavior is likely safe by
+default, while persistence would overlap with history/settings policy.
+
+### Future Design Questions
+
+- Should the remembered directory update only after a successful open?
+- Should drag/drop, history reopen, and picker opens all update the directory,
+  or picker opens only?
+- Should this remain memory-only, or become a privacy-controlled setting?
+
+## Future RFC-F09 — Toolbar Icon Alignment Polish
+
+Planning status: deferred candidate, not part of RFC 026. This can be promoted
+independently if the owner decides it should land before v2.1.
+
+### Goal
+
+Fix button icon alignment in the main viewer toolbar so icon-only controls are
+visually centered and consistent across themes/platforms.
+
+### Reason to Defer
+
+This is a focused UI polish issue and should not delay RFC 026 acceptance.
+
+### Future Design Questions
+
+- Should icon buttons have a single fixed square size and flex centering?
+- Are emoji glyphs causing platform-dependent alignment, and should these
+  controls switch to a more stable icon strategy?
+
+## Future RFC-F10 — Zoom Scale Persistence
+
+Planning status: deferred candidate, not part of RFC 026. This can be promoted
+independently if the owner decides it should land before v2.1.
+
+### Goal
+
+Preserve the zoom overlay scale so users do not need to reset it every time
+they open a page in the zoom view.
+
+### Reason to Defer
+
+This is useful, but it changes view-state behavior and should be decided
+separately from PDF link/outline support.
+
+### Future Design Questions
+
+- Should zoom scale persist only during the current document session, across
+  app sessions, or as a global default?
+- Should tile-grid scale and zoom-overlay scale remain independent?
+- Should page changes, document changes, or app restarts reset zoom scale?
+
+## Future RFC-F11 — Smooth Zoom-Scale Transition
+
+Planning status: deferred candidate, not part of RFC 026. This can be promoted
+independently if the owner decides it should land before v2.1.
+
+### Goal
+
+Reduce the dizzying visual transition when changing zoom scale in the zoom
+overlay.
+
+### Reason to Defer
+
+Smooth transitions may require renderer-level tradeoffs: immediate bitmap
+rerendering is accurate but can feel jumpy, while animated interpolation may
+temporarily show scaled raster content before the final render arrives.
+
+### Future Design Questions
+
+- Is CSS transform interpolation acceptable while waiting for a freshly
+  rendered bitmap?
+- Should the app crossfade between old and new renders?
+- Can smooth transition coexist with accurate text/link/search overlay
+  geometry without temporary mismatch?
+
+## Future RFC-F12 — Settings Storage With `app-json-settings`
+
+Planning status: deferred new-function candidate, likely v2.1 or later unless
+the owner explicitly promotes it.
+
+### Goal
+
+Evaluate replacing or wrapping the current settings storage with the
+`app-json-settings` crate.
+
+### Reason to Defer
+
+Settings storage affects migration, compatibility, error recovery, and privacy.
+It needs explicit design before implementation.
+
+### Future Design Questions
+
+- What migration path preserves existing user settings?
+- Does the crate handle corrupt files, schema evolution, and platform-specific
+  config directories in a way that matches current policy?
+- Which settings are safe to persist by default?
+
+## Future RFC-F13 — Persistent History With Privacy Controls
+
+Planning status: deferred new-function candidate, likely v2.1 or later unless
+the owner explicitly promotes it.
+
+### Goal
+
+Evaluate persistent document history, with explicit privacy controls and a
+clear default policy.
+
+### Reason to Defer
+
+Current session-only history is privacy-safe. Persisting document paths can
+reveal sensitive file names and locations, so this needs owner-approved UX and
+storage policy before implementation.
+
+### Future Design Questions
+
+- Should persistent history be opt-in only?
+- What clear/reset controls are required?
+- Should entries store full paths, display names only, or redacted paths?
+- Should private/incognito mode disable history writes?

@@ -173,6 +173,10 @@ button.ghost {
   gap: 0.5rem;
   margin-top: 1rem;
 }
+.external-uri-dialog button:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
 
 /* ── Viewer layout ─────────────────────────────────────────── */
 .viewer { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
@@ -421,6 +425,7 @@ button:focus-visible, input:focus-visible {
   padding: 1rem; background: color-mix(in srgb, var(--muted) 6%, var(--bg));
 }
 .zoom-image-wrap { position: relative; display: inline-block; }
+.zoom-image-wrap.has-links { cursor: pointer; }
 .zoom-img {
   position: relative;
   z-index: 0;
@@ -474,9 +479,11 @@ button:focus-visible, input:focus-visible {
 .zoom-link-overlay {
   position: absolute;
   display: block;
-  border: 1px solid transparent;
-  border-radius: 2px;
+  border: 0;
+  border-bottom: 2px solid var(--accent);
+  border-radius: 0;
   background: transparent;
+  box-shadow: inset 0 -0.45em 0 color-mix(in srgb, var(--accent) 10%, transparent);
 }
 button.zoom-link-overlay {
   padding: 0;
@@ -486,10 +493,12 @@ button.zoom-link-overlay.internal:hover,
 button.zoom-link-overlay.external:hover,
 button.zoom-link-overlay.internal:focus-visible,
 button.zoom-link-overlay.external:focus-visible {
-  border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  border-bottom-color: var(--accent);
+  box-shadow: inset 0 -0.45em 0 color-mix(in srgb, var(--accent) 16%, transparent);
 }
 .zoom-link-overlay.disabled {
+  border-bottom-color: color-mix(in srgb, var(--muted) 60%, transparent);
+  box-shadow: none;
   pointer-events: none;
 }
 

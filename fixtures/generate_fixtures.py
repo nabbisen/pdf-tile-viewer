@@ -81,9 +81,9 @@ def build_pdf(pages: list[str]) -> bytes:
     xref_pos = len(out)
     count = len(objects) + 1
     out += f"xref\n0 {count}\n".encode()
-    out += b"0000000000 65535 f \n"
+    out += b"0000000000 65535 f\n"
     for off in offsets[1:]:
-        out += f"{off:010d} 00000 n \n".encode()
+        out += f"{off:010d} 00000 n\n".encode()
     out += (
         f"trailer\n<< /Size {count} /Root 1 0 R >>\n"
         f"startxref\n{xref_pos}\n%%EOF\n"
@@ -111,9 +111,9 @@ def assemble_objects(objects: list[bytes]) -> bytes:
     xref_pos = len(out)
     count = len(objects) + 1
     out += f"xref\n0 {count}\n".encode()
-    out += b"0000000000 65535 f \n"
+    out += b"0000000000 65535 f\n"
     for off in offsets[1:]:
-        out += f"{off:010d} 00000 n \n".encode()
+        out += f"{off:010d} 00000 n\n".encode()
     out += (
         f"trailer\n<< /Size {count} /Root 1 0 R >>\n"
         f"startxref\n{xref_pos}\n%%EOF\n"
@@ -123,6 +123,14 @@ def assemble_objects(objects: list[bytes]) -> bytes:
 
 def content_stream(text: str) -> bytes:
     stream = f"BT /F1 24 Tf 72 700 Td ({pdf_string(text)}) Tj ET".encode()
+    return b"<< /Length %d >>\nstream\n%s\nendstream" % (len(stream), stream)
+
+
+def content_stream_lines(lines: list[tuple[int, int, int, str]]) -> bytes:
+    stream = "\n".join(
+        f"BT /F1 {size} Tf {x} {y} Td ({pdf_string(text)}) Tj ET"
+        for size, x, y, text in lines
+    ).encode()
     return b"<< /Length %d >>\nstream\n%s\nendstream" % (len(stream), stream)
 
 
@@ -150,9 +158,30 @@ def build_navigation_pdf() -> bytes:
             b"/Annots [15 0 R 20 0 R 21 0 R 22 0 R] /Contents 9 0 R >>"
         ),
         # 7..9 Content streams.
-        content_stream("Navigation page one"),
-        content_stream("Navigation page two"),
-        content_stream("Navigation page three"),
+        content_stream_lines(
+            [
+                (24, 72, 700, "Navigation page one"),
+                (14, 72, 660, "Internal link to page 3"),
+                (14, 72, 610, "External https link"),
+            ]
+        ),
+        content_stream_lines(
+            [
+                (24, 72, 700, "Navigation page two"),
+                (14, 72, 660, "Blocked file URI"),
+                (14, 72, 610, "Relative URI"),
+                (14, 72, 560, "Blocked launch action"),
+            ]
+        ),
+        content_stream_lines(
+            [
+                (24, 72, 700, "Navigation page three"),
+                (14, 72, 660, "Internal link to page 1"),
+                (14, 72, 610, "Blocked remote document"),
+                (14, 72, 560, "Blocked embedded document"),
+                (14, 72, 510, "Blocked JavaScript action"),
+            ]
+        ),
         # 10..13 and 23 Outline tree.
         b"<< /Type /Outlines /First 11 0 R /Last 23 0 R /Count 4 >>",
         (

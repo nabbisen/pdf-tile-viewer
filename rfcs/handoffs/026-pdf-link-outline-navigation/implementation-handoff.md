@@ -83,25 +83,25 @@ Implementation reviews:
   `GDK_BACKEND=x11` comparison run. This is deferred to Future RFC-F07 because
   it is not specific to RFC 026 link/outline behavior.
 
-## 6. Manual QA still needed before RFC completion
+## 6. Manual QA result
 
 Detailed test steps and an evidence template are in
 `rfcs/handoffs/026-pdf-link-outline-navigation/manual-qa-checklist.md`.
 
-- PDF with no outline opens normally.
-- PDF with outline shows the outline panel and navigates to expected pages.
-- Nested outline entries expand, collapse, and keep stable indentation.
-- Zoom-overlay internal links navigate to expected pages.
-- Zoom-overlay text selection still works over linked text.
-- Search highlights still render in tile view and zoom overlay.
-- External URI activation shows the confirmation dialog.
-- Cancel and Escape close the external URI dialog without changing document
-  state.
-- Copy reports success or failure clearly.
-- Focus is trapped inside the dialog while open and returns to the zoom overlay
-  close button when closed.
-- GUI picker behavior remains unchanged from RFC 025. Linux dashboard
-  drag/drop reliability is deferred to Future RFC-F07.
+Manual WebView QA passed for RFC 026 link/outline behavior after the follow-up
+fixture, disabled-action, link-affordance, and dialog-focus fixes:
+
+- no-outline and outline behavior passed;
+- outline navigation passed;
+- zoom-overlay internal link navigation passed;
+- zoom-overlay text selection over linked pages passed;
+- tile-grid and zoom-overlay search highlight preservation passed;
+- external URI copy-only dialog behavior passed;
+- Launch, remote, embedded, and JavaScript action non-execution passed;
+- picker behavior and non-`.pdf` rejection passed.
+
+Linux dashboard drag/drop failed during QA and is deferred to Future RFC-F07.
+The picker remains the reliable intake path.
 
 ## 7. Gate status
 
@@ -119,8 +119,8 @@ dead-code warning cleanup:
 - `cargo test --workspace --exclude app`
 - `mdbook build docs`
 
-For a final RFC 026 acceptance point, record manual QA evidence in the review
-or release-prep notes.
+Manual QA evidence is recorded in
+`rfcs/handoffs/026-pdf-link-outline-navigation/manual-qa-checklist.md`.
 
 Recommended final gates:
 
@@ -137,7 +137,7 @@ mdbook build docs
 
 ## 8. Next step
 
-Complete the manual QA checklist above, then decide whether to move
+Review the final RFC 026 follow-up diff. After acceptance and commit, move
 `rfcs/proposed/026-pdf-link-outline-navigation.md` to `rfcs/done/` and update
 `rfcs/README.md`. Release preparation should remain a separate owner-requested
 step.

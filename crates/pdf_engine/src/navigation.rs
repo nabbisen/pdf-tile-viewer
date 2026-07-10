@@ -244,16 +244,23 @@ fn link_target(
     destination: Option<PdfDestination<'_>>,
     action: Option<PdfAction<'_>>,
     limits: &NavigationResourceLimits,
-    mut outline_budget: Option<&mut ExtractionBudget>,
+    outline_budget: Option<&mut ExtractionBudget>,
 ) -> NavigationTarget {
-    if let Some(destination) = destination {
-        return destination_target(destination);
+    if let Some(action) = action {
+        return action_target(action, limits, outline_budget);
     }
 
-    let Some(action) = action else {
-        return NavigationTarget::Disabled(DisabledNavigationReason::NoDestination);
-    };
+    match destination {
+        Some(destination) => destination_target(destination),
+        None => NavigationTarget::Disabled(DisabledNavigationReason::NoDestination),
+    }
+}
 
+fn action_target(
+    action: PdfAction<'_>,
+    limits: &NavigationResourceLimits,
+    mut outline_budget: Option<&mut ExtractionBudget>,
+) -> NavigationTarget {
     match action {
         PdfAction::LocalDestination(action) => match action.destination() {
             Ok(destination) => destination_target(destination),

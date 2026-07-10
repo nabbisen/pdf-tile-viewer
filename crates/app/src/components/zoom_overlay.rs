@@ -419,9 +419,16 @@ pub fn ZoomOverlay(
                     div { class: "zoom-image-container",
                         match &*zoom_image.read() {
                             ZoomImageState::Ready { uri, width_px, height_px } => rsx! {
+                                {
+                                    let wrap_class = if page_link_rects.is_empty() {
+                                        "zoom-image-wrap"
+                                    } else {
+                                        "zoom-image-wrap has-links"
+                                    };
+                                    rsx! {
                                 div {
                                     id: "zoom-image-wrap",
-                                    class: "zoom-image-wrap",
+                                    class: "{wrap_class}",
                                     style: "position: relative; display: inline-block; \
                                             width: {width_px}px; height: {height_px}px;",
                                     onmousedown: move |evt: Event<MouseData>| {
@@ -630,6 +637,8 @@ pub fn ZoomOverlay(
                                         }
                                     }
                                 }
+                                    }
+                                }
                             },
                             ZoomImageState::Loading => rsx! {
                                 div { class: "zoom-placeholder",
@@ -794,7 +803,11 @@ fn ExternalUriDialog(
 }
 
 fn focus_external_uri_cancel_button() {
-    let _ = eval("document.getElementById('external-uri-cancel')?.focus();");
+    let _ = eval(
+        "const focusCancel = () => document.getElementById('external-uri-cancel')?.focus();\
+         focusCancel();\
+         setTimeout(focusCancel, 0);",
+    );
 }
 
 fn focus_zoom_close_button() {
