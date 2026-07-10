@@ -3,19 +3,22 @@ name: Microsoft Store (MSIX)
 # Build a Windows MSIX package for Microsoft Store submission.
 #
 # This is a SEPARATE release pathway from the cross-platform executable
-# release (release.yml). Store submission is a deliberate, credential-gated
-# act with its own certification cycle, so it is MANUAL ONLY
-# (workflow_dispatch) — never automatic on a tag.
+# release (release.yml). It builds automatically when a GitHub Release is
+# published and can also be started manually. Store submission remains a
+# deliberate, human-reviewed act; this workflow builds the .msix artifact but
+# does not publish it to Partner Center.
 #
 # Pathway summary:
 #   release.yml  → tag-triggered → .tar.gz/.zip per OS → GitHub Release
-#   this file    → manual        → .msix              → Partner Center (Windows)
+#   this file    → release/manual → .msix             → Partner Center (Windows)
 #
-# The signed .msix is produced as a workflow artifact. Uploading to Partner
+# The .msix is produced as a workflow artifact. Uploading to Partner
 # Center is left as a manual or separately-credentialed step, because Store
 # publishing requires Partner Center secrets and human review of the listing.
 
 on:
+  release:
+    types: [published]
   workflow_dispatch:
     inputs:
       msix_revision:
@@ -28,6 +31,8 @@ env:
   PDFIUM_RELEASE_TAG: chromium/7920
   RUST_TARGET: x86_64-pc-windows-msvc
   PLATFORM_SEGMENT: windows-x86_64
+  MSIX_CERT_BASE64: ${{ secrets.MSIX_CERT_BASE64 }}
+  MSIX_CERT_PASSWORD: ${{ secrets.MSIX_CERT_PASSWORD }}
 
 jobs:
   msix:
@@ -126,11 +131,8 @@ jobs:
       # Store submissions with the Store certificate, so an unsigned package
       # is acceptable for Store upload; sideloading would require signing).
       - name: Sign MSIX (if certificate provided)
-        if: ${{ secrets.MSIX_CERT_BASE64 != '' }}
+        if: ${{ env.MSIX_CERT_BASE64 != '' }}
         shell: pwsh
-        env:
-          MSIX_CERT_BASE64: ${{ secrets.MSIX_CERT_BASE64 }}
-          MSIX_CERT_PASSWORD: ${{ secrets.MSIX_CERT_PASSWORD }}
         run: |
           $pfx = "cert.pfx"
           [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:MSIX_CERT_BASE64))
@@ -142,7 +144,7 @@ jobs:
           Remove-Item $pfx
 
       - name: Upload MSIX artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: pdf-tile-viewer-msix
           path: dist/*.msix
