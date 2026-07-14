@@ -86,32 +86,6 @@ jobs:
           PDF_TILE_VIEWER_PDFIUM_DIR: ${{ github.workspace }}/resources/pdfium/${{ env.PLATFORM_SEGMENT }}
         run: cargo test -p pdf_engine --test smoke --release --target ${{ env.RUST_TARGET }} -- --test-threads=1
 
-      - name: Resolve Visual C++ runtime framework dependency
-        shell: pwsh
-        run: |
-          $sdkManifest = "${env:ProgramFiles(x86)}\Microsoft SDKs\Windows Kits\10\ExtensionSDKs\Microsoft.VCLibs.Desktop\14.0\SDKManifest.xml"
-          if (-not (Test-Path $sdkManifest)) {
-            throw "Microsoft.VCLibs.Desktop SDKManifest.xml not found: $sdkManifest"
-          }
-
-          [xml]$manifest = Get-Content $sdkManifest
-          $identity = $manifest.DocumentElement.GetAttribute("FrameworkIdentity-Retail")
-          if ([string]::IsNullOrWhiteSpace($identity)) {
-            throw "FrameworkIdentity-Retail not found in $sdkManifest"
-          }
-
-          $name = [regex]::Match($identity, "Name\s*=\s*([^,]+)").Groups[1].Value.Trim()
-          $minVersion = [regex]::Match($identity, "MinVersion\s*=\s*([^,]+)").Groups[1].Value.Trim()
-          $publisher = [regex]::Match($identity, "Publisher\s*=\s*'([^']+)'").Groups[1].Value.Trim()
-          if (-not $name -or -not $minVersion -or -not $publisher) {
-            throw "Could not parse Visual C++ runtime framework identity: $identity"
-          }
-
-          "MSIX_VCLIBS_NAME=$name" >> $env:GITHUB_ENV
-          "MSIX_VCLIBS_MIN_VERSION=$minVersion" >> $env:GITHUB_ENV
-          "MSIX_VCLIBS_PUBLISHER=$publisher" >> $env:GITHUB_ENV
-          Write-Host "Resolved VCLibs dependency: $name $minVersion"
-
       - name: Stage MSIX package root
         shell: bash
         env:
@@ -122,17 +96,54 @@ jobs:
             "resources/pdfium/${PLATFORM_SEGMENT}/pdfium.dll" \
             "dist/msix-root"
 
-      - name: Verify staged MSIX manifest dependencies
+      - name: Bundle Visual C++ runtime DLLs
+        shell: pwsh
+        run: |
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          if (-not (Test-Path $vswhere)) {
+            throw "vswhere.exe not found: $vswhere"
+          }
+
+          $vsRoot = & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Redist.14.Latest -property installationPath
+          if ([string]::IsNullOrWhiteSpace($vsRoot)) {
+            throw "Visual C++ redistributable component not found in Visual Studio installation."
+          }
+
+          $redistRoot = Join-Path $vsRoot "VC\Redist\MSVC"
+          $crtDir = Get-ChildItem $redistRoot -Directory |
+            Sort-Object Name -Descending |
+            ForEach-Object { Join-Path $_.FullName "x64\Microsoft.VC143.CRT" } |
+            Where-Object { Test-Path $_ } |
+            Select-Object -First 1
+          if (-not $crtDir) {
+            throw "Microsoft.VC143.CRT x64 redistributable directory not found under $redistRoot"
+          }
+
+          $targets = @(
+            "dist/msix-root",
+            "dist/msix-root/resources/pdfium/windows-x86_64"
+          )
+          foreach ($target in $targets) {
+            Copy-Item (Join-Path $crtDir "*.dll") -Destination $target -Force
+          }
+
+          Write-Host "Bundled Visual C++ runtime DLLs from $crtDir"
+          Get-ChildItem $crtDir -Filter *.dll | Select-Object -ExpandProperty Name
+
+      - name: Verify staged MSIX manifest and runtime
         shell: bash
         run: |
           set -euo pipefail
-          grep -F "PackageDependency Name=\"${MSIX_VCLIBS_NAME}\"" dist/msix-root/AppxManifest.xml
-          grep -F "MinVersion=\"${MSIX_VCLIBS_MIN_VERSION}\"" dist/msix-root/AppxManifest.xml
-          grep -F "Publisher=\"${MSIX_VCLIBS_PUBLISHER}\"" dist/msix-root/AppxManifest.xml
-          if grep -n -E '@(VERSION|VCLIBS_[A-Z_]+)@' dist/msix-root/AppxManifest.xml; then
-            echo "Unresolved MSIX manifest placeholder found." >&2
+          if grep -n -E '@VERSION@|Microsoft\.VCLibs|PackageDependency' dist/msix-root/AppxManifest.xml; then
+            echo "Unexpected MSIX manifest placeholder or framework dependency found." >&2
             exit 1
           fi
+          test -f dist/msix-root/vcruntime140.dll
+          test -f dist/msix-root/vcruntime140_1.dll
+          test -f dist/msix-root/msvcp140.dll
+          test -f dist/msix-root/resources/pdfium/windows-x86_64/vcruntime140.dll
+          test -f dist/msix-root/resources/pdfium/windows-x86_64/vcruntime140_1.dll
+          test -f dist/msix-root/resources/pdfium/windows-x86_64/msvcp140.dll
 
       - name: Locate Windows SDK tools (makeappx, signtool)
         id: sdk

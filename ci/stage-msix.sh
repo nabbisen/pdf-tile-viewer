@@ -23,10 +23,6 @@
 # The MSIX Version is a 4-part numeric X.Y.Z.R. Pre-release suffixes
 # (-beta.N etc.) are NOT permitted by MSIX, so only the semver core is used.
 # The 4th part (revision) defaults to 0; override with MSIX_REVISION.
-#
-# The Visual C++ runtime framework dependency is normally resolved from the
-# Windows SDK by msix-store.yml. The defaults below keep local staging usable
-# when the script is run by hand.
 
 set -euo pipefail
 
@@ -45,9 +41,6 @@ FULL_VERSION=$(grep '^version' "${REPO_ROOT}/Cargo.toml" | head -1 | sed 's/.*= 
 SEMVER_CORE="${FULL_VERSION%%-*}"
 REVISION="${MSIX_REVISION:-0}"
 MSIX_VERSION="${SEMVER_CORE}.${REVISION}"
-VCLIBS_NAME="${MSIX_VCLIBS_NAME:-Microsoft.VCLibs.140.00.UWPDesktop}"
-VCLIBS_MIN_VERSION="${MSIX_VCLIBS_MIN_VERSION:-14.0.27323.0}"
-VCLIBS_PUBLISHER="${MSIX_VCLIBS_PUBLISHER:-CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US}"
 
 echo "Cargo version : ${FULL_VERSION}"
 echo "MSIX version  : ${MSIX_VERSION}"
@@ -64,9 +57,6 @@ cp "${ASSETS_SRC}"/*.png "${OUTPUT_DIR}/Assets/"
 # Substitute the version placeholder in the manifest.
 sed \
     -e "s/@VERSION@/${MSIX_VERSION}/g" \
-    -e "s/@VCLIBS_NAME@/${VCLIBS_NAME}/g" \
-    -e "s/@VCLIBS_MIN_VERSION@/${VCLIBS_MIN_VERSION}/g" \
-    -e "s/@VCLIBS_PUBLISHER@/${VCLIBS_PUBLISHER}/g" \
     "${MANIFEST_SRC}" > "${OUTPUT_DIR}/AppxManifest.xml"
 
 echo "Staged MSIX root at ${OUTPUT_DIR}:"
