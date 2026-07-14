@@ -73,7 +73,7 @@ PDF Tile Viewer has two independent release outputs:
 | Pathway | Workflow | Trigger | Output | Distribution |
 |---------|----------|---------|--------|--------------|
 | Executable build | `release.yml` | semver tag (`2.0.0`) | `.tar.gz` / `.zip` per OS | GitHub Release |
-| Microsoft Store | `msix-store.yml` | GitHub Release published or manual (`workflow_dispatch`) | `.msix` | Partner Center (Windows) |
+| Microsoft Store | `msix-store.yml` | successful `release.yml`, manually published GitHub Release, or manual (`workflow_dispatch`) | `.msix` | Partner Center (Windows) |
 
 ### Executable build (Linux, macOS, Windows)
 
@@ -83,11 +83,14 @@ licenses, and docs, attached to a GitHub Release.
 
 ### Microsoft Store (Windows MSIX)
 
-The MSIX artifact builds automatically when a GitHub Release is published and
-can also be started manually from the **Microsoft Store (MSIX)** workflow in
-the Actions tab. It builds the Windows binary, bundles PDFium, stages the
-package layout via `ci/stage-msix.sh`, and runs `makeappx` to produce a
-`.msix`. Uploading to Partner Center remains manual.
+The MSIX artifact builds automatically after a successful `release.yml` run.
+This is necessary because `release.yml` creates the GitHub Release with
+`GITHUB_TOKEN`, and GitHub does not create follow-on workflow runs for most
+events caused by `GITHUB_TOKEN`. The workflow also runs for manually published
+GitHub Releases and can be started manually from the **Microsoft Store (MSIX)**
+workflow in the Actions tab. It builds the Windows binary, bundles PDFium,
+stages the package layout via `ci/stage-msix.sh`, and runs `makeappx` to
+produce a `.msix`. Uploading to Partner Center remains manual.
 
 Notes:
 

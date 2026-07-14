@@ -3,14 +3,15 @@ name: Microsoft Store (MSIX)
 # Build a Windows MSIX package for Microsoft Store submission.
 #
 # This is a SEPARATE release pathway from the cross-platform executable
-# release (release.yml). It builds automatically when a GitHub Release is
-# published and can also be started manually. Store submission remains a
-# deliberate, human-reviewed act; this workflow builds the .msix artifact but
-# does not publish it to Partner Center.
+# release (release.yml). It builds automatically after the Release workflow
+# succeeds, can also build for a manually published GitHub Release, and can be
+# started manually. Store submission remains a deliberate, human-reviewed act;
+# this workflow builds the .msix artifact but does not publish it to Partner
+# Center.
 #
 # Pathway summary:
 #   release.yml  → tag-triggered → .tar.gz/.zip per OS → GitHub Release
-#   this file    → release/manual → .msix             → Partner Center (Windows)
+#   this file    → release workflow/manual → .msix    → Partner Center (Windows)
 #
 # The .msix is produced as a workflow artifact. Uploading to Partner
 # Center is left as a manual or separately-credentialed step, because Store
@@ -19,6 +20,9 @@ name: Microsoft Store (MSIX)
 on:
   release:
     types: [published]
+  workflow_run:
+    workflows: ["Release"]
+    types: [completed]
   workflow_dispatch:
     inputs:
       msix_revision:
@@ -37,9 +41,12 @@ env:
 jobs:
   msix:
     name: build MSIX
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.ref }}
 
       - name: Install Rust
         run: |

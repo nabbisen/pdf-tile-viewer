@@ -9,14 +9,6 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-### Fixed
-
-- Bundled Visual C++ runtime DLLs app-locally in the Microsoft Store MSIX
-  artifact and removed the unavailable `Microsoft.VCLibs.140.00.UWPDesktop`
-  framework dependency from the manifest.
-- Updated the macOS x64 release job to use the current Intel macOS GitHub
-  Actions runner label instead of the stale `macos-13` label.
-
 ---
 
 ## [2.0.0]
@@ -30,6 +22,14 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Fixed
 
 - Centered icon-only toolbar buttons in the main viewer.
+- Bundled Visual C++ runtime DLLs app-locally in the Microsoft Store MSIX
+  artifact and removed the unavailable `Microsoft.VCLibs.140.00.UWPDesktop`
+  framework dependency from the manifest.
+- Trigger the Microsoft Store MSIX workflow from successful `release.yml`
+  completion so releases created by Actions with `GITHUB_TOKEN` still produce
+  the Store artifact automatically.
+- Updated the macOS x64 release job to use the current Intel macOS GitHub
+  Actions runner label instead of the stale `macos-13` label.
 
 ---
 
