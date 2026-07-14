@@ -9,6 +9,12 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- Added an explicit Microsoft.VCLibs framework dependency to the Microsoft
+  Store MSIX manifest so Store installs provide the Visual C++ runtime needed
+  by the Windows build and bundled PDFium.
+
 ---
 
 ## [2.0.0]

@@ -96,8 +96,10 @@ Notes:
   core in `Cargo.toml` (for example, `2.1.0-beta.1` → `2.1.0`) and uses the
   `msix_revision` dispatch input as the 4th part `R` (default `0`). Bump the
   revision when re-submitting the same semver.
-- **Manifest.** `packaging/windows/AppxManifest.xml` carries a `@VERSION@`
-  placeholder that `ci/stage-msix.sh` substitutes at build time. Keep the
+- **Manifest.** `packaging/windows/AppxManifest.xml` carries placeholders for
+  the package version and the Visual C++ runtime framework dependency. The
+  workflow resolves the VCLibs identity from the Windows SDK, and
+  `ci/stage-msix.sh` substitutes those values at build time. Keep the
   `Identity Name`, `Publisher`, and Store assets in sync with the Partner
   Center listing.
 - **Signing.** The MSIX is built unsigned by default. Partner Center re-signs
