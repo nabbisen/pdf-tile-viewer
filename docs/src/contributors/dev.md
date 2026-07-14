@@ -152,7 +152,7 @@ It builds the RFC 014 artifact matrix, each with its bundled PDFium:
 | `linux-x64` | `ubuntu-latest` | `…-linux-x64.tar.gz` |
 | `windows-x64` | `windows-latest` | `…-windows-x64.zip` |
 | `macos-arm64` | `macos-latest` | `…-macos-arm64.tar.gz` |
-| `macos-x64` | `macos-13` | `…-macos-x64.tar.gz` |
+| `macos-x64` | `macos-15-intel` | `…-macos-x64.tar.gz` |
 
 Each build fetches the pinned PDFium for its platform, compiles the app,
 runs the engine smoke tests against that PDFium (the RFC 014 §7 package

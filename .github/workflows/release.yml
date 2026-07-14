@@ -58,7 +58,7 @@ jobs:
             lib_file: libpdfium.dylib
             bin_file: pdf-tile-viewer
           - name: macos-x64
-            os: macos-13
+            os: macos-15-intel
             rust_target: x86_64-apple-darwin
             pdfium_target: mac-x64
             platform_segment: macos-x86_64

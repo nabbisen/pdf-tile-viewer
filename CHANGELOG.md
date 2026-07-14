@@ -14,6 +14,8 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Added an explicit Microsoft.VCLibs framework dependency to the Microsoft
   Store MSIX manifest so Store installs provide the Visual C++ runtime needed
   by the Windows build and bundled PDFium.
+- Updated the macOS x64 release job to use the current Intel macOS GitHub
+  Actions runner label instead of the stale `macos-13` label.
 
 ---
 
