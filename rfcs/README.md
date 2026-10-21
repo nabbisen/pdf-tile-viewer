@@ -30,6 +30,12 @@ Execution order is serial and recorded in the Developer Handoffs below.
 | 037 | [User-Facing Error Presentation and Accessible Names](accepted/037-user-facing-error-presentation-and-accessible-names.md) | Accepted — planned 2.0.1 |
 | 038 | [Corrective Documentation, Governance, and Repository Hygiene](accepted/038-corrective-documentation-governance-and-repository-hygiene.md) | Accepted — planned 2.0.1 |
 
+### Proposed — emergency fix (awaiting owner acceptance)
+
+| ID | Title | Status |
+|----|-------|--------|
+| 039 | [Viewer Scale Shortcut Crash (Emergency Fix)](proposed/039-scale-shortcut-crash-hotfix.md) | Proposed — emergency |
+
 ---
 
 ## Proposed Follow-Ups
@@ -52,6 +58,7 @@ Execution order is serial and recorded in the Developer Handoffs below.
 | 023 | [Single-Page PDF Text Selection Layer](handoffs/023-pdf-text-selection-layer/implementation-handoff.md) (historical) |
 | 026 | [PDF Link and Outline Navigation](handoffs/026-pdf-link-outline-navigation/implementation-handoff.md) (historical) |
 | 033 | [Keyboard Routing, Modal Layers, and Dismissal Model](handoffs/033-keyboard-routing-and-dismissal-model/evidence-run.md) (evidence run only; implementation handoff pending) |
+| 039 | [Viewer Scale Shortcut Crash (Emergency Fix)](handoffs/039-scale-shortcut-crash-hotfix/implementation-handoff.md) (starts after acceptance) |
 | 034 | [Display-Space Page Geometry](handoffs/034-display-space-page-geometry/implementation-handoff.md) |
 | 035 | [Document Session Lifecycle and Render Freshness](handoffs/035-document-session-lifecycle-and-render-freshness/implementation-handoff.md) |
 | 036 | [Release Supply-Chain and Workflow Hardening](handoffs/036-release-supply-chain-and-workflow-hardening/implementation-handoff.md) |
