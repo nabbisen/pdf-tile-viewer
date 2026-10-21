@@ -276,7 +276,7 @@ storage policy before implementation.
 ## Future RFC-F14 — Render Pipeline and Image Transport
 
 > Planned as a minor-line RFC; **blocked on the measured evidence run**
-> (`.git-exclude/tasks/dev-team/002-evidence-run.md`).
+> (`rfcs/handoffs/033-keyboard-routing-and-dismissal-model/evidence-run.md`, Part B).
 
 ### Goal
 
