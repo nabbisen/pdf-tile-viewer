@@ -69,6 +69,7 @@ behavior (owned by RFC 033–037), rewriting published git history, new features
 - `.github/ISSUE_TEMPLATE/config.yaml` → `config.yml`, with a contact link to
   this repository (the current link points to `nabbisen/apimock-rs`).
 - Date the `[2.0.0]` CHANGELOG heading (2026-07-14, tag date).
+- Contributor chapter `docs/src/contributors/dioxus-desktop-lessons.md` (added 2026-10-22 at the owner's request): keep it truthful as RFC 033, 035, 037 and 039 land (update the matching "tracked in" statements and the checklist); each later slice that confirms or changes a lesson edits the chapter in the same change.
 - Commit and link `PRIVACY.md` from both READMEs and the docs; add a `ja`
   resource to the MSIX manifest when the owner confirms Store listing languages.
 
