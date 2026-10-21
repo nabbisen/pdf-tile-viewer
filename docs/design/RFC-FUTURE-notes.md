@@ -272,3 +272,37 @@ storage policy before implementation.
 - What clear/reset controls are required?
 - Should entries store full paths, display names only, or redacted paths?
 - Should private/incognito mode disable history writes?
+
+## Future RFC-F14 — Render Pipeline and Image Transport
+
+> Planned as a minor-line RFC; **blocked on the measured evidence run**
+> (`.git-exclude/tasks/dev-team/002-evidence-run.md`).
+
+### Goal
+
+Bound UI-side memory and make scrolling responsive on large documents: replace
+base64 data URIs with a custom image protocol (candidate:
+`dioxus-desktop` `use_asset_handler`), virtualize tile DOM, coalesce and
+throttle render requests, add engine-side priority/cancellation, and shape the
+engine boundary as process-ready (opaque ids, byte messages).
+
+### Security constraints carried forward
+
+Serve only cache entries addressed by opaque ids scoped to document and
+generation; never accept file-system paths; no directory listing; evaluate a
+restrictive CSP once `data:` URIs are gone.
+
+## Future RFC-F15 — Search Progress and Cancellation
+
+Search is one blocking engine command that stalls rendering on large documents.
+Needs progress reporting, cancellation, and bounded wait (goal-state § 19). It
+changes the engine protocol, so it is separate from F14.
+
+## Future RFC-F16 — PDFium Process Isolation
+
+The engine runs in-process on a single worker thread with no timeouts or size
+limits (`TooLargeForPolicy` is defined but never produced). A pathological PDF
+can hang rendering or abort the app. Candidate: a child-process engine with a
+serializable message protocol (RFC 016 § 14 "Separate PDFium worker process").
+Owner decision D6 (2026-10-21): open as a roadmap theme; discuss at the
+roadmap checkpoint.

@@ -1,6 +1,7 @@
 # RFC Index — PDF Tile Viewer
 
-Implemented RFCs live in `rfcs/done/`. Proposed follow-up work lives in
+Implemented RFCs live in `rfcs/done/`; accepted RFCs (design settled,
+implementation may start) in `rfcs/accepted/`; proposed follow-up work in
 `rfcs/proposed/`. The lifecycle policy is in
 `rfcs/done/000-rfc-lifecycle-policy.md`.
 
@@ -11,6 +12,23 @@ Implemented RFCs live in `rfcs/done/`. Proposed follow-up work lives in
 | ID | Title | Status |
 |----|-------|--------|
 | 000 | [RFC Lifecycle Policy](done/000-rfc-lifecycle-policy.md) | Implemented |
+
+---
+
+## Accepted — 2.0 Corrective Track (planned for 2.0.1)
+
+Owner-accepted 2026-10-21; implementers may start. The release version,
+schedule and gates are proposed by the architect and authorized by the owner.
+Execution order is serial and recorded in the Developer Handoffs below.
+
+| ID | Title | Status |
+|----|-------|--------|
+| 033 | [Keyboard Routing, Modal Layers, and Dismissal Model](accepted/033-keyboard-routing-and-dismissal-model.md) | Accepted — planned 2.0.1 |
+| 034 | [Display-Space Page Geometry](accepted/034-display-space-page-geometry.md) | Accepted — planned 2.0.1 |
+| 035 | [Document Session Lifecycle and Render Freshness](accepted/035-document-session-lifecycle-and-render-freshness.md) | Accepted — planned 2.0.1 |
+| 036 | [Release Supply-Chain and Workflow Hardening](accepted/036-release-supply-chain-and-workflow-hardening.md) | Accepted — planned 2.0.1 |
+| 037 | [User-Facing Error Presentation and Accessible Names](accepted/037-user-facing-error-presentation-and-accessible-names.md) | Accepted — planned 2.0.1 |
+| 038 | [Corrective Documentation, Governance, and Repository Hygiene](accepted/038-corrective-documentation-governance-and-repository-hygiene.md) | Accepted — planned 2.0.1 |
 
 ---
 
@@ -31,8 +49,10 @@ Implemented RFCs live in `rfcs/done/`. Proposed follow-up work lives in
 
 | RFC | Handoff |
 |-----|---------|
-| 023 | [Single-Page PDF Text Selection Layer](handoffs/023-pdf-text-selection-layer/implementation-handoff.md) |
-| 026 | [PDF Link and Outline Navigation](handoffs/026-pdf-link-outline-navigation/implementation-handoff.md) |
+| 023 | [Single-Page PDF Text Selection Layer](handoffs/023-pdf-text-selection-layer/implementation-handoff.md) (historical) |
+| 026 | [PDF Link and Outline Navigation](handoffs/026-pdf-link-outline-navigation/implementation-handoff.md) (historical) |
+| 036 | [Release Supply-Chain and Workflow Hardening](handoffs/036-release-supply-chain-and-workflow-hardening/implementation-handoff.md) |
+| 038 | [Corrective Documentation, Governance, and Repository Hygiene](handoffs/038-corrective-documentation-governance-and-repository-hygiene/implementation-handoff.md) (slices A and B′) |
 
 ---
 

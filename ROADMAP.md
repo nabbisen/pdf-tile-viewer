@@ -33,8 +33,29 @@ RFC designs live in `rfcs/proposed/`; the ADR and detailed roadmap are in
 | `2.0.0-beta.1` | Search, highlights, zoomed page viewer, file history |
 | `2.0.0-beta.11` | Final beta before 2.0.0; password-protected PDF opening |
 | `2.0.0 RC` | Release-candidate validation after RFC 026 follow-up acceptance |
-| `2.0.0` | Final release prep in progress |
+| `2.0.0` | Released (tag `2.0.0`) |
 | `2.1.0` | Post-2.0 candidates: settings/history policy, picker/zoom polish, optional platform investigations |
+
+---
+
+## Approved corrective track (owner decision, 2026-10-21)
+
+Correctness, safety, and truthfulness fixes found by the architect onboarding
+review. No new features. Proposed release: `2.0.1` (pending owner
+authorization of the schedule). Nothing is tagged or published without the
+owner's explicit go/no-go (DEC-001).
+
+| RFC | Theme |
+|-----|-------|
+| 033 | Keyboard routing, modal layers, Escape never leaves the document |
+| 034 | Display-space page geometry (rotation/crop correctness) |
+| 035 | Document session lifecycle and render freshness |
+| 036 | Release supply-chain and workflow hardening |
+| 037 | User-facing error presentation and accessible names |
+| 038 | Documentation truth, RFC-policy compliance, repository hygiene |
+
+Prerequisite evidence run (manual repro + measured stress test) precedes the
+render-pipeline RFC (F14).
 
 ---
 
@@ -55,6 +76,9 @@ Tracked in `docs/design/RFC-FUTURE-notes.md`:
 - **RFC 030 / F11** Smooth zoom-scale transition
 - **RFC 031 / F12** Settings storage with `app-json-settings`
 - **RFC 032 / F13** Persistent document history with privacy controls
+- **F14** Render pipeline and image transport (after the evidence run)
+- **F15** Search progress and cancellation
+- **F16** PDFium process isolation (roadmap theme; owner decision D6)
 
 Implemented former future themes:
 
@@ -66,5 +90,5 @@ Implemented former future themes:
 
 ## RFC status
 
-See `rfcs/README.md` for the full RFC index.
-All active RFCs are in `rfcs/proposed/`. Completed policy: `rfcs/done/`.
+See `rfcs/README.md` for the full RFC index. Proposed RFCs are in
+`rfcs/proposed/`; implemented RFCs and the lifecycle policy are in `rfcs/done/`.

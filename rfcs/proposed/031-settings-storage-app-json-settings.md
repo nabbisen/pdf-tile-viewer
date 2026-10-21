@@ -52,6 +52,25 @@ schema evolution, corrupt-file recovery, and privacy defaults.
 - Which current settings are safe to persist by default?
 - What tests are needed to prove migration does not lose settings?
 
+## 5a. Owner-Approved Design Inputs (2026-10-21)
+
+These come from the architect onboarding review and must be settled by this
+RFC's design (they are not optional alternatives):
+
+- Preserve unknown JSON keys across load/save (no silent data loss).
+- Never downgrade or overwrite a file whose `schema_version` is newer than the
+  supported one; treat it as read-only or back it up first.
+- Only a *parse* failure triggers the `.json.bak` replacement; a transient read
+  error must not rename the user's file.
+- Debounced, off-UI-thread writes (no per-slider-tick synchronous I/O).
+- Remove the dead keys from the schema and docs (`privacy.persist_recent_files`,
+  `privacy.include_full_paths_in_diagnostics`, `advanced.diagnostics_enabled`,
+  `window.maximized`, `viewer.zoom_overlay_alpha`); parsing stays tolerant so
+  old files still load. Persistent history (RFC 032) re-introduces its own key
+  only with its own design.
+- Separate "last used scale" from any "default scale"; the `0` key resets to a
+  documented, fixed 100%.
+
 ## 6. Acceptance / QA Checklist
 
 - [ ] Current and proposed storage paths are documented.
