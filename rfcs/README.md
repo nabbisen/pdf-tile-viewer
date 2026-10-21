@@ -51,6 +51,8 @@ Execution order is serial and recorded in the Developer Handoffs below.
 |-----|---------|
 | 023 | [Single-Page PDF Text Selection Layer](handoffs/023-pdf-text-selection-layer/implementation-handoff.md) (historical) |
 | 026 | [PDF Link and Outline Navigation](handoffs/026-pdf-link-outline-navigation/implementation-handoff.md) (historical) |
+| 034 | [Display-Space Page Geometry](handoffs/034-display-space-page-geometry/implementation-handoff.md) |
+| 035 | [Document Session Lifecycle and Render Freshness](handoffs/035-document-session-lifecycle-and-render-freshness/implementation-handoff.md) |
 | 036 | [Release Supply-Chain and Workflow Hardening](handoffs/036-release-supply-chain-and-workflow-hardening/implementation-handoff.md) |
 | 038 | [Corrective Documentation, Governance, and Repository Hygiene](handoffs/038-corrective-documentation-governance-and-repository-hygiene/implementation-handoff.md) (slices A and B′) |
 

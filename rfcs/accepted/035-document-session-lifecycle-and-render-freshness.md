@@ -62,18 +62,24 @@ change.
 
 Add `app_services::session_service::SessionService`, constructed once next to
 the existing services and holding the engine handle and the three caches'
-services. It exposes:
+services. It exposes two **synchronous** methods:
 
 ```rust
-pub async fn close(&self, id: DocumentId, generation: DocumentGeneration);
+pub fn opened(&self, session: &DocumentSession);              // registers the active session
+pub fn close(&self, id: DocumentId, generation: DocumentGeneration);
 ```
 
 `close` performs, in order: mark the session closed in every cache (so late
-results are refused), evict its entries, then `engine.close_document(id)`. The
-viewer calls it from a single lifecycle hook when the `Viewer` component is
-dropped; `open` flows already pass through the dashboard, so the invariant
-"at most one open session" holds. A debug assertion in `SessionService` checks
-that opening a second document while one is open is a logic error.
+results are refused), evict its entries, then send the engine
+`close_document(id)` command. It is deliberately fire-and-forget:
+`EngineHandle::close_document` sends its command eagerly when called (the
+returned future only awaits the reply), so dropping the future still closes the
+document, the engine thread executes commands in order, and no async runtime is
+needed in a component's drop hook. The viewer calls `close` from `use_drop`
+when the `Viewer` component is dropped; `open` flows already pass through the
+dashboard, so the invariant "at most one open session" holds. `opened` records
+the active session, and a debug assertion fails if a second session is
+registered while one is still active (logic error).
 
 ### 5.2 Shared closed-session guard
 
