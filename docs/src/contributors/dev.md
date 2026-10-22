@@ -129,6 +129,27 @@ Notes:
 - All public items should have doc comments.
 - English for all code comments and documentation.
 
+### Signal borrow rule
+
+Never keep a `read()` / `peek()` guard alive across a `set()` / `write()` of the
+same signal. This includes **temporaries inside call arguments**: they live until
+the end of the enclosing statement, so `change_scale(*scale.peek() + 0.2)` still
+holds the borrow when `change_scale` calls `scale.set(..)`. The result is an
+`AlreadyBorrowed` panic in an event callback, which aborts the whole application
+(this shipped in 2.0.0, RFC 039). Read into a `let` first, and prefer pure
+functions in `domain` for the arithmetic (see `ViewerScale::next`):
+
+```rust
+let current = *scale.peek();                 // guard dropped at the end of this statement
+if let Some(next) = ViewerScale::next(current, change) {
+    scale.set(next);
+}
+```
+
+The reasoning and further Dioxus pitfalls are in
+[Lessons for Dioxus Desktop Apps](dioxus-desktop-lessons.md). Before a release,
+run the [Release QA Checklist](release-qa.md) on a release build.
+
 ## Continuous integration and releases
 
 Two GitHub Actions workflows live in `.github/workflows/`:
