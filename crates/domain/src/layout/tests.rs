@@ -170,3 +170,56 @@ fn scale_bucketing_prevents_cache_fragmentation() {
     assert_eq!(ScaleBucket::from_scale(0.2).0, 20);
     assert_ne!(ScaleBucket::from_scale(1.0), ScaleBucket::from_scale(1.2));
 }
+
+// ── RFC 039: scale arithmetic ────────────────────────────────────────────────
+
+fn assert_close(actual: Option<f32>, expected: Option<f32>) {
+    match (actual, expected) {
+        (Some(a), Some(e)) => assert!((a - e).abs() < 1e-4, "{a} != {e}"),
+        (a, e) => assert_eq!(a, e),
+    }
+}
+
+#[test]
+fn scale_next_steps_up_and_down_from_default() {
+    assert_close(ViewerScale::next(1.0, ScaleChange::By(0.2)), Some(1.2));
+    assert_close(ViewerScale::next(1.0, ScaleChange::By(-0.2)), Some(0.8));
+}
+
+#[test]
+fn scale_next_rounds_to_one_decimal() {
+    // 1.0 + 0.14 = 1.14 -> 1.1
+    assert_close(ViewerScale::next(1.0, ScaleChange::By(0.14)), Some(1.1));
+    // repeated 0.2 steps do not drift (0.6000001 style float noise is rounded away)
+    let mut current = 1.0_f32;
+    for _ in 0..10 {
+        current = ViewerScale::next(current, ScaleChange::By(0.2)).expect("below max");
+    }
+    assert_close(Some(current), Some(3.0));
+    // a change smaller than the rounding step is not a change
+    assert_eq!(ViewerScale::next(1.0, ScaleChange::By(0.04)), None);
+}
+
+#[test]
+fn scale_next_clamps_at_both_ends() {
+    assert_close(ViewerScale::next(4.9, ScaleChange::By(0.2)), Some(5.0));
+    assert_eq!(ViewerScale::next(5.0, ScaleChange::By(0.2)), None);
+    assert_close(ViewerScale::next(0.3, ScaleChange::By(-0.2)), Some(0.2));
+    assert_eq!(ViewerScale::next(0.2, ScaleChange::By(-0.2)), None);
+    assert_close(ViewerScale::next(1.0, ScaleChange::To(9.0)), Some(5.0));
+    assert_close(ViewerScale::next(1.0, ScaleChange::To(-3.0)), Some(0.2));
+}
+
+#[test]
+fn scale_next_to_sets_and_reports_no_change_when_equal() {
+    assert_close(ViewerScale::next(1.4, ScaleChange::To(1.0)), Some(1.0));
+    assert_eq!(ViewerScale::next(1.0, ScaleChange::To(1.0)), None);
+    // equal after rounding counts as equal
+    assert_eq!(ViewerScale::next(1.0, ScaleChange::To(1.04)), None);
+}
+
+#[test]
+fn scale_next_ignores_non_finite_input() {
+    assert_eq!(ViewerScale::next(1.0, ScaleChange::By(f32::NAN)), None);
+    assert_eq!(ViewerScale::next(1.0, ScaleChange::To(f32::NAN)), None);
+}

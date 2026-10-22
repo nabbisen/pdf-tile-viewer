@@ -18,6 +18,27 @@ impl ViewerScale {
     pub fn clamped(value: f32) -> Self {
         ViewerScale(value.clamp(Self::MIN, Self::MAX))
     }
+
+    /// Next scale for `change` starting from `current`: apply, round to 0.1,
+    /// clamp to `[MIN, MAX]`. Returns `None` when the result differs from
+    /// `current` by less than 0.001 (nothing to change). RFC 039.
+    pub fn next(current: f32, change: ScaleChange) -> Option<f32> {
+        let target = match change {
+            ScaleChange::To(value) => value,
+            ScaleChange::By(delta) => current + delta,
+        };
+        let next = ((target * 10.0).round() / 10.0).clamp(Self::MIN, Self::MAX);
+        ((next - current).abs() >= 0.001).then_some(next)
+    }
+}
+
+/// A requested change of the viewer scale (RFC 039).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum ScaleChange {
+    /// Set the scale to this value.
+    To(f32),
+    /// Add this (possibly negative) amount to the current scale.
+    By(f32),
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

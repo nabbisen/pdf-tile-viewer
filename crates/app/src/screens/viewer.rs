@@ -11,7 +11,7 @@ use app_services::render_service::RenderService;
 use app_services::settings_service::SettingsStore;
 use domain::document::PageIndex;
 use domain::layout::{
-    LayoutGeneration, PagesPerRowMode, TileLayoutInput, ViewerScale, compute_layout,
+    LayoutGeneration, PagesPerRowMode, ScaleChange, TileLayoutInput, ViewerScale, compute_layout,
 };
 use domain::search::{PageHighlightSet, PageSearchSummary};
 use domain::settings::{AppSettingsV1, PagesPerRowPreference};
@@ -199,10 +199,11 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
         let next = *render_gen.peek() + 1;
         render_gen.set(next);
     };
-    let mut change_scale = move |v: f32| {
-        let c = ((v * 10.0).round() / 10.0).clamp(ViewerScale::MIN, ViewerScale::MAX);
-        if (c - *scale.peek()).abs() >= 0.001 {
-            scale.set(c);
+    let mut change_scale = move |change: ScaleChange| {
+        // Read in its own statement: no guard may be alive when `set` runs (RFC 039).
+        let current = *scale.peek();
+        if let Some(next) = ViewerScale::next(current, change) {
+            scale.set(next);
             invalidate();
         }
     };
@@ -236,9 +237,9 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
                 match evt.key() {
                     Key::Character(ref s) => match s.as_str() {
                         "z" | "Z" => zen_mode.toggle(),
-                        "+" | "=" => change_scale(*scale.peek() + 0.2),
-                        "-" => change_scale(*scale.peek() - 0.2),
-                        "0" => change_scale(default_scale),
+                        "+" | "=" => change_scale(ScaleChange::By(0.2)),
+                        "-" => change_scale(ScaleChange::By(-0.2)),
+                        "0" => change_scale(ScaleChange::To(default_scale)),
                         _ => {}
                     },
                     Key::Escape => {
@@ -255,7 +256,7 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
                 if evt.modifiers().ctrl() {
                     evt.prevent_default();
                     let d = evt.delta().strip_units().y;
-                    change_scale(*scale.peek() + if d < 0.0 { 0.2 } else { -0.2 });
+                    change_scale(ScaleChange::By(if d < 0.0 { 0.2 } else { -0.2 }));
                 }
             },
 
