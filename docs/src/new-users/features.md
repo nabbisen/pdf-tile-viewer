@@ -1,6 +1,6 @@
 # Features
 
-> **Status:** `2.0.0` release documentation.
+> **Status:** `2.0.1` release documentation.
 
 ## All pages as a tile grid
 

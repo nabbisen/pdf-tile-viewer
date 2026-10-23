@@ -11,6 +11,20 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [2.0.1] - 2026-10-28
+
+### Fixed
+
+- The application no longer aborts when the scale shortcuts `+`, `=`, `-` or
+  `Ctrl` + scroll are used in the viewer (RFC 039).
+
+### Added
+
+- Documentation: release QA checklist, the signal borrow rule in the
+  contributor guide, and the "Lessons for Dioxus Desktop Apps" chapter.
+
+---
+
 ## [2.0.0]
 
 ### Added

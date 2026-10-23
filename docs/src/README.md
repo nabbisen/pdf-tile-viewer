@@ -8,5 +8,5 @@ Choose your path:
 - **Intermediate Users** — Settings, keyboard shortcuts, and platform notes.
 - **Contributors** — Architecture, RFC designs, local development, and testing.
 
-> **Note:** This documentation covers the `2.0.0` release line.
+> **Note:** This documentation covers the `2.0.1` release line.
 > Post-2.0 ideas are tracked separately in the roadmap and RFC index.
