@@ -32,8 +32,8 @@ Shortcut routing, input guards, Escape behavior, tile freshness, zoom overlay co
 ## Acceptance criteria
 RFC 039 § 7 satisfied; no change outside the four listed files (plus tests and `SUMMARY.md`); review request delivered.
 
-## Release preparation (separate, last commit — only if the architect orders it after review)
-The owner decides whether and when to release. If ordered: (a) record the commit of the stray local tag `2.0.1` (`5c69522`) in the review request and delete the **local** tag (`git tag -d 2.0.1`; owner decision D7) — the release tag name must be free; (b) bump the workspace version to `2.0.1` in `Cargo.toml` and `Cargo.lock`; (c) add a dated `## [2.0.1]` section to `CHANGELOG.md` (Fixed: the abort); (d) update user-doc statements that name the "2.0.0 release line". Do **not** create or push any tag.
+## Release preparation
+Separate task, authorized by the owner on 2026-10-24: see [`release-preparation.md`](release-preparation.md). Not part of this slice's acceptance (already approved).
 
 ## Prohibited shortcuts
 Wrapping the call in `catch_unwind` or ignoring the panic; changing handler structure beyond the call-site change; skipping the release-build verification; editing the owner's real settings file.
