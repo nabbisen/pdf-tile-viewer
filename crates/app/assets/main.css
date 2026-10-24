@@ -438,6 +438,12 @@ button:focus-visible, input:focus-visible {
 }
 .zoom-image-wrap { position: relative; display: inline-block; }
 .zoom-image-wrap.has-links { cursor: pointer; }
+/* RFC 035 § 5.5: old image kept while the new scale renders; no interaction until it arrives. */
+.zoom-image-wrap.is-refreshing { cursor: progress; }
+.zoom-busy-dot {
+  position: absolute; top: 0.6rem; right: 0.6rem; z-index: 3;
+  pointer-events: none;
+}
 .zoom-img {
   position: relative;
   z-index: 0;

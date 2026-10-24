@@ -14,7 +14,7 @@ use domain::document::{DocumentGeneration, DocumentId, PageIndex};
 use domain::render::{RenderFlags, RenderOutputFormat, RenderPageRequest, ScaleBucket};
 use domain::text::TextLayerRequest;
 
-use super::state::{ZoomImageState, ZoomPageLinksState, ZoomTextLayerState};
+use super::state::{ReadyImage, ZoomImageState, ZoomPageLinksState, ZoomTextLayerState};
 use super::util;
 
 /// Render the current page when the page or scale changes.
@@ -42,9 +42,25 @@ pub(super) fn use_page_image_loader(
             flags: RenderFlags::default(),
             format: RenderOutputFormat::Png,
         };
+        // The image currently shown (or kept while a render is pending), if any.
+        let shown: Option<ReadyImage> = match &*zoom_image.peek() {
+            ZoomImageState::Ready(image) => Some(image.clone()),
+            ZoomImageState::Loading { previous } => previous.clone(),
+            ZoomImageState::Failed(_) => None,
+        };
+        // Already showing this page at this bucket: nothing to render.
+        if matches!(&*zoom_image.peek(), ZoomImageState::Ready(image)
+            if image.page_index == idx && image.bucket == scale_bucket)
+        {
+            return;
+        }
         let request_id = *image_request_seq.peek() + 1;
         image_request_seq.set(request_id);
-        zoom_image.set(ZoomImageState::Loading);
+        // Scale change on the same page: keep the old image until the new one arrives
+        // (RFC 035 § 5.5). Page change: placeholder.
+        let previous = shown
+            .filter(|image| util::keep_previous(image.page_index, image.bucket, idx, scale_bucket));
+        zoom_image.set(ZoomImageState::Loading { previous });
 
         let rs2 = rs.clone();
         let mut zi = zoom_image;
@@ -63,11 +79,13 @@ pub(super) fn use_page_image_loader(
                         *active_scale.peek(),
                         scale_bucket,
                     ) {
-                        zi.set(ZoomImageState::Ready {
+                        zi.set(ZoomImageState::Ready(ReadyImage {
                             uri: format!("data:image/png;base64,{b64}"),
                             width_px: w,
                             height_px: h,
-                        });
+                            page_index: idx,
+                            bucket: scale_bucket,
+                        }));
                     }
                 }
                 Err(e) => {

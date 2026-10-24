@@ -17,6 +17,19 @@ pub fn png_dimensions(data: &[u8]) -> Option<(u32, u32)> {
     Some((w, h))
 }
 
+/// Whether the image shown for `prev_*` stays visible while `next_*` renders
+/// (RFC 035 § 5.5): only when the **scale** changes on the **same page**. An image of another
+/// page must never be shown under a new page number, and an image of the same bucket needs
+/// no replacement.
+pub fn keep_previous(
+    prev_page: PageIndex,
+    prev_bucket: ScaleBucket,
+    next_page: PageIndex,
+    next_bucket: ScaleBucket,
+) -> bool {
+    prev_page == next_page && prev_bucket != next_bucket
+}
+
 /// Compute RFC 011 highlight overlay rects for the zoom view.
 ///
 /// Returns image-space `RectPx` values ready to position as overlay `<div>`s.

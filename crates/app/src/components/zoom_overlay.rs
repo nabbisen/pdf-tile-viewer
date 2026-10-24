@@ -33,7 +33,7 @@ use domain::settings::AppSettingsV1;
 use crate::i18n::{Locale, MessageKey, t};
 
 use external_uri_dialog::ExternalUriDialogState;
-use state::{ZoomImageState, ZoomPageLinksState, ZoomTextLayerState};
+use state::{ReadyImage, ZoomImageState, ZoomPageLinksState, ZoomTextLayerState};
 
 const ZOOM_SCALE_MIN: f32 = 0.5;
 const ZOOM_SCALE_MAX: f32 = 8.0;
@@ -65,7 +65,8 @@ pub fn ZoomOverlay(
             .zoom_overlay_scale
             .clamp(ZOOM_SCALE_MIN, ZOOM_SCALE_MAX)
     });
-    let zoom_image: Signal<ZoomImageState> = use_signal(|| ZoomImageState::Loading);
+    let zoom_image: Signal<ZoomImageState> =
+        use_signal(|| ZoomImageState::Loading { previous: None });
     let zoom_text_layer: Signal<ZoomTextLayerState> = use_signal(|| ZoomTextLayerState::Loading);
     let zoom_page_links: Signal<ZoomPageLinksState> = use_signal(|| ZoomPageLinksState::Loading);
     let image_request_seq: Signal<u64> = use_signal(|| 0);
@@ -118,47 +119,39 @@ pub fn ZoomOverlay(
     };
 
     // ── Highlight rects in image-space for current page ───────────────────
+    // Text, highlights and link areas exist only for a `Ready` image: while an image of
+    // another scale is kept during a re-render, their geometry would not match it.
     let highlight_rects: Vec<RectPx> = match &*zoom_image.read() {
-        ZoomImageState::Ready {
-            width_px,
-            height_px,
-            ..
-        } => util::zoom_highlight_rects(
+        ZoomImageState::Ready(image) => util::zoom_highlight_rects(
             current_idx,
             &page_descriptors,
             &search_highlights,
-            *width_px,
-            *height_px,
+            image.width_px,
+            image.height_px,
         ),
         _ => Vec::new(),
     };
     let text_segment_rects = match (&*zoom_image.read(), &*zoom_text_layer.read()) {
-        (
-            ZoomImageState::Ready {
-                width_px,
-                height_px,
-                ..
-            },
-            ZoomTextLayerState::Ready(layer),
-        ) => util::zoom_text_segment_rects(
-            current_idx,
-            &page_descriptors,
-            layer,
-            *width_px,
-            *height_px,
-        ),
+        (ZoomImageState::Ready(image), ZoomTextLayerState::Ready(layer)) => {
+            util::zoom_text_segment_rects(
+                current_idx,
+                &page_descriptors,
+                layer,
+                image.width_px,
+                image.height_px,
+            )
+        }
         _ => Vec::new(),
     };
     let page_link_rects = match (&*zoom_image.read(), &*zoom_page_links.read()) {
-        (
-            ZoomImageState::Ready {
-                width_px,
-                height_px,
-                ..
-            },
-            ZoomPageLinksState::Ready(links),
-        ) => {
-            util::zoom_page_link_rects(current_idx, &page_descriptors, links, *width_px, *height_px)
+        (ZoomImageState::Ready(image), ZoomPageLinksState::Ready(links)) => {
+            util::zoom_page_link_rects(
+                current_idx,
+                &page_descriptors,
+                links,
+                image.width_px,
+                image.height_px,
+            )
         }
         _ => Vec::new(),
     };
@@ -258,7 +251,7 @@ pub fn ZoomOverlay(
                     // ── Page image ─────────────────────────────────────────
                     div { class: "zoom-image-container",
                         match &*zoom_image.read() {
-                            ZoomImageState::Ready { uri, width_px, height_px } => rsx! {
+                            ZoomImageState::Ready(ReadyImage { uri, width_px, height_px, .. }) => rsx! {
                                 {
                                     let wrap_class = if page_link_rects.is_empty() {
                                         "zoom-image-wrap"
@@ -326,7 +319,31 @@ pub fn ZoomOverlay(
                                     }
                                 }
                             },
-                            ZoomImageState::Loading => rsx! {
+                            // Scale change on the same page: the old image stays, plain (no text,
+                            // highlight or link layers, so no selection or link activation),
+                            // with a small busy dot, until the new render replaces it.
+                            ZoomImageState::Loading { previous: Some(ReadyImage { uri, width_px, height_px, .. }) } => rsx! {
+                                div {
+                                    id: "zoom-image-wrap",
+                                    class: "zoom-image-wrap is-refreshing",
+                                    "aria-busy": "true",
+                                    style: "position: relative; display: inline-block; \
+                                            width: {width_px}px; height: {height_px}px;",
+                                    img {
+                                        class: "zoom-img",
+                                        src: "{uri}",
+                                        alt: "{page_alt}",
+                                        draggable: "false",
+                                        style: "display: block; \
+                                                width: {width_px}px; height: {height_px}px; \
+                                                max-width: none;",
+                                        width: "{width_px}",
+                                        height: "{height_px}",
+                                    }
+                                    span { class: "zoom-busy-dot tile-loading-dot" }
+                                }
+                            },
+                            ZoomImageState::Loading { previous: None } => rsx! {
                                 div { class: "zoom-placeholder",
                                     span { class: "tile-loading-dot" }
                                 }

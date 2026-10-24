@@ -323,3 +323,47 @@ fn movement_threshold_distinguishes_click_from_drag() {
         4.0
     ));
 }
+
+#[test]
+fn keep_previous_when_only_the_scale_changes_on_the_same_page() {
+    assert!(keep_previous(
+        PageIndex(2),
+        ScaleBucket(270),
+        PageIndex(2),
+        ScaleBucket(300)
+    ));
+    assert!(keep_previous(
+        PageIndex(0),
+        ScaleBucket(800),
+        PageIndex(0),
+        ScaleBucket(500)
+    ));
+}
+
+#[test]
+fn keep_previous_is_false_when_the_page_changes() {
+    // Another page's image under the new page number would mislead, whatever the scale.
+    assert!(!keep_previous(
+        PageIndex(2),
+        ScaleBucket(270),
+        PageIndex(3),
+        ScaleBucket(300)
+    ));
+    assert!(!keep_previous(
+        PageIndex(2),
+        ScaleBucket(270),
+        PageIndex(3),
+        ScaleBucket(270)
+    ));
+}
+
+#[test]
+fn keep_previous_is_false_for_the_same_page_and_bucket() {
+    // Nothing to replace: the loader does not start a render for this case.
+    assert!(!keep_previous(
+        PageIndex(1),
+        ScaleBucket(270),
+        PageIndex(1),
+        ScaleBucket(270)
+    ));
+}
