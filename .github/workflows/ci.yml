@@ -103,7 +103,7 @@ jobs:
       - name: Engine smoke tests (with PDFium)
         env:
           PDF_TILE_VIEWER_PDFIUM_DIR: ${{ github.workspace }}/ci/.pdfium
-        run: cargo test -p pdf_engine --test smoke
+        run: cargo test -p pdf_engine --test smoke --test oracle
 
   # macOS and Windows used to compile for the first time at tag time (RFC 036 G-06).
   # macOS Intel is covered by the release matrix only.
@@ -148,7 +148,7 @@ jobs:
         shell: bash
         env:
           PDF_TILE_VIEWER_PDFIUM_DIR: ${{ github.workspace }}/ci/.pdfium
-        run: cargo test -p pdf_engine --test smoke
+        run: cargo test -p pdf_engine --test smoke --test oracle
 
   # Release tooling: shell lint, version consistency, and the self-tests of every
   # ci/*.sh guard (RFC 036 § 5.1, 5.2, 5.4a, 5.7).

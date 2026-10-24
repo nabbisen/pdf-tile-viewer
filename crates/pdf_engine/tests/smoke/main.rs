@@ -93,6 +93,7 @@ macro_rules! require_engine {
 
 mod document;
 mod encryption;
+mod geometry;
 mod lifecycle;
 mod navigation;
 mod render;

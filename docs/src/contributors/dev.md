@@ -45,7 +45,7 @@ The PDFium engine smoke tests are separate and still need the env var:
 
 ```sh
 PDF_TILE_VIEWER_PDFIUM_DIR="$(pwd)/ci/.pdfium" \
-    cargo test -p pdf_engine --test smoke
+    cargo test -p pdf_engine --test smoke --test oracle
 ```
 
 ## Workspace layout
