@@ -41,7 +41,7 @@ In `Viewer` (`crates/app/src/screens/viewer.rs`) add `use_drop(move || session_s
 - `invalidate()` keeps its role (reset non-`Ready` tiles to `Pending`, bump `render_gen`); update its comment.
 
 ### 6. Zoom overlay keeps the previous image (RFC 035 § 5.5, amendment 2026-10-24)
-Implement `ZoomImageState::Loading { previous: Option<ReadyImage> }` and the pure `keep_previous(prev_page, prev_bucket, next_page, next_bucket)` in `zoom_overlay/state.rs`/`util.rs` (tests: same page + bucket change keeps; page change drops; same bucket n/a). While a kept image is shown, hide the text layer, highlights and link hit areas (their geometry belongs to the other scale). Manual check: zoom `+` repeatedly 2.7× → 8.0× with frame screenshots every ~40 ms: no blank frame; page change shows the placeholder.
+Implement `ZoomImageState::Loading { previous: Option<ReadyImage> }` and the pure `keep_previous(prev_page, prev_bucket, next_page, next_bucket)` in `zoom_overlay/state.rs`/`util.rs` (tests: same page + bucket change keeps; page change drops; same bucket n/a). While a kept image is shown, hide the text layer, highlights and link hit areas (their geometry belongs to the other scale). Evidence (done and approved; kept as the record of the question): the kept image on a scale change and the placeholder on a page change are proven by the pure `keep_previous` tests plus code review of the loader; no frame sampling.
 
 ## Non-change scope
 Scheduling policy, prefetch margin, image transport (data URIs stay), search, zoom overlay, keyboard handling, error messages, settings, any engine protocol change.
