@@ -1,6 +1,6 @@
 # Handoff — RFC 040 Tile Retention Window
 
-Governing RFC: [`../../proposed/040-tile-retention-window.md`](../../proposed/040-tile-retention-window.md) — **start only after the owner has accepted RFC 040** (the architect moves it to `rfcs/accepted/` and fixes this link).
+Governing RFC: [`../../accepted/040-tile-retention-window.md`](../../accepted/040-tile-retention-window.md) — accepted by the owner on 2026-10-24.
 Executes the RFC; must not redefine it. Slice R, after RFC 035 (slice D) is committed. Working model: directly on `main`, one actor, hand over with the commit hash, `main` green. No tags, no releases (DEC-001). **GUI test protocol applies** (scratch `XDG_CONFIG_HOME`, transient `systemd --user` unit, verify the focused window before every `wtype`/`xdotool` call, `wtype -d 50`).
 
 ## Purpose

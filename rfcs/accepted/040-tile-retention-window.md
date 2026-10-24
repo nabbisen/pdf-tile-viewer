@@ -3,7 +3,8 @@ project: PDF Tile Viewer
 document_family: 2.0 corrective RFCs
 language: English
 date: 2026-10-24
-status: Proposed (awaiting owner acceptance of the text)
+status: Accepted (planned for 2.0.2)
+accepted: 2026-10-24
 baseline: PDF Tile Viewer 2.0.1
 priority: Corrective
 depends_on: RFC 007, RFC 035

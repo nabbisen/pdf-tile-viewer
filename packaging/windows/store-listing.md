@@ -28,7 +28,7 @@ Features 20 × 200, Search terms 7 × 30); confirm them in Partner Center when p
    `LANG` environment variable, which Windows normally does not set, so on Windows
    the UI is English unless `ui.locale` is edited in `settings.json`. Do **not**
    advertise "Japanese user interface" until system-locale detection is fixed
-   (finding recorded by the architect; see the 2.0.2/2.1.0 plan). The Japanese
+   (RFC 043, in the 2.0.2 train; lift this hold only after the Japanese-Windows check in RFC 043 § 6 passes). The Japanese
    *listing* itself is fine.
 7. **WebView2.** The window uses the Microsoft Edge WebView2 Runtime (included in Windows 11, delivered with Edge on Windows 10). Certification flagged only Visual C++ last time; if it asks about WebView2 as well, add one line to both descriptions' first two lines. Test on a Windows 10 machine if you have one.
 

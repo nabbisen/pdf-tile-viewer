@@ -39,7 +39,7 @@ Make the pipeline verify what it ships and give each job only the privileges it 
 - `ci.yml`: add `cargo test -p app` to the Linux job; add `macos-latest` and `windows-latest` jobs running `cargo check --workspace`, `cargo test --workspace`, and the PDFium smoke test against the verified platform asset (`fail-fast: false`; set `PDF_TILE_VIEWER_PDFIUM_DIR` per platform; use bash steps on Windows).
 - `actionlint` job (pinned release binary or pinned action) over `.github/workflows`.
 - `deny.toml` and a `cargo-deny` job (pinned action), advisories + licenses + bans, `continue-on-error: true` initially. Triage the first report: list findings in the review request; do not suppress advisories without a written reason in `deny.toml`.
-- Clippy: add a **non-blocking** job (`continue-on-error: true`) running `cargo clippy --workspace --all-targets -- -D warnings`. (The owner has not yet answered RFC 036 § 5.6; making it blocking is a one-line change the architect will order.)
+- Clippy: **blocking** job `cargo clippy --workspace --all-targets -- -D warnings` after fixing the two existing warnings (RFC 036 § 5.6, owner-approved) — see § 9.
 
 ### 6. Documentation
 Update `docs/src/contributors/dev.md` (PDFium bump procedure with hashes, release guard, dry-run on a fork) and `docs/src/contributors/testing.md` (new CI jobs). Correct any statement claiming checksum verification existed before. **Do not** touch other documentation (RFC 038 slices own it).
@@ -53,13 +53,19 @@ The 2.0.1 GitHub Release contained a stray `pdf-tile-viewer-v2.0.0-linux-x64.tar
 ### 8. Version single source and the release-preparation workflow (RFC 036 § 5.7, owner-approved 2026-10-24)
 Implement RFC 036 § 5.7 exactly. In order:
 1. `packaging/windows/AppxManifest.xml`: set the real `Version="2.0.1.0"` (the current Cargo version `.0`); remove the placeholder comment.
-2. `ci/set-version.sh`, `ci/verify-version-consistency.sh` and their self-tests (`ci/set-version-self-test.sh`, `ci/verify-version-consistency-self-test.sh`, using temporary copies of the files): cases — clean run; dirty tree refused; invalid version refused; CHANGELOG heading missing refused; manifest/Cargo mismatch detected; non-zero revision detected; placeholder detected; pre-release suffix dropped in the manifest only.
+2. `ci/set-version.sh` (also: the CHANGELOG heading must read `## [X.Y.Z] - unreleased`; the script replaces `unreleased` with today's UTC date), `ci/verify-version-consistency.sh` (heading dated or `unreleased`) and their self-tests (`ci/set-version-self-test.sh`, `ci/verify-version-consistency-self-test.sh`, using temporary copies of the files): cases — clean run; dirty tree refused; invalid version refused; CHANGELOG heading missing refused; manifest/Cargo mismatch detected; non-zero revision detected; placeholder detected; pre-release suffix dropped in the manifest only.
 3. `ci.yml`: run the consistency check and all self-tests on every push; add `workflow_call` with an optional `ref` input and check out `${{ inputs.ref || github.sha }}`.
 4. `.github/workflows/prepare-release.yml` per § 5.7 item 4. The bot identity is `github-actions[bot]`; use the token that `actions/checkout` provides (no personal tokens, no new secrets). Require a successful CI run for the head of `main` (query with `gh api`/`gh run list` using `GH_TOKEN: ${{ github.token }}` and the default read permission); fail clearly otherwise. Never create a tag.
 5. `release.yml` `verify-tag`: also run `ci/verify-version-consistency.sh`. `msix-store.yml` and `ci/stage-msix.sh`: remove `msix_revision` everywhere; the stage script verifies the manifest version and writes `msix-version.txt` (single source for the output file name); keep the post-staging checks (no placeholder, no VCLibs dependency, VC runtime DLLs present).
 6. Docs: `docs/src/contributors/dev.md` — replace the manual release recipe by the new order of work (§ 5.7), state that the MSIX revision is always 0 and why (link the Microsoft Learn page), document the bot-bypass note and the `main` protection status; correct the DEC-015 wording wherever it appears in tracked docs.
 7. **Evidence:** self-tests pass locally and in CI; `actionlint` clean; demonstrate the guards by deliberately breaking each (manifest mismatch, non-zero revision) in a scratch copy. **Dry-run instructions for the owner (fork):** how to create a throw-away fork, dispatch *Prepare release* with a pre-release version (for example `2.0.2-rc.1`, with a matching CHANGELOG heading on the fork), what the resulting commit must contain (`git show --stat`), that CI runs on it, and that no tag exists. You do **not** run it on the real repository.
 
+
+### 9. Pinned toolchain and blocking clippy (RFC 036 § 5.6, owner-approved 2026-10-24)
+1. Fix the two clippy warnings first (`outline_panel.rs` redundant closure; the needless borrow in `zoom_overlay/link_layer.rs`) — behavior-preserving, listed in the review request as the only app-code change of this slice.
+2. `rust-toolchain.toml` at the repository root: `[toolchain] channel = "<exact current stable, e.g. 1.99.1>"`, `components = ["rustfmt", "clippy"]`, `profile = "minimal"`. Update every workflow to use it (no `rustup default stable`; a `rustup show` step installs the pinned toolchain; add per-job `rustup target add` for release targets afterwards; include `rust-toolchain.toml` in cache keys). Confirm on each OS runner in the fork dry run.
+3. `ci.yml`: blocking `clippy` job; `docs/src/contributors/dev.md`: the toolchain statement becomes true; add the bump procedure (monthly check, one commit, fix new lints) and "no MSRV declared"; `testing.md`: the gate now includes clippy.
+4. Evidence: clippy clean on all targets locally and in CI; a deliberately introduced warning in a scratch copy fails the job.
 
 ## Non-change scope
 Signing behavior, artifact layout, packaged-artifact smoke logic, the `msix_revision` input semantics, release notes generation, application code.

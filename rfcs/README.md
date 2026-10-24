@@ -26,18 +26,14 @@ Execution order is serial and recorded in the Developer Handoffs below.
 | 033 | [Keyboard Routing, Modal Layers, and Dismissal Model](accepted/033-keyboard-routing-and-dismissal-model.md) | Accepted — planned 2.0.2 |
 | 034 | [Display-Space Page Geometry](accepted/034-display-space-page-geometry.md) | Accepted — planned 2.0.2 |
 | 035 | [Document Session Lifecycle and Render Freshness](accepted/035-document-session-lifecycle-and-render-freshness.md) | Accepted — planned 2.0.2 |
+| 040 | [Tile Retention Window](handoffs/040-tile-retention-window/implementation-handoff.md) |
 | 036 | [Release Supply-Chain and Workflow Hardening](accepted/036-release-supply-chain-and-workflow-hardening.md) | Accepted — planned 2.0.2 |
 | 037 | [User-Facing Error Presentation and Accessible Names](accepted/037-user-facing-error-presentation-and-accessible-names.md) | Accepted — planned 2.0.2 |
+| 043 | [System Locale Detection](handoffs/043-system-locale-detection/implementation-handoff.md) |
 | 038 | [Corrective Documentation, Governance, and Repository Hygiene](accepted/038-corrective-documentation-governance-and-repository-hygiene.md) | Accepted — planned 2.0.2 |
 | 039 | [Viewer Scale Shortcut Crash (Emergency Fix)](accepted/039-scale-shortcut-crash-hotfix.md) | Accepted — emergency, released in 2.0.1 |
-
-### Proposed — corrective track addition (awaiting owner acceptance of the text)
-
-| ID | Title | Status |
-|----|-------|--------|
-| 040 | [Tile Retention Window](proposed/040-tile-retention-window.md) | Proposed — planned 2.0.2 (handoff: [040](handoffs/040-tile-retention-window/implementation-handoff.md), starts after acceptance) |
-
----
+| 040 | [Tile Retention Window](accepted/040-tile-retention-window.md) | Accepted — planned 2.0.2 |
+| 043 | [System Locale Detection](accepted/043-system-locale-detection.md) | Accepted — planned 2.0.2 |
 
 ## Proposed Follow-Ups
 
@@ -63,8 +59,8 @@ Execution order is serial and recorded in the Developer Handoffs below.
 | 035 | [Document Session Lifecycle and Render Freshness](handoffs/035-document-session-lifecycle-and-render-freshness/implementation-handoff.md) |
 | 033 | [Keyboard Routing, Modal Layers, and Dismissal Model](handoffs/033-keyboard-routing-and-dismissal-model/implementation-handoff.md) (evidence run: [evidence-run.md](handoffs/033-keyboard-routing-and-dismissal-model/evidence-run.md)) |
 | 036 | [Release Supply-Chain and Workflow Hardening](handoffs/036-release-supply-chain-and-workflow-hardening/implementation-handoff.md) |
-| 037 | [User-Facing Error Presentation and Accessible Names](handoffs/037-user-facing-error-presentation-and-accessible-names/implementation-handoff.md) |
-| 038 | [Corrective Documentation, Governance, and Repository Hygiene](handoffs/038-corrective-documentation-governance-and-repository-hygiene/implementation-handoff.md) (slices A and B′) |
+| 037 | [User-Facing Error Presentation and Accessible Names](handoffs/037-user-facing-error-presentation-and-accessible-names/implementation-handoff.md) ([listening session](handoffs/037-user-facing-error-presentation-and-accessible-names/screen-reader-listening-session.md)) |
+| 038 | [Corrective Documentation, Governance, and Repository Hygiene](handoffs/038-corrective-documentation-governance-and-repository-hygiene/implementation-handoff.md) (slices A and B′; [final sync](handoffs/038-corrective-documentation-governance-and-repository-hygiene/final-sync.md)) |
 
 ---
 

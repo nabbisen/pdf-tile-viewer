@@ -128,10 +128,12 @@ placeholder, which is not a valid manifest.
    versions in `Cargo.toml`; refreshes `Cargo.lock` (workspace crates only); sets
    the manifest to `<core>.0` (a pre-release suffix is dropped); requires that
    `CHANGELOG.md` already contains `## [<version>]` (release notes are written by
-   people, not by CI); prints a summary. It has a self-test.
+   people, not by CI) **and that its heading reads `## [<version>] - unreleased`**;
+   the script replaces `unreleased` with the preparation date (UTC), so dates can no
+   longer be wrong by hand. It prints a summary and has a self-test.
 3. `ci/verify-version-consistency.sh` (self-tested) checks: Cargo version core ==
    manifest core, manifest revision is `0`, no `@…@` placeholder, and a CHANGELOG
-   heading for the Cargo version exists. It runs in `ci.yml` on every push and as
+   heading for the Cargo version exists (dated or `unreleased`). It runs in `ci.yml` on every push and as
    part of `verify-tag` (§ 5.2), which additionally requires tag == Cargo version.
 4. `.github/workflows/prepare-release.yml` (`workflow_dispatch`, input `version`):
    workflow permissions `contents: read`; the single job `prepare` gets
@@ -168,12 +170,18 @@ commit → `release.yml` and `msix-store.yml` follow.
 - Add `cargo deny` (advisories, licences, bans) via a SHA-pinned action,
   initially non-blocking to establish a baseline, then blocking after triage.
 
-### 5.6 Open question for the owner
+### 5.6 Clippy is blocking, with a pinned toolchain (owner decision 2026-10-24)
 
-Promote `cargo clippy --workspace --all-targets -- -D warnings` from advisory
-(DEC-016) to a blocking job? There are 2 warnings today; the change would also
-let RFC 037 enforce `clippy::use_debug` in the `app` crate. Not assumed by this
-RFC.
+`cargo clippy --workspace --all-targets -- -D warnings` is a **blocking** CI job
+(DEC-016 is superseded: the project gate is fmt + check + clippy + test). Because an
+unpinned `stable` can turn `main` red with no commit (new lints every six weeks),
+the toolchain is **pinned** in `rust-toolchain.toml` (explicit version, components
+`rustfmt` and `clippy`, profile `minimal`). All workflows use the pinned toolchain;
+the release candidate is thereby reproducible. The pin is bumped deliberately (in
+the monthly upstream watch): one commit changes the version and fixes any new
+lints. The two existing warnings are fixed first (redundant closure in
+`outline_panel.rs`; needless borrow in `zoom_overlay/link_layer.rs`). This also lets
+RFC 037's `clippy::use_debug` lint be enforced. No MSRV is declared.
 
 ## 6. Alternatives considered
 
