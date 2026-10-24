@@ -11,6 +11,10 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Memory use no longer grows with the number of pages scrolled past (RFC 040). Rendered
+  pages are kept only within about two screen heights of the view (and at most 80 at a
+  time); pages further away are released and show the loading placeholder when you scroll
+  back to them.
 - Closing a document now releases it. Returning to the dashboard or opening another file used to
   leave the native PDFium document, its text/link data and its cached page images in memory for the
   rest of the process; one `SessionService` now closes everything, and results that arrive after the

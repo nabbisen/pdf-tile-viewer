@@ -58,3 +58,12 @@ For source builds, see the contributor development guide for PDFium setup.
 
 No. 2.0.1 is unsigned. On macOS or Windows you may see an OS security
 prompt the first time you run it.
+
+**Why do pages far from the view show a loading placeholder?**
+
+To keep memory use low, the viewer keeps rendered pages only near what you are
+looking at (about two screen heights above and below). Pages further away are
+released, and they show the loading placeholder for a moment when you scroll
+back to them, then fill in again. Pages close to the view are never affected.
+The effect is that memory use stays about the same however long the document is
+and however far you scroll.

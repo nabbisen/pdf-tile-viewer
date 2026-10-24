@@ -12,7 +12,9 @@ use dioxus::prelude::*;
 
 use app_services::render_service::RenderService;
 use domain::document::{DocumentGeneration, DocumentId, PageIndex};
-use domain::layout::{TileLayout, ViewportRect, query_visibility};
+use domain::layout::{
+    RetentionLimits, TileLayout, ViewportRect, query_visibility, retention_victims,
+};
 use domain::render::{RenderFlags, RenderOutputFormat, RenderPageRequest, ScaleBucket};
 
 use crate::state::{TileImageState, TileImages};
@@ -26,6 +28,21 @@ const PREFETCH_MARGIN_PX: f32 = 600.0;
 /// bucket is stale: it keeps showing, and a render for the wanted bucket is requested.
 pub fn tile_needs_render(state: Option<&TileImageState>, wanted: ScaleBucket) -> bool {
     !matches!(state, Some(TileImageState::Ready { bucket, .. }) if *bucket == wanted)
+}
+
+/// Returns the victims of a retention pass to `Pending` (RFC 040 § 4.2), dropping their image.
+///
+/// Only `Ready` tiles are reset: a tile that has started rendering or failed since the plan
+/// was made is left alone. Returns whether anything changed.
+pub fn apply_retention(states: &mut TileImages, victims: &[PageIndex]) -> bool {
+    let mut changed = false;
+    for page in victims {
+        if let Some(state @ TileImageState::Ready { .. }) = states.get_mut(page) {
+            *state = TileImageState::Pending;
+            changed = true;
+        }
+    }
+    changed
 }
 
 /// Schedule renders for visible and near-visible tiles only.
@@ -59,6 +76,23 @@ pub fn schedule_visible_renders(
         .map(|&p| (p, true))
         .chain(vis.prefetch_pages.iter().map(|&p| (p, false)))
         .collect();
+
+    // Release rendered tiles that are far from the viewport (RFC 040): memory follows the
+    // window, not the number of pages scrolled past. The cap never goes below the number of
+    // tiles wanted right now, so a tile the scheduler is about to request is not evicted.
+    {
+        let ready: Vec<PageIndex> = tile_images
+            .peek()
+            .iter()
+            .filter(|(_, state)| matches!(state, TileImageState::Ready { .. }))
+            .map(|(page, _)| *page)
+            .collect();
+        let limits = RetentionLimits::for_viewport(viewport_height).with_min_cap(to_render.len());
+        let victims = retention_victims(&layout, viewport, &ready, limits);
+        if !victims.is_empty() {
+            apply_retention(&mut tile_images.write(), &victims);
+        }
+    }
 
     // Keep only the tiles that are not yet satisfied at this scale bucket.
     let to_render: Vec<(PageIndex, bool)> = to_render

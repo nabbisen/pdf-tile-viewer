@@ -111,7 +111,8 @@ must not close or freeze at any step.
 
 ## 9. Closing
 
-- [ ] Reopening several documents in a row (open, **← Back**, open) works without slowing down — memory growth per open is **known failing until RFC 035**.
+- [ ] Reopening several documents in a row (open, **← Back**, open) works without slowing down and memory does not grow per open (RFC 035: a closed document is released).
+- [ ] Memory plateau (RFC 040): on a 100-page document, scroll from the first to the last page and back, twice. Total memory (app plus WebKit processes) after the second pass is within 10 % of the first pass, and well below what holding every page would need. Tiles within two screens of the view never blink; far tiles show the loading placeholder and fill in.
 - [ ] Closing the window ends the process; the stderr log contains no `panicked`.
 - [ ] Paste the stderr log (or "empty") into the release record.
 
