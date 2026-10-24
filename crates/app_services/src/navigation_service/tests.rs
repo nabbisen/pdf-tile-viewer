@@ -77,7 +77,7 @@ fn evict_session_removes_outline_and_suppresses_late_insert() {
     cache.evict_session(DocumentId(1), DocumentGeneration(2));
 
     assert!(cache.get_outline(&key(1, 2)).is_none());
-    assert!(cache.is_session_suppressed(key(1, 2)));
+    assert!(cache.is_session_closed(DocumentId(1), DocumentGeneration(2)));
     assert!(!cache.insert_outline(key(1, 2), outline));
 }
 
@@ -155,7 +155,7 @@ fn evict_session_removes_page_links_and_suppresses_late_insert() {
     cache.evict_session(DocumentId(1), DocumentGeneration(2));
 
     assert!(cache.get_page_links(&request.cache_key()).is_none());
-    assert!(cache.is_session_suppressed(key(1, 2)));
+    assert!(cache.is_session_closed(DocumentId(1), DocumentGeneration(2)));
     assert!(!cache.insert_page_links(
         links,
         NavigationResourceLimits::default().max_cached_link_pages

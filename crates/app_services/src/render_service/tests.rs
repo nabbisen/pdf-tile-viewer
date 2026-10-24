@@ -65,14 +65,14 @@ fn eviction_occurs_when_over_budget() {
 }
 
 #[test]
-fn evict_generation_removes_matching_entries() {
-    // RFC 007 §10: wrong-generation entries are evicted on document close.
+fn evict_session_removes_matching_entries() {
+    // RFC 035: a closed session's entries are evicted.
     let mut cache = RenderCache::new(MINIMUM_CACHE_BUDGET_BYTES);
     cache.insert(key(0, 1, 100), bytes(100));
     cache.insert(key(1, 1, 100), bytes(100));
     cache.insert(key(0, 2, 100), bytes(100)); // different generation
 
-    cache.evict_generation(DocumentGeneration(1));
+    cache.evict_session(DocumentId(1), DocumentGeneration(1));
     assert_eq!(cache.entry_count(), 1, "only gen-2 entry should remain");
     assert!(cache.get(&key(0, 1, 100)).is_none());
     assert!(cache.get(&key(0, 2, 100)).is_some());
@@ -84,4 +84,38 @@ fn different_scale_buckets_are_separate_cache_entries() {
     cache.insert(key(0, 1, 100), bytes(100));
     cache.insert(key(0, 1, 150), bytes(150));
     assert_eq!(cache.entry_count(), 2);
+}
+
+#[test]
+fn evict_session_refuses_late_inserts_for_that_session_only() {
+    let mut cache = RenderCache::new(MINIMUM_CACHE_BUDGET_BYTES);
+    cache.insert(key(0, 1, 100), bytes(100));
+    cache.evict_session(DocumentId(1), DocumentGeneration(1));
+    assert!(cache.is_session_closed(DocumentId(1), DocumentGeneration(1)));
+
+    cache.insert(key(1, 1, 100), bytes(100)); // late render of the closed session
+    assert_eq!(cache.entry_count(), 0);
+    assert_eq!(cache.used_bytes, 0);
+
+    cache.insert(key(0, 2, 100), bytes(100)); // another generation is unaffected
+    assert_eq!(cache.entry_count(), 1);
+}
+
+#[test]
+fn evict_session_does_not_affect_the_same_generation_of_another_document() {
+    let mut cache = RenderCache::new(MINIMUM_CACHE_BUDGET_BYTES);
+    let mut other = key(0, 1, 100);
+    other.document_id = DocumentId(2);
+    cache.insert(other, bytes(100));
+    cache.evict_session(DocumentId(1), DocumentGeneration(1));
+
+    assert!(cache.get(&other).is_some());
+    cache.insert(other_key_page(1), bytes(100));
+    assert_eq!(cache.entry_count(), 2);
+}
+
+fn other_key_page(page: usize) -> RenderCacheKey {
+    let mut k = key(page, 1, 100);
+    k.document_id = DocumentId(2);
+    k
 }

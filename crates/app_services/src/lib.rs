@@ -10,6 +10,7 @@
 //!
 //! This crate contains no Dioxus types and no native PDFium handles.
 
+pub mod closed_sessions;
 pub mod document_service;
 pub mod engine_boot;
 pub mod history_service;

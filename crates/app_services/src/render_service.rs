@@ -15,9 +15,11 @@
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
-use domain::document::DocumentGeneration;
+use domain::document::{DocumentGeneration, DocumentId};
 use domain::render::{RenderCacheKey, RenderError, RenderPageRequest, RenderedImagePayload};
 use pdf_engine::worker::EngineHandle;
+
+use crate::closed_sessions::ClosedSessions;
 
 pub const DEFAULT_CACHE_BUDGET_BYTES: usize = 256 * 1024 * 1024; // 256 MB
 pub const MINIMUM_CACHE_BUDGET_BYTES: usize = 64 * 1024 * 1024; // 64 MB
@@ -28,7 +30,6 @@ pub const MINIMUM_CACHE_BUDGET_BYTES: usize = 64 * 1024 * 1024; // 64 MB
 
 struct CacheEntry {
     bytes: Arc<[u8]>,
-    generation: DocumentGeneration,
     /// Monotonically increasing insert order; used for FIFO eviction.
     insert_seq: u64,
 }
@@ -42,6 +43,7 @@ struct CacheEntry {
 pub struct RenderCache {
     entries: HashMap<RenderCacheKey, CacheEntry>,
     insert_seq: u64,
+    closed_sessions: ClosedSessions,
     pub used_bytes: usize,
     pub budget_bytes: usize,
 }
@@ -51,6 +53,7 @@ impl RenderCache {
         RenderCache {
             entries: HashMap::new(),
             insert_seq: 0,
+            closed_sessions: ClosedSessions::new(),
             used_bytes: 0,
             budget_bytes,
         }
@@ -63,18 +66,18 @@ impl RenderCache {
 
     /// Insert a rendered page; evicts stale/old entries if over budget.
     pub fn insert(&mut self, key: RenderCacheKey, bytes: Arc<[u8]>) {
-        if self.entries.contains_key(&key) {
+        if self.entries.contains_key(&key)
+            || self.is_session_closed(key.document_id, key.document_generation)
+        {
             return;
         }
         let byte_len = bytes.len();
         self.evict_to_fit(byte_len);
         self.insert_seq += 1;
-        let generation = key.document_generation;
         self.entries.insert(
             key,
             CacheEntry {
                 bytes,
-                generation,
                 insert_seq: self.insert_seq,
             },
         );
@@ -105,17 +108,26 @@ impl RenderCache {
         }
     }
 
-    /// Evict all entries that belong to a specific document generation. Call
-    /// this when a document is closed (RFC 007 §10 eviction priority 1).
-    pub fn evict_generation(&mut self, generation: DocumentGeneration) {
-        self.entries.retain(|_, e| {
-            if e.generation == generation {
+    /// Evicts every entry of a closed session and refuses later inserts for it (RFC 035
+    /// § 5.2): a render that completes after the close must not repopulate the cache.
+    pub fn evict_session(&mut self, document_id: DocumentId, generation: DocumentGeneration) {
+        self.entries.retain(|key, e| {
+            if key.document_id == document_id && key.document_generation == generation {
                 self.used_bytes = self.used_bytes.saturating_sub(e.bytes.len());
                 false
             } else {
                 true
             }
         });
+        self.closed_sessions.mark_closed(document_id, generation);
+    }
+
+    pub fn is_session_closed(
+        &self,
+        document_id: DocumentId,
+        generation: DocumentGeneration,
+    ) -> bool {
+        self.closed_sessions.is_closed(document_id, generation)
     }
 
     pub fn entry_count(&self) -> usize {
@@ -183,9 +195,9 @@ impl RenderService {
         Ok(bytes)
     }
 
-    pub fn evict_generation(&self, generation: DocumentGeneration) {
+    pub fn evict_session(&self, document_id: DocumentId, generation: DocumentGeneration) {
         let mut cache = self.cache.lock().unwrap();
-        cache.evict_generation(generation);
+        cache.evict_session(document_id, generation);
     }
 
     /// Diagnostics snapshot for the settings/diagnostics panel (RFC 008).

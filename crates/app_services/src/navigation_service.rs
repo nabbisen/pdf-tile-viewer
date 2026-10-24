@@ -4,7 +4,7 @@
 //! outline data is document metadata, not executable behavior; external URI
 //! opening remains governed by `uri_policy`.
 
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::collections::{HashMap, VecDeque};
 use std::sync::{Arc, Mutex};
 
 use domain::document::{DocumentGeneration, DocumentId, PageIndex};
@@ -13,6 +13,8 @@ use domain::navigation::{
     PageLinkSet, PageLinksCacheKey, PageLinksRequest,
 };
 use pdf_engine::worker::EngineHandle;
+
+use crate::closed_sessions::ClosedSessions;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
 pub struct DocumentOutlineCacheKey {
@@ -33,7 +35,7 @@ pub struct NavigationCache {
     outlines: HashMap<DocumentOutlineCacheKey, Arc<DocumentOutline>>,
     page_links: HashMap<PageLinksCacheKey, Arc<PageLinkSet>>,
     page_link_order: VecDeque<PageLinksCacheKey>,
-    suppressed_sessions: HashSet<DocumentOutlineCacheKey>,
+    closed_sessions: ClosedSessions,
 }
 
 impl NavigationCache {
@@ -42,7 +44,7 @@ impl NavigationCache {
             outlines: HashMap::new(),
             page_links: HashMap::new(),
             page_link_order: VecDeque::new(),
-            suppressed_sessions: HashSet::new(),
+            closed_sessions: ClosedSessions::new(),
         }
     }
 
@@ -55,7 +57,9 @@ impl NavigationCache {
         key: DocumentOutlineCacheKey,
         outline: Arc<DocumentOutline>,
     ) -> bool {
-        if self.outlines.contains_key(&key) || self.is_session_suppressed(key) {
+        if self.outlines.contains_key(&key)
+            || self.is_session_closed(key.document_id, key.generation)
+        {
             return false;
         }
         self.outlines.insert(key, outline);
@@ -74,10 +78,7 @@ impl NavigationCache {
         };
         if max_cached_pages == 0
             || self.page_links.contains_key(&key)
-            || self.is_session_suppressed(DocumentOutlineCacheKey {
-                document_id: key.document_id,
-                generation: key.generation,
-            })
+            || self.is_session_closed(key.document_id, key.generation)
         {
             return false;
         }
@@ -104,11 +105,15 @@ impl NavigationCache {
         self.page_link_order.retain(|link_key| {
             link_key.document_id != document_id || link_key.generation != generation
         });
-        self.suppressed_sessions.insert(key);
+        self.closed_sessions.mark_closed(document_id, generation);
     }
 
-    pub fn is_session_suppressed(&self, key: DocumentOutlineCacheKey) -> bool {
-        self.suppressed_sessions.contains(&key)
+    pub fn is_session_closed(
+        &self,
+        document_id: DocumentId,
+        generation: DocumentGeneration,
+    ) -> bool {
+        self.closed_sessions.is_closed(document_id, generation)
     }
 
     pub fn outline_count(&self) -> usize {
@@ -151,7 +156,7 @@ impl NavigationService {
             if let Some(outline) = cache.get_outline(&key) {
                 return Ok(outline);
             }
-            if cache.is_session_suppressed(key) {
+            if cache.is_session_closed(key.document_id, key.generation) {
                 return Err(NavigationError::DocumentNotOpen);
             }
         }
@@ -169,7 +174,7 @@ impl NavigationService {
         let outline = Arc::new(outline);
         {
             let mut cache = self.cache.lock().unwrap();
-            if cache.is_session_suppressed(key) {
+            if cache.is_session_closed(key.document_id, key.generation) {
                 return Err(NavigationError::DocumentNotOpen);
             }
             cache.insert_outline(key, outline.clone());
@@ -193,7 +198,7 @@ impl NavigationService {
             if let Some(links) = cache.get_page_links(&key) {
                 return Ok(links);
             }
-            if cache.is_session_suppressed(session_key) {
+            if cache.is_session_closed(session_key.document_id, session_key.generation) {
                 return Err(NavigationError::DocumentNotOpen);
             }
         }
@@ -211,7 +216,7 @@ impl NavigationService {
         let links = Arc::new(links);
         {
             let mut cache = self.cache.lock().unwrap();
-            if cache.is_session_suppressed(session_key) {
+            if cache.is_session_closed(session_key.document_id, session_key.generation) {
                 return Err(NavigationError::DocumentNotOpen);
             }
             cache.insert_page_links(links.clone(), request.limits.max_cached_link_pages);

@@ -113,12 +113,7 @@ fn evict_session_removes_entries_and_suppresses_late_insert() {
     cache.evict_session(DocumentId(1), DocumentGeneration(1));
 
     assert!(cache.get(&key(0, 1)).is_none());
-    assert!(
-        cache.is_session_suppressed(crate::text_service::TextLayerSessionKey {
-            document_id: DocumentId(1),
-            generation: DocumentGeneration(1),
-        })
-    );
+    assert!(cache.is_session_closed(DocumentId(1), DocumentGeneration(1)));
     assert!(!cache.insert(key(0, 1), page));
 }
 

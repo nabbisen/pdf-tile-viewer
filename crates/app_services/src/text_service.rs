@@ -4,7 +4,7 @@
 //! page. It stores domain-owned text-layer data only; extracted text must not
 //! be persisted in settings, history, diagnostics, or logs.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::mem;
 use std::sync::{Arc, Mutex};
 
@@ -13,6 +13,8 @@ use domain::text::{
     PageTextLayer, TextLayerCacheKey, TextLayerError, TextLayerRequest, TextLayerSegment,
 };
 use pdf_engine::worker::EngineHandle;
+
+use crate::closed_sessions::ClosedSessions;
 
 pub const DEFAULT_TEXT_LAYER_CACHE_BUDGET_BYTES: usize = 8 * 1024 * 1024; // 8 MB
 pub const MINIMUM_TEXT_LAYER_CACHE_BUDGET_BYTES: usize = 512 * 1024; // 512 KB
@@ -34,7 +36,7 @@ struct TextLayerSessionKey {
 /// Small in-memory text-layer cache for the active document session.
 pub struct TextLayerCache {
     entries: HashMap<TextLayerCacheKey, CacheEntry>,
-    suppressed_sessions: HashSet<TextLayerSessionKey>,
+    closed_sessions: ClosedSessions,
     insert_seq: u64,
     pub used_bytes: usize,
     pub budget_bytes: usize,
@@ -44,7 +46,7 @@ impl TextLayerCache {
     pub fn new(budget_bytes: usize) -> Self {
         TextLayerCache {
             entries: HashMap::new(),
-            suppressed_sessions: HashSet::new(),
+            closed_sessions: ClosedSessions::new(),
             insert_seq: 0,
             used_bytes: 0,
             budget_bytes,
@@ -56,7 +58,9 @@ impl TextLayerCache {
     }
 
     pub fn insert(&mut self, key: TextLayerCacheKey, layer: Arc<PageTextLayer>) -> bool {
-        if self.entries.contains_key(&key) || self.is_session_suppressed(session_key(key)) {
+        if self.entries.contains_key(&key)
+            || self.is_session_closed(key.document_id, key.generation)
+        {
             return false;
         }
 
@@ -93,11 +97,15 @@ impl TextLayerCache {
                 true
             }
         });
-        self.suppressed_sessions.insert(session_key);
+        self.closed_sessions.mark_closed(document_id, generation);
     }
 
-    fn is_session_suppressed(&self, session_key: TextLayerSessionKey) -> bool {
-        self.suppressed_sessions.contains(&session_key)
+    pub fn is_session_closed(
+        &self,
+        document_id: DocumentId,
+        generation: DocumentGeneration,
+    ) -> bool {
+        self.closed_sessions.is_closed(document_id, generation)
     }
 
     pub fn entry_count(&self) -> usize {
@@ -150,7 +158,7 @@ impl TextLayerService {
             if let Some(layer) = cache.get(&key) {
                 return Ok(layer);
             }
-            if cache.is_session_suppressed(session_key(key)) {
+            if cache.is_session_closed(key.document_id, key.generation) {
                 return Err(TextLayerError::StaleResult);
             }
         }
@@ -168,7 +176,7 @@ impl TextLayerService {
         let layer = Arc::new(layer);
         {
             let mut cache = self.cache.lock().unwrap();
-            if cache.is_session_suppressed(session_key(key)) {
+            if cache.is_session_closed(key.document_id, key.generation) {
                 return Err(TextLayerError::StaleResult);
             }
             cache.insert(key, layer.clone());
