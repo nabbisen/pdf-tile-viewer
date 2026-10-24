@@ -6,6 +6,12 @@
 
 use crate::document::{PageDescriptor, PageIndex};
 
+mod retention;
+pub use retention::{
+    RETENTION_MAX_READY_TILES, RETENTION_MIN_WINDOW_PX, RETENTION_WINDOW_VIEWPORTS,
+    RetentionLimits, retention_victims,
+};
+
 /// Pixels-per-point multiplier applied to page geometry.
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct ViewerScale(pub f32);
