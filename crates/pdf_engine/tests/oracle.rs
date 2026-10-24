@@ -82,6 +82,7 @@ fn point_conversion_agrees_with_pdfium_page_to_device() {
     let (pdfium, _report) = bind_from_dir(&dir).expect("PDFium bind failed");
 
     let mut checked = 0usize;
+    let mut worst = 0.0_f32;
     for name in [
         "rotate-0.pdf",
         "rotate-90.pdf",
@@ -133,6 +134,9 @@ fn point_conversion_agrees_with_pdfium_page_to_device() {
                         && (ours.1 - oracle.1).abs() <= TOLERANCE_POINTS,
                     "{name} page {index} ({rotation:?}) user ({ux}, {uy}): ours {ours:?}, PDFium {oracle:?}"
                 );
+                worst = worst
+                    .max((ours.0 - oracle.0).abs())
+                    .max((ours.1 - oracle.1).abs());
                 checked += 1;
             }
 
@@ -166,5 +170,8 @@ fn point_conversion_agrees_with_pdfium_page_to_device() {
             }
         }
     }
+    eprintln!(
+        "oracle: {checked} points compared, worst deviation {worst:.4} pt (tolerance {TOLERANCE_POINTS} pt)"
+    );
     assert!(checked >= 100, "oracle compared only {checked} points");
 }
