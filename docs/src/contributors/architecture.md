@@ -28,3 +28,12 @@ app  (Dioxus Desktop binary)
 - **Generation-tagged results**: every async result carries `document_id +
   generation` so stale renders/searches can be discarded without races.
 
+- **One owner for the session lifecycle** (RFC 035): `app_services::session_service::SessionService`
+  registers the open document (`opened`) and closes it (`close`). `close` marks the session closed
+  in the render, text-layer and navigation caches (a bounded `ClosedSessions` record in each, so late
+  async results are refused), evicts its entries, and sends the engine `close_document`. The `Viewer`
+  component calls it from `use_drop`; at most one document is open at a time.
+- **Render cache policy** (RFC 035): true LRU (a hit refreshes recency); entries of a generation other
+  than the open document's go first; hard byte budget (default 256 MB, minimum 64 MB). Tiles record the
+  scale bucket they were rendered at and keep their old image until the render for the current bucket
+  arrives; the zoom overlay does the same for a scale change on the same page.

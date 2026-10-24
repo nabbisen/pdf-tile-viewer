@@ -11,6 +11,16 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Closing a document now releases it. Returning to the dashboard or opening another file used to
+  leave the native PDFium document, its text/link data and its cached page images in memory for the
+  rest of the process; one `SessionService` now closes everything, and results that arrive after the
+  close are refused by every cache (RFC 035).
+- The page-image cache is now a true least-recently-used cache that evicts images of other documents
+  first (it was oldest-first without that priority), and its documentation matches.
+- After changing the scale, tiles that were already rendered are re-rendered at the new scale
+  (they used to stay blurry until the document was reopened); the old image stays visible until the
+  sharper one arrives. The zoom overlay likewise keeps the previous image while the next scale renders
+  instead of flashing blank (RFC 035).
 - Search highlights, text selection areas and link areas on pages with a `/Rotate`
   of 90°, 180° or 270° or with a crop box that does not start at the origin are now
   placed correctly (they were computed for upright, uncropped pages only). The

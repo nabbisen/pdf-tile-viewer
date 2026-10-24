@@ -19,7 +19,8 @@ Covers the library/service crates:
   settings clamping/fallback/round-trip, search-result formatting.
 - `app_services`: file-intake validation ordering, settings
   backup-on-corruption, history dedupe-to-top, engine boot policy,
-  render-cache eviction, text-layer cache behavior, and generation cleanup.
+  render-cache LRU and generation-first eviction, text-layer cache behavior, the shared
+  `ClosedSessions` guard, and `SessionService` (close evicts every cache and refuses late inserts).
 - `packaging`: PDFium resolution policy, production vs development mode.
 - `pdf_engine` lib: the pure `user_space` conversion (RFC 034: four rotations, crop origin,
   rectangle normalization, degenerate/non-finite input, consistency cross-check) and error
