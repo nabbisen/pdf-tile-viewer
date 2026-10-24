@@ -145,7 +145,7 @@ pub(super) fn image_mouseup_handler(
                  if (!el) return null;\
                  const r = el.getBoundingClientRect();\
                  return [r.left, r.top];";
-            let Ok(Some(rect_origin)) = eval(&script).join::<Option<Vec<f64>>>().await else {
+            let Ok(Some(rect_origin)) = eval(script).join::<Option<Vec<f64>>>().await else {
                 return;
             };
             if rect_origin.len() != 2 {

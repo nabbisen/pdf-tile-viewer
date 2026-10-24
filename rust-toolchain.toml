@@ -1,0 +1,7 @@
+# Pinned toolchain (RFC 036 § 5.6): CI, release builds and local development use
+# the same compiler, so `main` cannot turn red because a new stable release added
+# lints. Bump deliberately (see docs/src/contributors/dev.md). No MSRV is declared.
+[toolchain]
+channel = "1.99.1"
+components = ["rustfmt", "clippy"]
+profile = "minimal"

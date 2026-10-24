@@ -24,7 +24,7 @@ pub fn OutlinePanel(
     on_navigate: Callback<PageIndex>,
 ) -> Element {
     let locale: Memo<Locale> = use_context();
-    let expanded: Signal<HashSet<String>> = use_signal(|| HashSet::new());
+    let expanded: Signal<HashSet<String>> = use_signal(HashSet::new);
 
     rsx! {
         aside {
