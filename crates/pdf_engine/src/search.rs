@@ -9,6 +9,7 @@ use domain::search::{PageSearchSummary, SearchError, SearchRequest, SearchResult
 use pdfium_render::prelude::*;
 
 use crate::engine::PdfEngine;
+use crate::user_space::UserRect;
 
 pub fn search_document(
     engine: &PdfEngine,
@@ -110,20 +111,23 @@ pub fn search_document_with_highlights(
             Err(e) => return Err(SearchError::SearchFailed(e.to_string())),
         };
 
-        let page_height = session.pages[index].display_height_points;
+        let geometry = engine.geometry(request.document_id, index);
         let mut highlights: Vec<domain::search::TextHighlight> = Vec::new();
+        let mut match_count = 0usize;
         for (match_idx, segments) in search.iter(PdfSearchDirection::SearchForward).enumerate() {
+            match_count += 1;
+            // Rects that cannot be converted (inconsistent page, degenerate) are dropped;
+            // the match itself still counts, only its overlay is lost.
             let rects: Vec<domain::geometry::PageRect> = segments
                 .iter()
-                .map(|seg| {
+                .filter_map(|seg| {
                     let b = seg.bounds();
-                    crate::engine::legacy_bottom_left_to_display(
-                        page_height,
-                        b.left().value,
-                        b.bottom().value,
-                        b.width().value,
-                        b.height().value,
-                    )
+                    geometry?.rect_to_display(UserRect {
+                        left: b.left().value,
+                        bottom: b.bottom().value,
+                        right: b.right().value,
+                        top: b.top().value,
+                    })
                 })
                 .collect();
             if !rects.is_empty() {
@@ -134,17 +138,18 @@ pub fn search_document_with_highlights(
             }
         }
 
-        if !highlights.is_empty() {
-            let count = highlights.len();
+        if match_count > 0 {
             summary_pages.push(PageSearchSummary {
                 page_index: PageIndex(index),
-                match_count: count,
+                match_count,
             });
-            highlight_pages.push(domain::search::PageHighlightSet {
-                page_index: PageIndex(index),
-                highlights,
-            });
-            total += count;
+            if !highlights.is_empty() {
+                highlight_pages.push(domain::search::PageHighlightSet {
+                    page_index: PageIndex(index),
+                    highlights,
+                });
+            }
+            total += match_count;
         }
     }
 

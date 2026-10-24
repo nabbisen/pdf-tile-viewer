@@ -4,7 +4,6 @@
 //! generation-tagged, and bounded by [`NavigationResourceLimits`].
 
 use domain::document::PageIndex;
-use domain::geometry::PageRect;
 use domain::navigation::{
     DestinationView, DisabledNavigationReason, DocumentOutline, DocumentOutlineRequest,
     ExternalUriTarget, NavigationDestination, NavigationError, NavigationLimitStatus,
@@ -14,6 +13,7 @@ use domain::navigation::{
 use pdfium_render::prelude::*;
 
 use crate::engine::PdfEngine;
+use crate::user_space::{DisplayAxis, PageGeometry, UserRect};
 
 struct ExtractionBudget {
     limits: NavigationResourceLimits,
@@ -108,6 +108,7 @@ pub fn extract_document_outline(
     let document = engine
         .native(request.document_id)
         .ok_or(NavigationError::DocumentNotOpen)?;
+    let geometries = engine.geometries(request.document_id);
     let mut budget = ExtractionBudget::new(request.limits);
     let mut roots = Vec::new();
 
@@ -116,7 +117,8 @@ pub fn extract_document_outline(
         let mut sibling_index = 0usize;
         while let Some(bookmark) = current {
             let next = bookmark.next_sibling();
-            if let Some(node) = extract_outline_node(&bookmark, vec![sibling_index], 1, &mut budget)
+            if let Some(node) =
+                extract_outline_node(&bookmark, vec![sibling_index], 1, &mut budget, geometries)
             {
                 roots.push(node);
             }
@@ -159,6 +161,8 @@ pub fn extract_page_links(
         .get(request.page_index.0 as PdfPageIndex)
         .map_err(|_| NavigationError::PageOutOfBounds)?;
 
+    let geometries = engine.geometries(request.document_id);
+    let geometry = geometries.get(request.page_index.0).copied();
     let mut links = Vec::new();
     let mut status = NavigationLimitStatus::default();
     for (index, link) in page.links().iter().enumerate() {
@@ -170,20 +174,28 @@ pub fn extract_page_links(
         let Ok(rect) = link.rect() else {
             continue;
         };
-        if rect.width().value <= 0.0 || rect.height().value <= 0.0 {
+        // Degenerate rects and pages with inconsistent geometry get no clickable overlay.
+        let Some(rect) = geometry.and_then(|g| {
+            g.rect_to_display(UserRect {
+                left: rect.left().value,
+                bottom: rect.bottom().value,
+                right: rect.right().value,
+                top: rect.top().value,
+            })
+        }) else {
             continue;
-        }
+        };
 
         links.push(PageLink {
             id: PageLinkId(link_index),
-            rect: crate::engine::legacy_bottom_left_to_display(
-                session.pages[request.page_index.0].display_height_points,
-                rect.left().value,
-                rect.bottom().value,
-                rect.width().value,
-                rect.height().value,
+            rect,
+            target: link_target(
+                link.destination(),
+                link.action(),
+                &request.limits,
+                None,
+                geometries,
             ),
-            target: link_target(link.destination(), link.action(), &request.limits, None),
         });
     }
 
@@ -201,6 +213,7 @@ fn extract_outline_node(
     path: Vec<usize>,
     depth: usize,
     budget: &mut ExtractionBudget,
+    geometries: &[PageGeometry],
 ) -> Option<OutlineNode> {
     if depth > budget.limits.max_outline_depth {
         budget.status.outline_truncated = true;
@@ -218,7 +231,9 @@ fn extract_outline_node(
         for (child_index, child) in bookmark.iter_direct_children().enumerate() {
             let mut child_path = path.clone();
             child_path.push(child_index);
-            if let Some(node) = extract_outline_node(&child, child_path, depth + 1, budget) {
+            if let Some(node) =
+                extract_outline_node(&child, child_path, depth + 1, budget, geometries)
+            {
                 children.push(node);
             }
             if budget.outline_nodes >= budget.limits.max_outline_nodes {
@@ -236,6 +251,7 @@ fn extract_outline_node(
         bookmark.action(),
         &limits,
         Some(budget),
+        geometries,
     );
 
     Some(OutlineNode {
@@ -251,13 +267,14 @@ fn link_target(
     action: Option<PdfAction<'_>>,
     limits: &NavigationResourceLimits,
     outline_budget: Option<&mut ExtractionBudget>,
+    geometries: &[PageGeometry],
 ) -> NavigationTarget {
     if let Some(action) = action {
-        return action_target(action, limits, outline_budget);
+        return action_target(action, limits, outline_budget, geometries);
     }
 
     match destination {
-        Some(destination) => destination_target(destination),
+        Some(destination) => destination_target(destination, geometries),
         None => NavigationTarget::Disabled(DisabledNavigationReason::NoDestination),
     }
 }
@@ -266,10 +283,11 @@ fn action_target(
     action: PdfAction<'_>,
     limits: &NavigationResourceLimits,
     mut outline_budget: Option<&mut ExtractionBudget>,
+    geometries: &[PageGeometry],
 ) -> NavigationTarget {
     match action {
         PdfAction::LocalDestination(action) => match action.destination() {
-            Ok(destination) => destination_target(destination),
+            Ok(destination) => destination_target(destination, geometries),
             Err(_) => NavigationTarget::Disabled(DisabledNavigationReason::InvalidDestination),
         },
         PdfAction::Uri(action) => match action.uri() {
@@ -313,52 +331,105 @@ fn disabled_reason_for_action_type(action_type: PdfActionType) -> DisabledNaviga
     }
 }
 
-fn destination_target(destination: PdfDestination<'_>) -> NavigationTarget {
+/// Destination coordinates are converted to display space with the geometry of the
+/// **destination** page (not the page holding the link); without usable geometry the
+/// view degrades to `PageOnly`, the navigation itself is kept.
+fn destination_target(
+    destination: PdfDestination<'_>,
+    geometries: &[PageGeometry],
+) -> NavigationTarget {
     match destination.page_index() {
-        Ok(page_index) => NavigationTarget::InternalDestination(NavigationDestination {
-            page_index: PageIndex(page_index as usize),
-            view: destination_view(destination.view_settings().ok()),
-        }),
+        Ok(page_index) => {
+            let geometry = geometries.get(page_index as usize).copied();
+            NavigationTarget::InternalDestination(NavigationDestination {
+                page_index: PageIndex(page_index as usize),
+                view: destination_view(destination.view_settings().ok(), geometry),
+            })
+        }
         Err(_) => NavigationTarget::Disabled(DisabledNavigationReason::InvalidDestination),
     }
 }
 
-fn destination_view(settings: Option<PdfDestinationViewSettings>) -> DestinationView {
+fn destination_view(
+    settings: Option<PdfDestinationViewSettings>,
+    geometry: Option<PageGeometry>,
+) -> DestinationView {
+    let Some(geometry) = geometry.filter(PageGeometry::is_consistent) else {
+        return DestinationView::PageOnly;
+    };
     match settings {
         Some(PdfDestinationViewSettings::SpecificCoordinatesAndZoom(x, y, zoom)) => {
+            let mut x_points = None;
+            let mut y_points = None;
+            // A user-space coordinate lands on the display axis its rotation dictates.
+            for (axis, value) in [
+                x.and_then(|v| geometry.x_to_display(v.value)),
+                y.and_then(|v| geometry.y_to_display(v.value)),
+            ]
+            .into_iter()
+            .flatten()
+            {
+                match axis {
+                    DisplayAxis::X => x_points = Some(value),
+                    DisplayAxis::Y => y_points = Some(value),
+                }
+            }
             DestinationView::CoordinatesAndZoom {
-                x_points: x.map(|points| points.value),
-                y_points: y.map(|points| points.value),
+                x_points,
+                y_points,
                 zoom,
             }
         }
         Some(PdfDestinationViewSettings::FitPageToWindow) => DestinationView::FitPage,
-        Some(PdfDestinationViewSettings::FitPageHorizontallyToWindow(y)) => {
-            DestinationView::FitHorizontal {
-                y_points: y.map(|points| points.value),
-            }
-        }
-        Some(PdfDestinationViewSettings::FitPageVerticallyToWindow(x)) => {
-            DestinationView::FitVertical {
-                x_points: x.map(|points| points.value),
-            }
-        }
-        Some(PdfDestinationViewSettings::FitPageToRectangle(rect)) => {
-            DestinationView::FitRectangle(pdf_rect_to_page_rect(rect))
-        }
+        // "Fit width, top at user y" becomes "fit height, left at display x" on a 90/270 page.
+        Some(PdfDestinationViewSettings::FitPageHorizontallyToWindow(y)) => match y {
+            Some(v) => geometry
+                .y_to_display(v.value)
+                .map_or(DestinationView::PageOnly, fit_at),
+            None => fit_without_coordinate(geometry, true),
+        },
+        Some(PdfDestinationViewSettings::FitPageVerticallyToWindow(x)) => match x {
+            Some(v) => geometry
+                .x_to_display(v.value)
+                .map_or(DestinationView::PageOnly, fit_at),
+            None => fit_without_coordinate(geometry, false),
+        },
+        Some(PdfDestinationViewSettings::FitPageToRectangle(rect)) => geometry
+            .rect_to_display(UserRect {
+                left: rect.left().value,
+                bottom: rect.bottom().value,
+                right: rect.right().value,
+                top: rect.top().value,
+            })
+            .map_or(DestinationView::PageOnly, DestinationView::FitRectangle),
         Some(_) | None => DestinationView::PageOnly,
     }
 }
 
-/// TEMPORARY (RFC 034 commit 1): destination rectangles are still raw user-space
-/// values here; the engine-conversion commit converts them with the destination
-/// page's geometry. The UI ignores view hints today (page-only navigation).
-fn pdf_rect_to_page_rect(rect: PdfRect) -> PageRect {
-    PageRect {
-        x: rect.left().value,
-        y: rect.bottom().value,
-        width: rect.width().value,
-        height: rect.height().value,
+/// Fit view positioned by a converted coordinate: a value on the display y axis anchors a
+/// horizontal fit, on the x axis a vertical fit.
+fn fit_at((axis, value): (DisplayAxis, f32)) -> DestinationView {
+    match axis {
+        DisplayAxis::X => DestinationView::FitVertical {
+            x_points: Some(value),
+        },
+        DisplayAxis::Y => DestinationView::FitHorizontal {
+            y_points: Some(value),
+        },
+    }
+}
+
+/// A fit-width (`horizontal`) or fit-height request without a coordinate: the fit direction
+/// follows the displayed orientation.
+fn fit_without_coordinate(geometry: PageGeometry, horizontal: bool) -> DestinationView {
+    let quarter_turn = matches!(
+        geometry.rotation,
+        crate::user_space::Rotation::R90 | crate::user_space::Rotation::R270
+    );
+    if horizontal != quarter_turn {
+        DestinationView::FitHorizontal { y_points: None }
+    } else {
+        DestinationView::FitVertical { x_points: None }
     }
 }
 

@@ -256,3 +256,27 @@ fn geometry_point_to_display_rejects_non_finite_input() {
     assert_eq!(g.point_to_display(100.0, 100.0), Some((100.0, 692.0)));
     assert_eq!(g.point_to_display(f32::NAN, 1.0), None);
 }
+
+#[test]
+fn single_coordinates_land_on_the_axis_the_full_point_conversion_uses() {
+    for rotation in [Rotation::R0, Rotation::R90, Rotation::R180, Rotation::R270] {
+        let (px, py) = point_to_display(CROP, rotation, 100.0, 200.0);
+        for (axis, value) in [
+            x_to_display(CROP, rotation, 100.0),
+            y_to_display(CROP, rotation, 200.0),
+        ] {
+            let expected = match axis {
+                DisplayAxis::X => px,
+                DisplayAxis::Y => py,
+            };
+            assert!(close(value, expected), "{rotation:?} {axis:?}");
+        }
+        // user x and user y always land on different display axes
+        assert_ne!(
+            x_to_display(CROP, rotation, 0.0).0,
+            y_to_display(CROP, rotation, 0.0).0
+        );
+    }
+    assert_eq!(x_to_display(LETTER, Rotation::R90, 5.0).0, DisplayAxis::Y);
+    assert_eq!(y_to_display(LETTER, Rotation::R90, 5.0).0, DisplayAxis::X);
+}

@@ -7,6 +7,7 @@ use domain::text::{PageTextLayer, TextLayerError, TextLayerRequest, TextLayerSeg
 use pdfium_render::prelude::*;
 
 use crate::engine::PdfEngine;
+use crate::user_space::UserRect;
 
 pub fn extract_page_text_layer(
     engine: &PdfEngine,
@@ -33,6 +34,7 @@ pub fn extract_page_text_layer(
         .text()
         .map_err(|e| TextLayerError::ExtractionFailed(e.to_string()))?;
 
+    let geometry = engine.geometry(request.document_id, request.page_index.0);
     let mut segments = Vec::new();
     for (idx, segment) in text.segments().iter().enumerate() {
         let segment_index = u32::try_from(idx).map_err(|_| TextLayerError::SegmentIndexOverflow)?;
@@ -41,20 +43,22 @@ pub fn extract_page_text_layer(
             continue;
         }
 
+        // Degenerate rects and pages with inconsistent geometry yield no segment.
         let bounds = segment.bounds();
-        if bounds.width().value <= 0.0 || bounds.height().value <= 0.0 {
+        let Some(rect) = geometry.and_then(|g| {
+            g.rect_to_display(UserRect {
+                left: bounds.left().value,
+                bottom: bounds.bottom().value,
+                right: bounds.right().value,
+                top: bounds.top().value,
+            })
+        }) else {
             continue;
-        }
+        };
         segments.push(TextLayerSegment {
             segment_index,
             text: raw_text,
-            rect: crate::engine::legacy_bottom_left_to_display(
-                session.pages[request.page_index.0].display_height_points,
-                bounds.left().value,
-                bounds.bottom().value,
-                bounds.width().value,
-                bounds.height().value,
-            ),
+            rect,
         });
     }
 

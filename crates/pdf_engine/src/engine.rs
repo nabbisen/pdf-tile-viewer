@@ -12,6 +12,8 @@ use domain::document::{
 };
 use pdfium_render::prelude::*;
 
+use crate::user_space::{PageBox, PageGeometry, Rotation};
+
 pub struct PdfEngine {
     // Field order is load-bearing: Rust drops fields in declaration order,
     // and every `PdfDocument` in `sessions` borrows from `pdfium`'s boxed
@@ -25,6 +27,8 @@ pub struct PdfEngine {
 
 struct PdfiumBackedSession {
     public: DocumentSession,
+    // Per-page conversion geometry (RFC 034), computed once at open; index = page index.
+    geometry: Vec<PageGeometry>,
     // Native handle; lifetime '_ ties documents to the engine-owned Pdfium.
     native: PdfDocument<'static>,
 }
@@ -84,7 +88,7 @@ impl PdfEngine {
         // SAFETY: see `new` — the document never outlives `self.pdfium`.
         let native: PdfDocument<'static> = unsafe { std::mem::transmute(native) };
 
-        let pages = collect_page_descriptors(&native)?;
+        let (pages, geometry) = collect_page_descriptors(&native)?;
         let metadata = collect_metadata(&native, pages.len());
 
         let id = DocumentId(self.next_id);
@@ -114,6 +118,7 @@ impl PdfEngine {
             id,
             PdfiumBackedSession {
                 public: session.clone(),
+                geometry,
                 native,
             },
         );
@@ -133,28 +138,33 @@ impl PdfEngine {
         self.sessions.get(&id).map(|s| &s.native)
     }
 
+    /// Conversion geometry of one page (RFC 034); `None` for an unknown document or page.
+    pub(crate) fn geometry(&self, id: DocumentId, page_index: usize) -> Option<PageGeometry> {
+        self.sessions.get(&id)?.geometry.get(page_index).copied()
+    }
+
+    /// Conversion geometry of every page of a document (empty for an unknown document).
+    pub(crate) fn geometries(&self, id: DocumentId) -> &[PageGeometry] {
+        self.sessions
+            .get(&id)
+            .map_or(&[], |s| s.geometry.as_slice())
+    }
+
+    /// Pages whose computed display size disagrees with PDFium's (RFC 034 §5.3): they are
+    /// rendered normally but produce no overlay geometry.
+    pub fn inconsistent_pages(&self, id: DocumentId) -> Vec<PageIndex> {
+        self.sessions.get(&id).map_or_else(Vec::new, |s| {
+            s.geometry
+                .iter()
+                .enumerate()
+                .filter(|(_, g)| !g.is_consistent())
+                .map(|(i, _)| PageIndex(i))
+                .collect()
+        })
+    }
+
     pub fn session_count(&self) -> usize {
         self.sessions.len()
-    }
-}
-
-/// TEMPORARY (RFC 034 slice, commit 1; removed in the engine-conversion commit):
-/// flips a PDF user-space rectangle (bottom-left origin) into top-left display
-/// space for an **unrotated** page of height `page_height`. This keeps 0° pages
-/// unchanged while the domain types are renamed; rotated and cropped pages are
-/// handled by `user_space` afterwards.
-pub(crate) fn legacy_bottom_left_to_display(
-    page_height: f32,
-    left: f32,
-    bottom: f32,
-    width: f32,
-    height: f32,
-) -> domain::geometry::PageRect {
-    domain::geometry::PageRect {
-        x: left,
-        y: page_height - (bottom + height),
-        width,
-        height,
     }
 }
 
@@ -176,17 +186,39 @@ fn map_pdfium_load_error(error: PdfiumError) -> DocumentError {
 
 fn collect_page_descriptors(
     document: &PdfDocument<'_>,
-) -> Result<Vec<PageDescriptor>, DocumentError> {
+) -> Result<(Vec<PageDescriptor>, Vec<PageGeometry>), DocumentError> {
     let pages = document.pages();
-    let mut out = Vec::with_capacity(pages.len() as usize);
+    let mut descriptors = Vec::with_capacity(pages.len() as usize);
+    let mut geometry = Vec::with_capacity(pages.len() as usize);
     for (index, page) in pages.iter().enumerate() {
-        out.push(PageDescriptor {
+        let width = page.width().value;
+        let height = page.height().value;
+        descriptors.push(PageDescriptor {
             page_index: PageIndex(index),
-            display_width_points: page.width().value,
-            display_height_points: page.height().value,
+            display_width_points: width,
+            display_height_points: height,
         });
+        geometry.push(page_geometry(&page, (width, height)));
     }
-    Ok(out)
+    Ok((descriptors, geometry))
+}
+
+/// Reads the page box and rotation once and cross-checks them against the size PDFium reports.
+fn page_geometry(page: &PdfPage<'_>, reported: (f32, f32)) -> PageGeometry {
+    let page_box = page.boundaries().bounding().ok().map(|b| PageBox {
+        x0: b.bounds.left().value,
+        y0: b.bounds.bottom().value,
+        x1: b.bounds.right().value,
+        y1: b.bounds.top().value,
+    });
+    let rotation = page
+        .rotation()
+        .ok()
+        .map(|r| Rotation::from_degrees(r.as_degrees() as i32));
+    match (page_box, rotation) {
+        (Some(page_box), Some(rotation)) => PageGeometry::new(page_box, rotation, reported),
+        _ => PageGeometry::unavailable(),
+    }
 }
 
 fn collect_metadata(document: &PdfDocument<'_>, page_count: usize) -> DocumentMetadata {
