@@ -36,7 +36,10 @@ fn workspace_root() -> PathBuf {
 }
 
 fn fixture(name: &str) -> PathBuf {
-    workspace_root().join("fixtures").join(name)
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("tests")
+        .join("fixtures")
+        .join(name)
 }
 
 fn block_on<F: std::future::Future>(future: F) -> F::Output {

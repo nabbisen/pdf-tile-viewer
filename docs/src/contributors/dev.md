@@ -54,13 +54,13 @@ PDF_TILE_VIEWER_PDFIUM_DIR="$(pwd)/ci/.pdfium" \
 crates/
   domain/          Pure domain types (no I/O, no GUI, no PDFium)
   pdf_engine/      PDFium binding + serialized engine worker
+                   (tests/fixtures/: hand-built test PDFs + generator)
   packaging/       App-directory policy, PDFium path resolution, BuildInfo
   app_services/    Orchestration: file intake, settings, history, platform
   app/             Dioxus Desktop binary  ← GUI deps live here
 docs/
   design/          ADR, feasibility study, RFC roadmap (read-only reference)
   src/             mdbook source (this documentation)
-fixtures/          Minimal hand-built PDFs for testing
 ci/                CI helpers (fetch-pdfium.sh, archive-source.sh, package-linux.sh)
 rfcs/              RFC files following the lifecycle policy
 ```

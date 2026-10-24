@@ -14,7 +14,7 @@
 #     crates/
 #     rfcs/
 #     docs/
-#     fixtures/
+#     (crates/pdf_engine/tests/fixtures/ is part of crates/)
 #     ci/
 #     README.md
 #     CHANGELOG.md

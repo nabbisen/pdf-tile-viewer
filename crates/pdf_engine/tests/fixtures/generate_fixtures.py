@@ -24,10 +24,11 @@ Carve-out:
                           qpdf --static-id --static-aes-iv \
                             --encrypt pdf-tile-viewer-test \
                             pdf-tile-viewer-owner-test 128 --use-aes=y -- \
-                            fixtures/single-page-basic.pdf \
-                            fixtures/password-protected.pdf
+                            crates/pdf_engine/tests/fixtures/single-page-basic.pdf \
+                            crates/pdf_engine/tests/fixtures/password-protected.pdf
 
-Run from the repository root:  python3 fixtures/generate_fixtures.py
+Run from the repository root:
+  python3 crates/pdf_engine/tests/fixtures/generate_fixtures.py
 """
 
 from pathlib import Path

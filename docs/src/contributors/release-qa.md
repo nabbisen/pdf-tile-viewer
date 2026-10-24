@@ -21,10 +21,10 @@ marker removed) when it does.
   `resources/pdfium/<platform>/<libpdfium>` side by side (see `ci/package-linux.sh`).
 - Run with a **scratch settings directory** so your real settings are untouched
   (Linux: `XDG_CONFIG_HOME=$(mktemp -d)`), and keep the application's stderr in a file.
-- Documents: a PDF with at least 100 pages (`fixtures/fifty-pages-benchmark.pdf`
-  is enough for everything except the 100-page counts), `fixtures/navigation-links-outline.pdf`
-  (outline, internal and external links), `fixtures/password-protected.pdf`
-  (user password `pdf-tile-viewer-test`), `fixtures/not-a-pdf.pdf`.
+- Documents: a PDF with at least 100 pages (`crates/pdf_engine/tests/fixtures/fifty-pages-benchmark.pdf`
+  is enough for everything except the 100-page counts), `crates/pdf_engine/tests/fixtures/navigation-links-outline.pdf`
+  (outline, internal and external links), `crates/pdf_engine/tests/fixtures/password-protected.pdf`
+  (user password `pdf-tile-viewer-test`), `crates/pdf_engine/tests/fixtures/not-a-pdf.pdf`.
 - Window about 1280×720. Click an empty area of the tile grid before testing
   viewer shortcuts (they need focus in the viewer).
 

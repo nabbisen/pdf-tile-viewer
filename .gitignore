@@ -24,3 +24,6 @@ target
 /ci/.pdfium
 /.git-exclude/
 /docs/book/
+
+# release outputs (built by ci/package-linux.sh; never committed)
+/dist/
