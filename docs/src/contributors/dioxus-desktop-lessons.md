@@ -104,10 +104,17 @@ change_scale(current + 0.2);
   every rendered page was also kept in UI state as a `data:image/png;base64,…`
   string. On a release build, a 1000-page text PDF reached about 600 MB and a
   100-page image PDF about 1 GB, and memory was never reclaimed while scrolling
-  away. Tracked in RFC 035 and a follow-up retention RFC.
-- **Remedies.** (a) A **retention window** (keep rendered items only near the
-  viewport; the backend cache re-serves them cheaply) bounds memory by window size
-  instead of document size. (b) Serve images through a custom protocol instead of
+  away. Tracked in RFC 035 and RFC 040.
+- **Retention alone was not enough (Observed).** A **retention window** (keep rendered
+  items only near the viewport; the backend cache re-serves them cheaply) roughly
+  halved the memory of the application process, but the WebView's own processes did
+  **not** shrink and kept growing, so the total fell by only about 10 % on a
+  1000-page text PDF. Releasing items from UI state does not release the memory the
+  WebView holds for them. **Measure the application process and the WebView
+  processes separately** before promising a bound; do not assume the second follows
+  the first. What the WebView memory consists of is under investigation
+  (`data:` URLs are the suspect).
+- **Remedy under evaluation.** Serve images through a custom protocol instead of
   megabytes of base64 (**Source:** `dioxus-desktop` provides `use_asset_handler`).
   If you add a protocol handler, serve only cache entries addressed by opaque ids,
   never file paths, and review your content-security policy.

@@ -10,6 +10,7 @@ priority: Corrective
 depends_on: RFC 007, RFC 035
 amends: RFC 007 (§ 10 memory budget: the budget now also covers UI-side state)
 origin: WP0 evidence run 2026-10-22 (Part B), architect review
+amended: 2026-10-24 — § 4.1 cap clarified; § 9 result of the measured acceptance
 ---
 
 # RFC 040 — Tile Retention Window (bounded UI memory)
@@ -71,7 +72,10 @@ victims. If more than `max_ready_tiles` remain, the kept tiles farthest from the
 viewport centre are added to the victims until the cap holds. Visible tiles are
 never victims. Default limits: `window_px = max(2 × viewport_height, 1500)` and
 `max_ready_tiles = 80`. Both are constants in one place with tests; they are not
-user settings in this release.
+user settings in this release. **Clarification (accepted 2026-10-24):** the scheduler
+raises the cap to at least the number of tiles it wants rendered in the same pass
+(visible + prefetch): at small scales that number can exceed 80, and evicting tiles
+that are requested again in the same pass would only make them churn.
 
 ### 4.2 Application
 
@@ -153,3 +157,34 @@ Tiles within two viewport heights never change.
 
 Patch-compatible (a defect fix against the documented memory budget); no setting,
 file or API change. CHANGELOG "Fixed".
+
+## 9. Result and follow-up (2026-10-24)
+
+The policy and its scheduler integration are implemented and tested (commits `3197274`,
+`07c71fa`). The **measured acceptance of § 7 is not met**, and the cause is an
+assumption of this RFC that the measurements do not support.
+
+| text-1000, release build | app process | WebKit processes | total |
+|---|---:|---:|---:|
+| before (`a8ca205`), after one full scroll down | 678 MB | 484 MB | 1 162 MB |
+| after (`07c71fa`), after one full scroll down | 334 MB | 522 MB | 856 MB |
+| after, one down-and-back (2.0.1 reference: 1 055 MB) | 390 MB | 573 MB | **963 MB (91 %)** |
+| after, second down-and-back (plateau) | 400 MB | 626 MB | 1 027 MB (+6.6 %) |
+
+- **Met:** plateau (< 10 % on the second pass, measured on the total).
+- **Not met:** ≤ 55 % of the 2.0.1 value (91 %). The **app process** improved by about
+  half; the **WebKit processes did not shrink and keep growing**, although at most about
+  a dozen tiles are `Ready` at any time.
+- **What this means:** § 2 assumed that releasing tiles from UI state releases the memory
+  WebKit holds for them. It does not. The WebKit side is probably dominated by something
+  other than live `<img>` elements (candidates, **unverified**: WebKit's cache of `data:`
+  URL resources, JavaScript-heap strings not yet collected, allocator behaviour). The
+  assumption was not tested before the acceptance criterion was written; that was a
+  review gap on the architect's side.
+- **Status:** the acceptance criterion is **not changed**. RFC 040 stays on `main` as a
+  correct and useful policy (it is the retention policy any later transport redesign
+  keeps, § 4.5), but its user-facing claim is limited to "memory growth is reduced",
+  not "bounded". Whether 2.0.2 ships it as is, or together with a transport change
+  (RFC-FUTURE F14), is decided after the investigation in
+  `rfcs/handoffs/040-tile-retention-window/webkit-memory-investigation.md`
+  (idle decay of the WebKit memory; a custom-protocol prototype; the image-heavy case).
