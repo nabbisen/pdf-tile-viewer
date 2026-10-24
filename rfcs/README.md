@@ -58,7 +58,7 @@ Execution order is serial and recorded in the Developer Handoffs below.
 | 034 | [Display-Space Page Geometry](handoffs/034-display-space-page-geometry/implementation-handoff.md) |
 | 035 | [Document Session Lifecycle and Render Freshness](handoffs/035-document-session-lifecycle-and-render-freshness/implementation-handoff.md) |
 | 033 | [Keyboard Routing, Modal Layers, and Dismissal Model](handoffs/033-keyboard-routing-and-dismissal-model/implementation-handoff.md) (evidence run: [evidence-run.md](handoffs/033-keyboard-routing-and-dismissal-model/evidence-run.md)) |
-| 036 | [Release Supply-Chain and Workflow Hardening](handoffs/036-release-supply-chain-and-workflow-hardening/implementation-handoff.md) |
+| 036 | [Release Supply-Chain and Workflow Hardening](handoffs/036-release-supply-chain-and-workflow-hardening/implementation-handoff.md) ([follow-up](handoffs/036-release-supply-chain-and-workflow-hardening/dependency-and-release-notes.md)) |
 | 037 | [User-Facing Error Presentation and Accessible Names](handoffs/037-user-facing-error-presentation-and-accessible-names/implementation-handoff.md) ([listening session](handoffs/037-user-facing-error-presentation-and-accessible-names/screen-reader-listening-session.md)) |
 | 038 | [Corrective Documentation, Governance, and Repository Hygiene](handoffs/038-corrective-documentation-governance-and-repository-hygiene/implementation-handoff.md) (slices A and B′; [final sync](handoffs/038-corrective-documentation-governance-and-repository-hygiene/final-sync.md)) |
 

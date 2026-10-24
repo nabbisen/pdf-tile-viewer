@@ -10,7 +10,7 @@ priority: Corrective
 depends_on: RFC 003, RFC 014, RFC 015, RFC 016, RFC 018
 amends: RFC 014 (§ CI/release), RFC 016 (§ native library integrity)
 origin: architect onboarding review 2026-10-21 (internal), owner decision D5
-amended: 2026-10-24 — § 5.4a release-asset gate; § 5.7 version single source and release-preparation workflow (owner decision)
+amended: 2026-10-24 — § 5.4a release-asset gate; § 5.7 version single source and release-preparation workflow (owner decision); 2026-10-24 (review) — job permission `actions: read`, dated CHANGELOG heading required at tag time
 ---
 
 # RFC 036 — Release Supply-Chain and Workflow Hardening
@@ -137,7 +137,8 @@ placeholder, which is not a valid manifest.
    part of `verify-tag` (§ 5.2), which additionally requires tag == Cargo version.
 4. `.github/workflows/prepare-release.yml` (`workflow_dispatch`, input `version`):
    workflow permissions `contents: read`; the single job `prepare` gets
-   `contents: write` and nothing else. It requires that the head of `main` has a
+   `contents: write` and the read-only `actions: read` (to query whether CI is green
+   on `main`), nothing else. It requires that the head of `main` has a
    successful CI run, runs `ci/set-version.sh`, commits as `github-actions[bot]`
    ("Prepare release X.Y.Z"), and pushes to `main` without force (fails if `main`
    moved). Because pushes made with the built-in token do not start other workflows,
