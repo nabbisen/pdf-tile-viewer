@@ -1,3 +1,5 @@
+Historical record — implemented in 2.0.0-beta.8 (RFC 023 is in `rfcs/done/`; this handoff is kept for the design/implementation trail and is not a current instruction).
+
 # Handoff — RFC 023 Single-Page PDF Text Selection Layer
 
 ## 1. Summary
@@ -10,7 +12,7 @@ remains image-based and continues to render search results as visual overlays.
 
 - Paused creating additional RFCs.
 - Analyzed the existing PDFium search/highlight/render architecture.
-- Updated `rfcs/proposed/023-pdf-text-selection-layer.md`.
+- Updated the RFC (now `rfcs/done/023-pdf-text-selection-layer.md`).
 - Updated `rfcs/README.md` to match the revised RFC title.
 - Started implementation in small slices:
   - added `domain::text` request/result/cache-key/error types;
@@ -29,19 +31,18 @@ remains image-based and continues to render search results as visual overlays.
 
 ## 3. Files changed
 
-- `rfcs/proposed/023-pdf-text-selection-layer.md`
+- `rfcs/done/023-pdf-text-selection-layer.md`
 - `rfcs/README.md`
 - `rfcs/handoffs/023-pdf-text-selection-layer/implementation-handoff.md`
 - `crates/domain/src/text.rs`
 - `crates/domain/src/text/tests.rs`
 - `crates/pdf_engine/src/text_layer.rs`
 - `crates/pdf_engine/src/worker.rs`
-- `crates/pdf_engine/tests/smoke.rs`
+- `crates/pdf_engine/tests/smoke/text.rs` (at the time: `tests/smoke.rs`, since split by topic)
 - `crates/app_services/src/text_service.rs`
 - `crates/app_services/src/text_service/tests.rs`
 - `crates/app/src/app.rs`
-- `crates/app/src/components/zoom_overlay.rs`
-- `crates/app/src/components/zoom_overlay/util.rs`
+- `crates/app/src/components/zoom_overlay.rs` and `zoom_overlay/` (the overlay has since been split into modules)
 - `crates/app/assets/main.css`
 - `crates/app/src/i18n.rs`
 - `crates/app/src/i18n/en.rs`
@@ -49,11 +50,9 @@ remains image-based and continues to render search results as visual overlays.
 
 ## 4. Design decisions and assumptions
 
-- Architect review result:
-  `.git-exclude/reviewed/pdf_tile_viewer_rfc023_text_selection_design_review.md`
+- Architect review result (internal review record, not published)
   returned **Approve with mandatory changes before implementation**.
-- Architect rereview result:
-  `.git-exclude/reviewed/pdf_tile_viewer_rfc023_text_selection_rereview.md`
+- Architect rereview result (internal review record, not published)
   returned **Approved to proceed to implementation prototype**, after a small
   mandatory documentation patch. That patch has been applied to RFC 023.
 - Text selection is scoped to the zoom overlay / single-page view.
@@ -156,15 +155,9 @@ None.
   RFC file itself. Future review packages should include the primary RFC in the
   archive, not only review context.
 
-## 8. Recommended next step
+## 8. Outcome
 
-Prepare and publish `2.0.0-beta.8`:
-
-1. Commit the RFC 023 UI and release-prep changes.
-2. Run the release workflow from tag `2.0.0-beta.8`.
-3. After release, verify the published archive layout still keeps `bin/` and
-   `resources/` together and includes bundled PDFium.
-4. Keep real-world PDF fidelity checks open for rotated/cropped pages and
-   complex text ordering.
-5. Consider adding a PDFium-backed `TextLayerService::get_or_extract()` smoke
-   test before RC.
+Released as `2.0.0-beta.8`; the RFC moved to `rfcs/done/`. Rotated and cropped pages
+(item 4 of the original next steps) are addressed by
+[RFC 034](../../accepted/034-display-space-page-geometry.md); complex text ordering
+remains best effort.

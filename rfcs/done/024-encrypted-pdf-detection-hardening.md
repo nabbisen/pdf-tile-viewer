@@ -4,10 +4,11 @@ document_family: Dioxus + embedded/bundled PDFium migration RFCs
 language: English
 date: 2026-07-06
 status: Implemented (2.0.0-beta.10)
+amended_by: RFC 025 (password flow), RFC 037 (error semantics)
 baseline: PDF Tile Viewer 2.0.0-beta.9
-review: .git-exclude/reviewed/pdf_tile_viewer_rfc024_encrypted_pdf_detection_design_review.md
-rereview: .git-exclude/reviewed/pdf_tile_viewer_rfc024_encrypted_pdf_detection_design_rereview.md
-implementation_review: .git-exclude/reviewed/pdf_tile_viewer_rfc024_encrypted_pdf_detection_implementation_review.md
+review: internal review record (not published)
+rereview: internal review record (not published)
+implementation_review: internal review record (not published)
 ---
 
 # RFC 024 — Encrypted PDF Detection Hardening

@@ -3,7 +3,8 @@ project: PDF Tile Viewer
 document_family: Dioxus + embedded/bundled PDFium migration RFCs
 language: English
 date: 2026-06-07
-status: Implemented
+status: Implemented (2.0.0-alpha.1)
+amended_by: RFC 034 (PageDescriptor: display geometry), RFC 035 (session lifecycle usage)
 baseline: PDF Tile Viewer v1.1.2 reverse-engineered design + approved Dioxus goal-state design
 ---
 
@@ -203,3 +204,9 @@ Errors must preserve internal diagnostic detail for logs while exposing stable u
 | Native handles leak into UI state | Keep handle types private to `pdf_engine`. |
 | Stale renders appear after reopening another file | Include `document_id` and `generation` in render/search results. |
 | Page geometry mismatch breaks highlights | Canonicalize units and transformation rules in this RFC and RFC-011. |
+
+## Known gaps
+
+- **The session is never closed by the UI.** Opened documents (native PDFium handles and
+  cached renders) stay alive for the process lifetime. Fixed by
+  [RFC 035](../accepted/035-document-session-lifecycle-and-render-freshness.md).

@@ -11,10 +11,10 @@ Launch the app from the project root:
 PDF_TILE_VIEWER_PDFIUM_DIR="$(pwd)/ci/.pdfium" cargo run
 ```
 
-Then open `fixtures/navigation-links-outline.pdf` through the picker or drop it
+Then open `crates/pdf_engine/tests/fixtures/navigation-links-outline.pdf` through the picker or drop it
 on the dashboard.
 
-Also open `fixtures/single-page-basic.pdf` for the no-outline check.
+Also open `crates/pdf_engine/tests/fixtures/single-page-basic.pdf` for the no-outline check.
 
 During RFC 026 Linux WebKitGTK QA, picker open worked but dashboard file drop
 failed under both the observed Wayland session and an `GDK_BACKEND=x11`
@@ -23,7 +23,7 @@ drag/drop reliability separately as Future RFC-F07.
 
 ## Fixture Map
 
-`fixtures/navigation-links-outline.pdf` has three pages:
+`crates/pdf_engine/tests/fixtures/navigation-links-outline.pdf` has three pages:
 
 - Page 1 text: `Navigation page one`
   - Outline target: `Chapter 1`
@@ -93,8 +93,8 @@ Copy this into the final RFC 026 acceptance notes when complete:
 Manual WebView QA for RFC 026 completed on <OS / desktop / WebView version>.
 
 Fixture files:
-- fixtures/navigation-links-outline.pdf
-- fixtures/single-page-basic.pdf
+- crates/pdf_engine/tests/fixtures/navigation-links-outline.pdf
+- crates/pdf_engine/tests/fixtures/single-page-basic.pdf
 
 Result:
 - Outline/no-outline behavior: pass/fail

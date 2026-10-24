@@ -3,7 +3,8 @@ project: PDF Tile Viewer
 document_family: Dioxus + embedded/bundled PDFium migration RFCs
 language: English
 date: 2026-06-07
-status: Implemented
+status: Implemented (2.0.0-beta.2)
+amended_by: RFC 035 (cache policy and tile freshness), RFC 040 (memory budget also covers UI-side state)
 baseline: PDF Tile Viewer v1.1.2 reverse-engineered design + approved Dioxus goal-state design
 ---
 
@@ -182,3 +183,13 @@ The UI should avoid flicker by retaining the old image briefly during scale chan
 | Scroll causes render storm | High | Coalesce requests and throttle viewport updates. |
 | Cache eviction removes visible pages | Medium | Prioritize visible pages as non-evictable under normal pressure. |
 | PDFium worker becomes bottleneck | Medium | Accept serialization first; optimize scheduling before parallelism. |
+
+## Known gaps
+
+- **Freshness and cache policy.** The render cache evicts oldest-by-insertion rather than
+  true LRU, and tiles keep a stale-resolution image after a scale change. Fixed by
+  [RFC 035](../accepted/035-document-session-lifecycle-and-render-freshness.md).
+- **UI-side memory is unbounded.** Rendered tiles stay in UI state as data URIs, so memory
+  grows with the number of tiles ever shown. Bounded by
+  [RFC 040](../accepted/040-tile-retention-window.md) (retention window); bounded image
+  transport is left to the future render-pipeline RFC (RFC-FUTURE F14).

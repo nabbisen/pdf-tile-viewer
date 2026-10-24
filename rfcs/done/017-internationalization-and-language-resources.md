@@ -3,7 +3,8 @@ project: PDF Tile Viewer
 document_family: Dioxus + embedded/bundled PDFium migration RFCs
 language: English
 date: 2026-06-07
-status: Implemented
+status: Implemented (2.0.0-alpha.1)
+amended_by: RFC 037 (error mapping), RFC 043 (system locale detection)
 baseline: PDF Tile Viewer v1.1.2 reverse-engineered design + approved Dioxus goal-state design + project UI/UX requirement "Multilingual Support"
 ---
 

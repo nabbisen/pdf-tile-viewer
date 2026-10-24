@@ -4,10 +4,11 @@ document_family: Dioxus + embedded/bundled PDFium migration RFCs
 language: English
 date: 2026-07-07
 status: Implemented (2.0.0-beta.11)
+amended_by: RFC 037 (error semantics)
 baseline: PDF Tile Viewer 2.0.0-beta.10
 depends_on: RFC 024
-review: .git-exclude/reviewed/pdf_tile_viewer_rfc025_password_protected_pdf_opening_design_review.md
-implementation_review: .git-exclude/reviewed/pdf_tile_viewer_rfc025_password_protected_pdf_opening_implementation_review.md
+review: internal review record (not published)
+implementation_review: internal review record (not published)
 ---
 
 # RFC 025 — Password-Protected PDF Opening Workflow

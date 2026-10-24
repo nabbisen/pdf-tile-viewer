@@ -2,7 +2,7 @@
 
 Implemented RFCs live in `rfcs/done/`; accepted RFCs (design settled,
 implementation may start) in `rfcs/accepted/`; proposed follow-up work in
-`rfcs/proposed/`. The lifecycle policy is in
+`rfcs/proposed/`; withdrawn or superseded RFCs in `rfcs/archive/`. The lifecycle policy is in
 `rfcs/done/000-rfc-lifecycle-policy.md`.
 
 ---
@@ -26,10 +26,8 @@ Execution order is serial and recorded in the Developer Handoffs below.
 | 033 | [Keyboard Routing, Modal Layers, and Dismissal Model](accepted/033-keyboard-routing-and-dismissal-model.md) | Accepted — planned 2.0.2 |
 | 034 | [Display-Space Page Geometry](accepted/034-display-space-page-geometry.md) | Accepted — planned 2.0.2 |
 | 035 | [Document Session Lifecycle and Render Freshness](accepted/035-document-session-lifecycle-and-render-freshness.md) | Accepted — planned 2.0.2 |
-| 040 | [Tile Retention Window](handoffs/040-tile-retention-window/implementation-handoff.md) |
 | 036 | [Release Supply-Chain and Workflow Hardening](accepted/036-release-supply-chain-and-workflow-hardening.md) | Accepted — planned 2.0.2 |
 | 037 | [User-Facing Error Presentation and Accessible Names](accepted/037-user-facing-error-presentation-and-accessible-names.md) | Accepted — planned 2.0.2 |
-| 043 | [System Locale Detection](handoffs/043-system-locale-detection/implementation-handoff.md) |
 | 038 | [Corrective Documentation, Governance, and Repository Hygiene](accepted/038-corrective-documentation-governance-and-repository-hygiene.md) | Accepted — planned 2.0.2 |
 | 039 | [Viewer Scale Shortcut Crash (Emergency Fix)](accepted/039-scale-shortcut-crash-hotfix.md) | Accepted — emergency, released in 2.0.1 |
 | 040 | [Tile Retention Window](accepted/040-tile-retention-window.md) | Accepted — planned 2.0.2 |
@@ -61,6 +59,14 @@ Execution order is serial and recorded in the Developer Handoffs below.
 | 036 | [Release Supply-Chain and Workflow Hardening](handoffs/036-release-supply-chain-and-workflow-hardening/implementation-handoff.md) ([follow-up](handoffs/036-release-supply-chain-and-workflow-hardening/dependency-and-release-notes.md)) |
 | 037 | [User-Facing Error Presentation and Accessible Names](handoffs/037-user-facing-error-presentation-and-accessible-names/implementation-handoff.md) ([listening session](handoffs/037-user-facing-error-presentation-and-accessible-names/screen-reader-listening-session.md)) |
 | 038 | [Corrective Documentation, Governance, and Repository Hygiene](handoffs/038-corrective-documentation-governance-and-repository-hygiene/implementation-handoff.md) (slices A and B′; [final sync](handoffs/038-corrective-documentation-governance-and-repository-hygiene/final-sync.md)) |
+| 040 | [Tile Retention Window](handoffs/040-tile-retention-window/implementation-handoff.md) |
+| 043 | [System Locale Detection](handoffs/043-system-locale-detection/implementation-handoff.md) |
+
+---
+
+## Archive
+
+Withdrawn or superseded RFCs live in [`archive/`](archive/README.md) (RFC 000). None yet.
 
 ---
 

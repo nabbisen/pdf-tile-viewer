@@ -3,7 +3,8 @@ project: PDF Tile Viewer
 document_family: Dioxus + embedded/bundled PDFium migration RFCs
 language: English
 date: 2026-06-07
-status: Implemented
+status: Implemented (2.0.0-alpha.4)
+amended_by: RFC 034 (coordinate transforms and rotation)
 baseline: PDF Tile Viewer v1.1.2 reverse-engineered design + approved Dioxus goal-state design
 ---
 
@@ -144,3 +145,10 @@ If PDF crop boxes are used, the canonical page geometry must account for them co
 ## 13. Release Policy
 
 If exact highlight alignment is not reliable by the release deadline, ship RFC-010 page-level markers and mark RFC-011 as beta/deferred. Do not ship misleading highlights.
+
+## Known gaps
+
+- **Rotated and cropped pages.** Search, text and link rectangles are misplaced on pages with
+  `/Rotate` or a non-zero crop origin, and no rotation fixtures were committed (the
+  "covered or explicitly documented as unsupported" requirement was not met). Fixed by
+  [RFC 034](../accepted/034-display-space-page-geometry.md).

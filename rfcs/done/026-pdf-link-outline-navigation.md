@@ -3,12 +3,12 @@ project: PDF Tile Viewer
 document_family: Dioxus + embedded/bundled PDFium migration RFCs
 language: English
 date: 2026-07-07
-status: Implemented
+status: Implemented (2.0.0)
 baseline: PDF Tile Viewer 2.0.0-beta.11
 depends_on: RFC 012, RFC 016, RFC 023, RFC 025
-review: .git-exclude/reviewed/pdf_tile_viewer_rfc026_pdf_link_outline_navigation_design_review.md
-rereview: .git-exclude/reviewed/pdf_tile_viewer_rfc026_pdf_link_outline_navigation_design_rereview.md
-implementation_review: .git-exclude/reviewed/pdf_tile_viewer_rfc026_pdf_link_outline_navigation_final_qa_followup_review.md
+review: internal review record (not published)
+rereview: internal review record (not published)
+implementation_review: internal review record (not published)
 ---
 
 # RFC 026 — PDF Link and Outline Navigation

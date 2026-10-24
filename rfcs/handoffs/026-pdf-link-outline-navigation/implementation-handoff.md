@@ -1,3 +1,5 @@
+Historical record — implemented in 2.0.0 (RFC 026 is in `rfcs/done/`; this handoff is kept for the implementation trail and is not a current instruction).
+
 # Handoff — RFC 026 PDF Link and Outline Navigation
 
 ## 1. Summary
@@ -14,8 +16,8 @@ After PR 4 cleanup review, an unused internal-link helper was removed from the
 zoom overlay utility module and the active `link_activation_at()` coverage was
 kept.
 
-The RFC remains in `rfcs/proposed/` until final manual QA and owner acceptance
-are complete. This handoff is not release prep and is not a release point.
+At the time of writing the RFC was in `rfcs/proposed/` pending final manual QA and
+owner acceptance; it has since been accepted and moved to `rfcs/done/` (see § 8).
 
 ## 2. Files and surfaces changed
 
@@ -38,21 +40,8 @@ are complete. This handoff is not release prep and is not a release point.
 
 ## 3. Review record
 
-Design reviews:
-
-- `.git-exclude/reviewed/pdf_tile_viewer_rfc026_pdf_link_outline_navigation_design_review.md`
-- `.git-exclude/reviewed/pdf_tile_viewer_rfc026_pdf_link_outline_navigation_design_rereview.md`
-
-Implementation reviews:
-
-- `.git-exclude/reviewed/pdf_tile_viewer_rfc026_pdf_link_outline_navigation_pr1_implementation_review.md`
-- `.git-exclude/reviewed/pdf_tile_viewer_rfc026_pdf_link_outline_navigation_pr1_implementation_rereview.md`
-- `.git-exclude/reviewed/pdf_tile_viewer_rfc026_pdf_link_outline_navigation_pr2_outline_ui_implementation_review.md`
-- `.git-exclude/reviewed/pdf_tile_viewer_rfc026_pdf_link_outline_navigation_pr3_zoom_link_overlay_implementation_review.md`
-- `.git-exclude/reviewed/pdf_tile_viewer_rfc026_pdf_link_outline_navigation_pr3_zoom_link_overlay_rereview.md`
-- `.git-exclude/reviewed/pdf_tile_viewer_rfc026_pdf_link_outline_navigation_pr3_zoom_link_overlay_rereview2.md`
-- `.git-exclude/reviewed/pdf_tile_viewer_rfc026_pdf_link_outline_navigation_pr4_external_uri_copy_confirmation_review.md`
-- `.git-exclude/reviewed/pdf_tile_viewer_rfc026_pdf_link_outline_navigation_pr4_external_uri_copy_confirmation_rereview.md`
+Design reviews, rereviews and per-slice implementation reviews were recorded as
+internal review records (not published).
 
 ## 4. Current behavior
 

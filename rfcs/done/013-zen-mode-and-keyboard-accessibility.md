@@ -3,7 +3,8 @@ project: PDF Tile Viewer
 document_family: Dioxus + embedded/bundled PDFium migration RFCs
 language: English
 date: 2026-06-07
-status: Implemented
+status: Implemented (2.0.0-beta.1)
+amended_by: RFC 033 (shortcuts, Escape, input guard, focus contract)
 baseline: PDF Tile Viewer v1.1.2 reverse-engineered design + approved Dioxus goal-state design
 ---
 
@@ -132,3 +133,10 @@ Important focus rules:
 | Zen mode traps user | Always support Escape and a visible/revealed exit control. |
 | Shortcuts conflict with inputs | Scope shortcuts by focused element. |
 | WebView accessibility differs by OS | Use semantic HTML-like Dioxus elements and test on primary OS. |
+
+## Known gaps
+
+- **Input guard and Escape.** Viewer shortcuts also fire while typing in text inputs, overlay
+  keys bubble into the viewer, Escape in the overlay also leaves the document, and several
+  focus rules of § 10 are not met. Fixed by
+  [RFC 033](../accepted/033-keyboard-routing-and-dismissal-model.md).
