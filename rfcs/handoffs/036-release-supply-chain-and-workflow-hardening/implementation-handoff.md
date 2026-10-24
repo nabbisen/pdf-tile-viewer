@@ -3,7 +3,7 @@
 Governing RFC: [`../../accepted/036-release-supply-chain-and-workflow-hardening.md`](../../accepted/036-release-supply-chain-and-workflow-hardening.md)
 This handoff executes the RFC; it must not redefine it. Conflicts → design request to the architect.
 
-Schedule: Wed 11-04 → Mon 11-09 (after RFC 038 Slice A is committed). Working model: directly on `main`, no branches, one actor at a time, hand over with the `main` commit hash.
+Order: first slice of the 2.0.2 train (after RFC 038 Slice A is committed). Working model: directly on `main`, no branches, one actor at a time, hand over with the `main` commit hash.
 
 **Hard limits (DEC-001):** do not create or push any tag, do not publish a release, do not change code-signing behavior, do not automate Store submission. Workflow changes are exercised by the **owner** on a fork; you prepare the instructions.
 
@@ -49,6 +49,17 @@ The 2.0.1 GitHub Release contained a stray `pdf-tile-viewer-v2.0.0-linux-x64.tar
 - `source` job: write the source archive to a fresh directory (`"$RUNNER_TEMP/source-out"`) and upload exactly that file (explicit path, `if-no-files-found: error`); the build jobs likewise upload exactly their own `dist/${artifact_name}.{tar.gz,zip}` (already explicit; keep).
 - `release` job: after flattening, a **gate step** fails unless every file name starts with `pdf-tile-viewer-v${version}` (version resolved from `Cargo.toml`) and exactly five files exist (four platform archives plus the source archive); print the list. Add a negative self-test to `ci/verify-release-tag-self-test.sh` or a new `ci/verify-release-assets-self-test.sh` (stray file, missing file, wrong version).
 - Evidence: the owner's fork dry run must show the gate passing and, with a deliberately placed stray file, failing.
+
+### 8. Version single source and the release-preparation workflow (RFC 036 § 5.7, owner-approved 2026-10-24)
+Implement RFC 036 § 5.7 exactly. In order:
+1. `packaging/windows/AppxManifest.xml`: set the real `Version="2.0.1.0"` (the current Cargo version `.0`); remove the placeholder comment.
+2. `ci/set-version.sh`, `ci/verify-version-consistency.sh` and their self-tests (`ci/set-version-self-test.sh`, `ci/verify-version-consistency-self-test.sh`, using temporary copies of the files): cases — clean run; dirty tree refused; invalid version refused; CHANGELOG heading missing refused; manifest/Cargo mismatch detected; non-zero revision detected; placeholder detected; pre-release suffix dropped in the manifest only.
+3. `ci.yml`: run the consistency check and all self-tests on every push; add `workflow_call` with an optional `ref` input and check out `${{ inputs.ref || github.sha }}`.
+4. `.github/workflows/prepare-release.yml` per § 5.7 item 4. The bot identity is `github-actions[bot]`; use the token that `actions/checkout` provides (no personal tokens, no new secrets). Require a successful CI run for the head of `main` (query with `gh api`/`gh run list` using `GH_TOKEN: ${{ github.token }}` and the default read permission); fail clearly otherwise. Never create a tag.
+5. `release.yml` `verify-tag`: also run `ci/verify-version-consistency.sh`. `msix-store.yml` and `ci/stage-msix.sh`: remove `msix_revision` everywhere; the stage script verifies the manifest version and writes `msix-version.txt` (single source for the output file name); keep the post-staging checks (no placeholder, no VCLibs dependency, VC runtime DLLs present).
+6. Docs: `docs/src/contributors/dev.md` — replace the manual release recipe by the new order of work (§ 5.7), state that the MSIX revision is always 0 and why (link the Microsoft Learn page), document the bot-bypass note and the `main` protection status; correct the DEC-015 wording wherever it appears in tracked docs.
+7. **Evidence:** self-tests pass locally and in CI; `actionlint` clean; demonstrate the guards by deliberately breaking each (manifest mismatch, non-zero revision) in a scratch copy. **Dry-run instructions for the owner (fork):** how to create a throw-away fork, dispatch *Prepare release* with a pre-release version (for example `2.0.2-rc.1`, with a matching CHANGELOG heading on the fork), what the resulting commit must contain (`git show --stat`), that CI runs on it, and that no tag exists. You do **not** run it on the real repository.
+
 
 ## Non-change scope
 Signing behavior, artifact layout, packaged-artifact smoke logic, the `msix_revision` input semantics, release notes generation, application code.

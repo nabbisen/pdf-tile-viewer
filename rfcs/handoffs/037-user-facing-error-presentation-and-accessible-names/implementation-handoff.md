@@ -1,7 +1,7 @@
 # Handoff — RFC 037 User-Facing Error Presentation and Accessible Names
 
 Governing RFC: [`../../accepted/037-user-facing-error-presentation-and-accessible-names.md`](../../accepted/037-user-facing-error-presentation-and-accessible-names.md) (incl. § 5.6, amended 2026-10-24). Evidence: `.git-exclude/review-request/wp0-evidence-run/` (Part C dumps and Orca logs).
-Executes the RFC; must not redefine it. Planned slice F (3 days), after RFC 033 (slice E). Working model: directly on `main`, one actor, hand over with the commit hash, `main` green. No tags, no releases (DEC-001). **GUI test protocol applies** (scratch `XDG_CONFIG_HOME`, transient unit, focus check before every synthetic input, `wtype -d 50`). Re-read files; line numbers have moved.
+Executes the RFC; must not redefine it. Slice F, after RFC 033 (slice E). Working model: directly on `main`, one actor, hand over with the commit hash, `main` green. No tags, no releases (DEC-001). **GUI test protocol applies** (scratch `XDG_CONFIG_HOME`, transient unit, focus check before every synthetic input, `wtype -d 50`). Re-read files; line numbers have moved.
 
 ## Change scope (RFC 037 §§ 5.1–5.6)
 1. **Failure mapping** (`crates/app/src/i18n/failure.rs`, new): exhaustive `match` mappers `search_error_key`, `render_error_key`, `text_layer_error_key`, `navigation_error_key`, `platform_error_key` (no wildcard arms). State types store `MessageKey` (`SearchState::Failed(MessageKey)`, `TileImageState::Failed(MessageKey)`, `ZoomImageState::Failed(MessageKey)`, reveal error). Debug detail only in debug builds after the localized text (existing `DiagnosticDetailsLabel` pattern); never a path. English and Japanese strings; completeness tests extended.

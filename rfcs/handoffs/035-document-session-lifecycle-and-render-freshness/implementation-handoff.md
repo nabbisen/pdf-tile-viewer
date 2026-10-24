@@ -3,7 +3,7 @@
 Governing RFC: [`../../accepted/035-document-session-lifecycle-and-render-freshness.md`](../../accepted/035-document-session-lifecycle-and-render-freshness.md)
 Executes the RFC; must not redefine it. Conflicts or gaps → design request to the architect.
 
-Schedule: Tue 11-17 → Thu 11-19 (**Slice D**), after RFC 034 (Slice C) is committed and `main` is green. Working model: directly on `main`, no branches, one actor at a time, hand over with the `main` commit hash. No tags, no releases (DEC-001).
+Order: **Slice D**, after RFC 034 (Slice C) is committed and `main` is green. Working model: directly on `main`, no branches, one actor at a time, hand over with the `main` commit hash. No tags, no releases (DEC-001).
 
 ## Purpose
 One close path that the UI cannot forget; uniform, bounded handling of closed sessions across all caches; a truthful LRU render cache; tiles that converge to the current scale.

@@ -1,7 +1,7 @@
 # Handoff — RFC 033 Keyboard Routing, Modal Layers, and Dismissal Model
 
 Governing RFC: [`../../accepted/033-keyboard-routing-and-dismissal-model.md`](../../accepted/033-keyboard-routing-and-dismissal-model.md) (incl. the 2026-10-24 amendment in § 5.4). Evidence: [`evidence-run.md`](evidence-run.md) and its review package (`.git-exclude/review-request/wp0-evidence-run/`).
-Executes the RFC; must not redefine it. Planned slice E (5 days), after RFC 040 (slice R). Working model: directly on `main`, one actor, hand over with the commit hash, `main` green. No tags, no releases (DEC-001). **GUI test protocol applies** (scratch `XDG_CONFIG_HOME`, transient `systemd --user` unit, verify the focused window before every `wtype`/`xdotool` call, `wtype -d 50`). Line numbers have moved since the RFC was written: re-read the files.
+Executes the RFC; must not redefine it. Slice E, after RFC 040 (slice R). Working model: directly on `main`, one actor, hand over with the commit hash, `main` green. No tags, no releases (DEC-001). **GUI test protocol applies** (scratch `XDG_CONFIG_HOME`, transient `systemd --user` unit, verify the focused window before every `wtype`/`xdotool` call, `wtype -d 50`). Line numbers have moved since the RFC was written: re-read the files.
 
 ## Release context (important)
 This ships in a **patch** release (2.0.2). The documented behavior "Escape with nothing to dismiss returns to the dashboard" **stays** (RFC 033 § 5.4 two-step rollout); only the bug that one Escape both closes a layer *and* leaves the document is fixed. `domain::shortcuts::ESCAPE_LEAVES_DOCUMENT_WHEN_IDLE` is `true` in this release. Do not change documented behavior beyond the RFC.

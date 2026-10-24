@@ -3,7 +3,7 @@
 Governing RFC: [`../../accepted/034-display-space-page-geometry.md`](../../accepted/034-display-space-page-geometry.md)
 Executes the RFC; must not redefine it. Conflicts or gaps → design request to the architect.
 
-Schedule: Thu 11-12 → Mon 11-16 (**Slice C**), after RFC 038 Slice B′ is committed and `main` is green. Working model: directly on `main`, no branches, one actor at a time, hand over with the `main` commit hash. No tags, no releases (DEC-001).
+Order: **Slice C**, after RFC 038 Slice B′ is committed and `main` is green. Working model: directly on `main`, no branches, one actor at a time, hand over with the `main` commit hash. No tags, no releases (DEC-001).
 
 ## Purpose
 Make the engine the single place that converts PDF user-space geometry into display-space geometry, so that tiles and every overlay (search highlights, text layer, link hit areas) are correct on rotated and cropped pages.

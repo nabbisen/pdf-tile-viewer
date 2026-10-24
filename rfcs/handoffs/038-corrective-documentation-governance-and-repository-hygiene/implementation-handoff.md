@@ -5,8 +5,8 @@ This handoff executes the RFC; it must not redefine it. If you find a conflict, 
 
 Two slices, **executed in this order and never overlapped**:
 
-- **Slice A** — behavior-preserving refactors (RFC 038 § 4.4). Schedule: Thu 10-29 → Mon 11-02.
-- **Slice B′** — documentation, RFC-policy compliance, repository hygiene (RFC 038 § 4.1–4.3, § 4.5). Schedule: Tue 11-10 → Wed 11-11, **after** the RFC 036 slice is committed.
+- **Slice A** — behavior-preserving refactors (RFC 038 § 4.4). Done and approved.
+- **Slice B′** — documentation, RFC-policy compliance, repository hygiene (RFC 038 § 4.1–4.3, § 4.5). Order: second slice of the 2.0.2 train, **after** the RFC 036 slice is committed.
 
 Working model: work directly on `main`, no branches; only one actor works at a time; hand over with the current `main` commit hash; `main` must be green before every push.
 

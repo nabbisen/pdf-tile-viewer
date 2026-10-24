@@ -3,7 +3,7 @@
 Governing RFC: [`../../accepted/039-scale-shortcut-crash-hotfix.md`](../../accepted/039-scale-shortcut-crash-hotfix.md) — accepted by the owner on 2026-10-22; the dev team may start.
 Executes the RFC; must not redefine it. Conflicts or gaps → design request to the architect.
 
-Schedule: one working day, then architect review (the owner decides when to hand over; the planned release go/no-go for the hotfix stays with the owner). Working model: directly on `main`, no branches, you are the only actor on the tree; start from a clean `git status` at the hand-over commit; hand over with the `main` commit hash. **No tags, no pushes of tags, no releases (DEC-001).**
+Order: implementation, then architect review (the owner decides when to hand over; the planned release go/no-go for the hotfix stays with the owner). Working model: directly on `main`, no branches, you are the only actor on the tree; start from a clean `git status` at the hand-over commit; hand over with the `main` commit hash. **No tags, no pushes of tags, no releases (DEC-001).**
 
 ## Purpose
 Remove the abort on `+`, `=`, `-` and `Ctrl+wheel` in the viewer (RFC 039 § 2) with the smallest correct change, plus regression protection.
