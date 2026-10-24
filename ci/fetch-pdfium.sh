@@ -4,7 +4,8 @@
 #
 # Source: https://github.com/bblanchon/pdfium-binaries (BSD-licensed builds
 # of Google's PDFium). The release tag is PINNED so smoke tests are
-# reproducible; bump deliberately and re-run the suite.
+# reproducible; bump deliberately and re-run the suite. Every download is
+# verified against ci/pdfium-checksums.txt (SHA-256) before extraction.
 #
 # Usage:   ci/fetch-pdfium.sh [target]
 #   target: linux-x64 (default) | linux-arm64 | mac-x64 | mac-arm64 | win-x64
@@ -26,6 +27,9 @@ trap 'rm -f "${TMP_TGZ}"' EXIT
 
 echo "Fetching ${URL}"
 curl -fSL --retry 3 -o "${TMP_TGZ}" "${URL}"
+
+# Fail closed on a wrong or unpinned archive, before anything is extracted (RFC 036 § 5.1).
+bash "${SCRIPT_DIR}/verify-sha256.sh" "${TMP_TGZ}" "${PDFIUM_RELEASE_TAG}" "pdfium-${TARGET}.tgz"
 
 tar -xzf "${TMP_TGZ}" -C "${DEST_DIR}" --strip-components=1 lib 2>/dev/null \
   || tar -xzf "${TMP_TGZ}" -C "${DEST_DIR}" --strip-components=1 bin 2>/dev/null

@@ -1,0 +1,8 @@
+# SHA-256 of the pinned PDFium release assets (RFC 036 § 5.1). Format: sha256, two spaces, release tag, two spaces, asset name.
+# Verified by ci/verify-sha256.sh before any extraction. Bump procedure: docs/src/contributors/dev.md.
+# chromium/7920 values: two independent downloads identical and equal to the GitHub release-asset digest (2026-10-24).
+49ab3afbd4e6c1e284b5f2898129c8bb8a10fd785c1c5392c8c1fc70242f9ced  chromium/7920  pdfium-linux-x64.tgz
+00551476a77fbc1a31c37573eadc9b63f1c366f65ad727539326927da083bb4d  chromium/7920  pdfium-linux-arm64.tgz
+bf25149815b34b00042f48a886653d469c817529dd9cccabb4b509b6465a9526  chromium/7920  pdfium-win-x64.tgz
+c032aa59be58b0f12e41e76a8ef707e347b9841b0426446f646b2568d350ec4f  chromium/7920  pdfium-mac-arm64.tgz
+0c78b8d55a4c97e02c9bb516997253cb972739373009cf29554c959a2f6b194a  chromium/7920  pdfium-mac-x64.tgz
