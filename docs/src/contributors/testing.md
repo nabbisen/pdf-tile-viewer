@@ -68,11 +68,42 @@ Negative layout self-tests are available:
 bash ci/smoke-release-artifact-self-test.sh
 ```
 
-## fmt check
+## fmt and clippy
 
 ```sh
 cargo fmt --check
+cargo clippy --workspace --all-targets -- -D warnings
 ```
+
+Clippy is part of the project gate and a **blocking** CI job (RFC 036 § 5.6; this
+supersedes DEC-016, which treated it as advisory). The toolchain is pinned in
+`rust-toolchain.toml`, so the lint set is the same locally and in CI.
+
+## Release tooling self-tests
+
+The scripts under `ci/` that guard releases each have a self-test that needs no
+network and no PDFium (they use scratch git repositories and files):
+
+```sh
+bash ci/verify-sha256-self-test.sh              # PDFium checksum verification fails closed
+bash ci/verify-release-tag-self-test.sh         # tag == version, dated CHANGELOG, commit on main
+bash ci/verify-release-assets-self-test.sh      # exactly the five expected release files
+bash ci/set-version-self-test.sh                # the only tool that changes versions
+bash ci/verify-version-consistency-self-test.sh # Cargo, MSIX manifest, CHANGELOG agree
+bash ci/smoke-release-artifact-self-test.sh     # malformed package layouts are rejected
+bash ci/verify-version-consistency.sh           # the check itself, on this tree
+shellcheck ci/*.sh
+```
+
+## CI jobs
+
+`.github/workflows/ci.yml` runs, on every push to `main` and every pull request:
+`rustfmt`, `clippy`, check and tests on Linux (including `cargo test -p app` and the
+PDFium smoke tests on the checksum-verified asset), check, tests and the PDFium smoke
+tests on macOS (arm64) and Windows, the release-tooling self-tests above, `actionlint`
+on the workflows, and `cargo deny` (advisories, licences, bans; non-blocking until
+the first report is triaged). Details and the release procedure:
+[Local Development](dev.md#continuous-integration-and-releases).
 
 ## Why Dioxus-specific test kinds are not used
 
