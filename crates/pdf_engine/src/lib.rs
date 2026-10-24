@@ -13,4 +13,5 @@ pub mod navigation;
 pub mod render;
 pub mod search;
 pub mod text_layer;
+pub mod user_space;
 pub mod worker;
