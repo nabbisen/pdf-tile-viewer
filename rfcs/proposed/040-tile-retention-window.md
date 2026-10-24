@@ -95,6 +95,27 @@ briefly (tiles within 2 viewport heights are never affected). This is the only
 visible difference; it is documented in the FAQ ("Why do pages far from the
 view show a loading placeholder?").
 
+### 4.5 Design continuity (architect self-review, 2026-10-24)
+
+This is not a throw-away stopgap. What RFC 040 adds is the **policy**: which
+rendered tiles may stay, decided by one pure, tested function
+(`retention_victims`). The **mechanism** it uses today (reset a tile to `Pending`,
+which removes its `<img>`) is the same mechanism a later DOM-virtualization and
+custom-image-protocol design (RFC-FUTURE F14) needs: even with short URLs, the
+decoded bitmaps that WebKit holds for live `<img>` elements dominate memory, so
+far tiles must still be released. F14 will replace the transport and may replace
+the placeholder rendering, but it keeps this policy function. Window size and cap
+are provisional values chosen from the WP0 measurements; the acceptance test
+(§ 7) is what fixes them, and they may be tuned in a patch release without any
+contract change.
+
+### 4.6 What the user sees
+
+A tile far from the viewport shows the existing loading placeholder (the same one
+used while a page first renders) when the user returns to it, then fills in. No
+new control, message or setting is introduced; the explanation is one FAQ entry.
+Tiles within two viewport heights never change.
+
 ## 5. Alternatives considered
 
 - **Time-based eviction.** Rejected: non-deterministic, harder to test.
