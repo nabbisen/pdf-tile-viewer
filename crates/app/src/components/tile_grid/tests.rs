@@ -1,5 +1,6 @@
 use super::*;
 use domain::geometry::PageRect;
+use domain::render::ScaleBucket;
 use domain::search::TextHighlight;
 
 fn descriptor() -> PageDescriptor {
@@ -31,7 +32,10 @@ fn tile_highlights_use_page_descriptor_transform() {
         PageIndex(0),
         &[descriptor()],
         Some(&highlights()),
-        &TileImageState::Ready("data:image/png;base64,".to_string()),
+        &TileImageState::Ready {
+            uri: "data:image/png;base64,".to_string(),
+            bucket: ScaleBucket(200),
+        },
         1224,
         1584,
     );
@@ -48,7 +52,10 @@ fn tile_highlights_do_not_fallback_to_raw_pdf_rects() {
         PageIndex(0),
         &[],
         Some(&highlights()),
-        &TileImageState::Ready("data:image/png;base64,".to_string()),
+        &TileImageState::Ready {
+            uri: "data:image/png;base64,".to_string(),
+            bucket: ScaleBucket(200),
+        },
         1224,
         1584,
     );

@@ -9,6 +9,7 @@ use std::path::PathBuf;
 use std::sync::OnceLock;
 
 use domain::document::{DocumentSession, PageIndex};
+use domain::render::ScaleBucket;
 use pdf_engine::worker::EngineHandle;
 
 /// Result of pre-UI engine boot. `Err` carries a user-presentable
@@ -29,16 +30,22 @@ pub fn engine_boot_error() -> Option<String> {
     BOOT.get().and_then(|b| b.as_ref().err()).cloned()
 }
 
-/// Render state of a single page tile (RFC 007 §11).
+/// Render state of a single page tile (RFC 007 §11, RFC 035 § 5.4).
 ///
 /// `Rendering(gen)` carries the layout-generation at the time the render was
 /// requested; stale completions (wrong gen) are silently dropped.
+///
+/// `Ready` records the [`ScaleBucket`] the image was rendered at: after a scale change
+/// the old image stays on screen until a render for the new bucket replaces it.
 #[derive(Clone, Debug, PartialEq)]
 pub enum TileImageState {
     Pending,
     Rendering(u64),
-    /// `data:image/png;base64,…` — provisional M4 transport (RFC 005 §7).
-    Ready(String),
+    Ready {
+        /// `data:image/png;base64,…` — provisional M4 transport (RFC 005 §7).
+        uri: String,
+        bucket: ScaleBucket,
+    },
     Failed(String),
 }
 

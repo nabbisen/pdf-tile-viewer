@@ -99,7 +99,7 @@ pub fn TileGrid(
                                     style: "position: relative; width: {w}px; height: {h}px; overflow: hidden;",
 
                                     match &image_state {
-                                        TileImageState::Ready(uri) => rsx! {
+                                        TileImageState::Ready { uri, .. } => rsx! {
                                             img {
                                                 class: "tile-img",
                                                 src: "{uri}",
@@ -178,7 +178,7 @@ fn tile_highlight_rects(
     rendered_width_px: u32,
     rendered_height_px: u32,
 ) -> Vec<RectPx> {
-    if !matches!(image_state, TileImageState::Ready(_)) {
+    if !matches!(image_state, TileImageState::Ready { .. }) {
         return Vec::new();
     }
     let Some(highlights) = page_highlights else {

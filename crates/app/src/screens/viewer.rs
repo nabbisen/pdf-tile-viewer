@@ -169,7 +169,7 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
             layout.read().clone(),
             *scroll_y.read(),
             *viewport_height.read(),
-            *scale.read(),
+            scale,
             current_gen,
             session_eff.id,
             session_eff.generation,
@@ -197,10 +197,13 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
     });
 
     // ── Helpers ────────────────────────────────────────────────────────────
+    // After a scale change: tiles that have no image yet go back to `Pending`; tiles that
+    // are `Ready` keep their (now stale-scale) image on screen and are re-rendered by the
+    // scheduler (`tile_needs_render`). Resetting them would flash blank tiles.
     let mut invalidate = move || {
         let mut images = tile_images.write();
         for state in images.values_mut() {
-            if !matches!(state, TileImageState::Ready(_)) {
+            if !matches!(state, TileImageState::Ready { .. }) {
                 *state = TileImageState::Pending;
             }
         }
