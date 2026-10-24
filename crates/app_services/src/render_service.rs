@@ -8,9 +8,11 @@
 //! provides a single async entry-point: check cache → render if miss →
 //! store → return. The `app` layer converts the bytes to a data URI.
 //!
-//! Memory policy (RFC 007 §10):
-//! - Default budget: 256 MB.
-//! - Eviction order: wrong-generation entries first, then oldest-by-insertion.
+//! Memory policy (RFC 007 §10, RFC 035 § 5.3):
+//! - Default budget: 256 MB (minimum 64 MB); never exceeded by eviction policy choices.
+//! - Eviction order: entries of a generation other than the active one first, then the
+//!   least recently used entry. A cache hit refreshes recency. Entries of a closed
+//!   session are removed on close and later inserts for it are refused.
 
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
@@ -30,19 +32,20 @@ pub const MINIMUM_CACHE_BUDGET_BYTES: usize = 64 * 1024 * 1024; // 64 MB
 
 struct CacheEntry {
     bytes: Arc<[u8]>,
-    /// Monotonically increasing insert order; used for FIFO eviction.
-    insert_seq: u64,
+    /// Recency stamp from the cache's counter; refreshed on insert and on every hit.
+    last_used_seq: u64,
 }
 
-/// In-memory LRU render cache (RFC 007 §6).
+/// In-memory LRU render cache (RFC 007 §6, RFC 035 § 5.3).
 ///
-/// Eviction priority (RFC 007 §10):
-/// 1. Entries whose `document_generation` does not match the current document
-///    generation are evicted first.
-/// 2. Otherwise, oldest-by-insertion.
+/// Eviction priority when the byte budget would be exceeded:
+/// 1. Entries whose generation differs from the active generation (when one is set).
+/// 2. Among those candidates (or among all entries if there is none), the least
+///    recently used one; `get` and `insert` both count as use.
 pub struct RenderCache {
     entries: HashMap<RenderCacheKey, CacheEntry>,
-    insert_seq: u64,
+    seq: u64,
+    active_generation: Option<DocumentGeneration>,
     closed_sessions: ClosedSessions,
     pub used_bytes: usize,
     pub budget_bytes: usize,
@@ -52,19 +55,36 @@ impl RenderCache {
     pub fn new(budget_bytes: usize) -> Self {
         RenderCache {
             entries: HashMap::new(),
-            insert_seq: 0,
+            seq: 0,
+            active_generation: None,
             closed_sessions: ClosedSessions::new(),
             used_bytes: 0,
             budget_bytes,
         }
     }
 
-    /// Look up a cached render; returns `None` on miss.
-    pub fn get(&self, key: &RenderCacheKey) -> Option<Arc<[u8]>> {
-        self.entries.get(key).map(|e| e.bytes.clone())
+    /// Sets the generation of the document that is open now; entries of any other
+    /// generation become the first eviction victims.
+    pub fn set_active_generation(&mut self, generation: Option<DocumentGeneration>) {
+        self.active_generation = generation;
     }
 
-    /// Insert a rendered page; evicts stale/old entries if over budget.
+    fn next_seq(&mut self) -> u64 {
+        self.seq += 1;
+        self.seq
+    }
+
+    /// Look up a cached render; a hit refreshes the entry's recency. `None` on miss.
+    pub fn get(&mut self, key: &RenderCacheKey) -> Option<Arc<[u8]>> {
+        let seq = self.next_seq();
+        self.entries.get_mut(key).map(|e| {
+            e.last_used_seq = seq;
+            e.bytes.clone()
+        })
+    }
+
+    /// Insert a rendered page; evicts entries if over budget. Refuses keys of a closed
+    /// session and keys that are already cached.
     pub fn insert(&mut self, key: RenderCacheKey, bytes: Arc<[u8]>) {
         if self.entries.contains_key(&key)
             || self.is_session_closed(key.document_id, key.document_generation)
@@ -73,12 +93,12 @@ impl RenderCache {
         }
         let byte_len = bytes.len();
         self.evict_to_fit(byte_len);
-        self.insert_seq += 1;
+        let last_used_seq = self.next_seq();
         self.entries.insert(
             key,
             CacheEntry {
                 bytes,
-                insert_seq: self.insert_seq,
+                last_used_seq,
             },
         );
         self.used_bytes += byte_len;
@@ -87,23 +107,20 @@ impl RenderCache {
     /// Evict entries until `budget_bytes - used_bytes >= need_bytes`, or the
     /// cache is empty.
     fn evict_to_fit(&mut self, need_bytes: usize) {
-        if self.used_bytes + need_bytes <= self.budget_bytes {
-            return;
-        }
-        // Collect eviction candidates: wrong-generation first, then oldest.
-        // We snapshot keys so we can mutate the map inside the loop.
         while self.used_bytes + need_bytes > self.budget_bytes && !self.entries.is_empty() {
+            let active = self.active_generation;
+            // `false` sorts before `true`: other-generation entries first, then LRU.
             let victim = self
                 .entries
                 .iter()
-                .min_by_key(|(_, e)| e.insert_seq)
+                .min_by_key(|(key, e)| {
+                    let current = active.is_none_or(|g| key.document_generation == g);
+                    (current, e.last_used_seq)
+                })
                 .map(|(k, _)| *k);
-            if let Some(k) = victim {
-                if let Some(e) = self.entries.remove(&k) {
-                    self.used_bytes = self.used_bytes.saturating_sub(e.bytes.len());
-                }
-            } else {
-                break;
+            let Some(k) = victim else { break };
+            if let Some(e) = self.entries.remove(&k) {
+                self.used_bytes = self.used_bytes.saturating_sub(e.bytes.len());
             }
         }
     }
@@ -171,7 +188,7 @@ impl RenderService {
 
         // Cache hit path.
         {
-            let cache = self.cache.lock().unwrap();
+            let mut cache = self.cache.lock().unwrap();
             if let Some(bytes) = cache.get(&key) {
                 return Ok(bytes);
             }
@@ -193,6 +210,11 @@ impl RenderService {
             cache.insert(key, bytes.clone());
         }
         Ok(bytes)
+    }
+
+    /// Sets the generation of the open document (see [`RenderCache::set_active_generation`]).
+    pub fn set_active_generation(&self, generation: Option<DocumentGeneration>) {
+        self.cache.lock().unwrap().set_active_generation(generation);
     }
 
     pub fn evict_session(&self, document_id: DocumentId, generation: DocumentGeneration) {
