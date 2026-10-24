@@ -44,6 +44,12 @@ Make the pipeline verify what it ships and give each job only the privileges it 
 ### 6. Documentation
 Update `docs/src/contributors/dev.md` (PDFium bump procedure with hashes, release guard, dry-run on a fork) and `docs/src/contributors/testing.md` (new CI jobs). Correct any statement claiming checksum verification existed before. **Do not** touch other documentation (RFC 038 slices own it).
 
+### 7. Release-asset hygiene (added 2026-10-24 after the 2.0.1 release)
+The 2.0.1 GitHub Release contained a stray `pdf-tile-viewer-v2.0.0-linux-x64.tar.gz`: the `source` job runs `ci/archive-source.sh dist` inside a checkout that still tracks `dist/…2.0.0….tar.gz` and uploads `dist/*.tar.gz`. Fix in the workflow (do not wait for RFC 038 B′ to untrack the file):
+- `source` job: write the source archive to a fresh directory (`"$RUNNER_TEMP/source-out"`) and upload exactly that file (explicit path, `if-no-files-found: error`); the build jobs likewise upload exactly their own `dist/${artifact_name}.{tar.gz,zip}` (already explicit; keep).
+- `release` job: after flattening, a **gate step** fails unless every file name starts with `pdf-tile-viewer-v${version}` (version resolved from `Cargo.toml`) and exactly five files exist (four platform archives plus the source archive); print the list. Add a negative self-test to `ci/verify-release-tag-self-test.sh` or a new `ci/verify-release-assets-self-test.sh` (stray file, missing file, wrong version).
+- Evidence: the owner's fork dry run must show the gate passing and, with a deliberately placed stray file, failing.
+
 ## Non-change scope
 Signing behavior, artifact layout, packaged-artifact smoke logic, the `msix_revision` input semantics, release notes generation, application code.
 
@@ -56,7 +62,7 @@ Signing behavior, artifact layout, packaged-artifact smoke logic, the `msix_revi
 6. Because workflows cannot be fully tested locally, expect to push iterative fixes to `main`; keep each push small, and do not hand over while CI is red.
 
 ## Acceptance criteria
-RFC 036 § 8: no step but signing can read signing secrets; `verify-tag` blocks the stray-tag scenario (shown by the self-test); every PDFium download fails closed on a wrong hash; CI shows `cargo test -p app` and macOS/Windows jobs; actions pinned; Dependabot configured.
+RFC 036 § 8; plus § 7 above (no file other than the five expected assets can reach a release): no step but signing can read signing secrets; `verify-tag` blocks the stray-tag scenario (shown by the self-test); every PDFium download fails closed on a wrong hash; CI shows `cargo test -p app` and macOS/Windows jobs; actions pinned; Dependabot configured.
 
 ## Prohibited shortcuts
 Skipping verification "for macOS"; storing hashes anywhere but `ci/pdfium-checksums.txt`; adding `continue-on-error` to the self-tests, `verify-tag`, or hash verification; suppressing `actionlint` or `cargo-deny` findings without a written reason; creating tags.

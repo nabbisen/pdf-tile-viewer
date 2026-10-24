@@ -36,6 +36,7 @@ differently, or automate Store submission (DEC-001, DEC-014 unchanged).
 | S-03b | All actions use mutable tags (`@v7`, `@v8`, `@v3`) | `grep uses: .github/workflows` |
 | G-06 | `ci.yml` runs on Linux only and never runs `cargo test -p app` (19 tests), although GUI dependencies are already installed; macOS and Windows compile for the first time at tag time | `ci.yml` |
 | — | No dependency advisory or licence check | no `deny.toml` / audit job |
+| S-04 | The `source` job uploads `dist/*.tar.gz` from a checkout that tracks an old release tarball; the 2.0.1 release shipped the 2.0.0 binary (with the shortcut abort) as an extra asset | 2.0.1 release assets, 2026-10-24 |
 
 ## 3. Goals
 
@@ -99,6 +100,10 @@ The script has a negative self-test in the style of
 Pin every `uses:` to a full commit SHA with a trailing `# vX.Y.Z` comment. Add
 `.github/dependabot.yml` for the `github-actions` and `cargo` ecosystems
 (weekly). Updates arrive as bot pull requests that the owner merges only between slices (the project works on `main` with one active actor at a time).
+
+### 5.4a Release-asset gate (added 2026-10-24)
+
+The source archive is produced outside the checkout's `dist/` and uploaded by explicit path; the `release` job fails unless exactly the five expected, correctly versioned assets are present (finding S-04).
 
 ### 5.5 CI coverage
 

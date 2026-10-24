@@ -9,6 +9,7 @@ baseline: PDF Tile Viewer 2.0.0
 priority: Corrective
 depends_on: RFC 004, RFC 007, RFC 023, RFC 026
 amends: RFC 004 (§ lifecycle usage), RFC 007 (§ cache policy, § freshness)
+amended: 2026-10-24 — § 5.5 zoom overlay keeps the previous image (WP0 finding B3)
 origin: architect onboarding review 2026-10-21 (internal)
 ---
 
@@ -110,6 +111,24 @@ generation check extended with the bucket.
 This is a deliberately minimal data-model fix. The later render-pipeline RFC may
 replace the tile-state representation entirely.
 
+### 5.5 Zoom overlay keeps the previous image while the next renders (amendment 2026-10-24)
+
+WP0 measured that changing the overlay scale (for example 7.8× → 8.0×) removes the
+old image first and shows a blank placeholder for about 0.4–0.7 s. Rule:
+
+- When only the **scale** changes on the **same page**, `ZoomImageState` keeps the
+  last `Ready` image visible (with a subtle busy indication) until the new render
+  arrives; the new image then replaces it in one step.
+- When the **page** changes, the previous image is **not** kept: the placeholder is
+  shown (an image of another page under the new page number would mislead).
+- While the previous image is shown for a pending scale change, the text layer,
+  search highlights and link hit areas are **hidden** (their geometry belongs to the
+  other scale) and return with the new image; selection and link activation are
+  disabled in that interval.
+- State shape: `Loading { previous: Option<ReadyImage> }`; the keep decision is a
+  pure function `keep_previous(prev_page, prev_bucket, next_page, next_bucket)` with
+  unit tests. Request-currency guards (`zoom_image_result_is_current`) are unchanged.
+
 ## 6. Alternatives considered
 
 - **Close inside `Phase` transitions in `app.rs`.** Rejected: ties lifecycle to
@@ -134,6 +153,7 @@ closed session are refused in every cache.
   available) and render/search/text/links return `DocumentNotOpen`.
 - Unit test for the scheduler decision function (extracted as a pure function):
   bucket change ⇒ re-render; same bucket ⇒ skip; old image retained.
+- Manual (overlay): at 2.7× press `+` repeatedly to 8.0×: no blank frame between old and new image (screenshots every ~40 ms); on page change the placeholder shows.
 - Manual: open A → dashboard → open B ×5; native session count and RSS do not
   grow with closed documents. Zoom the grid from 1.0× to 3.0× and back; visible
   tiles sharpen without a blank flash.

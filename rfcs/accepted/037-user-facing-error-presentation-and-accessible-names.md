@@ -9,6 +9,7 @@ baseline: PDF Tile Viewer 2.0.0
 priority: Corrective
 depends_on: RFC 013, RFC 016, RFC 017, RFC 025
 amends: RFC 017 (§ error mapping), RFC 025 (§ error semantics)
+amended: 2026-10-24 — § 5.6 accessibility extensions (WP0 Part C findings)
 origin: architect onboarding review 2026-10-21 (internal)
 ---
 
@@ -106,6 +107,43 @@ Enable `#![warn(clippy::use_debug)]` in the `app` crate (tests exempt) so
 `{:?}` formatting in UI code is flagged. Whether this becomes blocking depends on
 the owner decision recorded in RFC 036 § 5.6.
 
+### 5.6 Accessibility extensions (amendment 2026-10-24, WP0 Part C)
+
+Findings (AT-SPI dumps and an Orca run, `.git-exclude/review-request/wp0-evidence-run/`):
+glyph-only names, an unnamed slider and inputs, no document title or language,
+unannounced results, no `main` landmark in the viewer, "1 matches". Requirements:
+
+1. **Names.** Every control has an accessible name equal to its visible or localized
+   label: `aria-label` on the icon buttons (search, reveal in file manager, zen enter,
+   zen exit `×`); the scale slider (`Tile size`, with the current value as its
+   value text); the jump-to-page and columns number inputs are associated with their
+   visible labels (`for`/`id`) or get `aria-label`. New i18n keys in English and
+   Japanese; completeness tests extended. Names must not be the glyph.
+2. **Document title and language.** `document.title` and `<html lang>` follow the
+   active locale and the open document (`<file> — PDF Tile Viewer` / locale title);
+   set from one Rust function via a minimal script (no logic in JS), re-applied on
+   locale or phase change. Verified with the developer inspector in a debug build
+   and in the AT-SPI `lang` attribute.
+3. **Live status.** The search summary (results, no results, searching) is a
+   `role="status"` region (polite); failures and open errors use `role="alert"`.
+   The element exists in the DOM before its text changes. Whether Orca announces
+   them is verified in the owner's listening session (AU-8); the AT-SPI `live`
+   attribute is the automated acceptance.
+4. **Landmarks and headings.** The viewer has a `main` landmark containing the tile
+   grid; zen mode keeps it; the page title is a heading on every screen.
+5. **Plurals.** The tile match badge and the search summary use plural-aware
+   messages (`1 match` / `N matches`; Japanese has no plural form), implemented as a
+   pure `plural(locale, count, one, other)` helper with tests.
+6. **Short-query feedback.** Submitting a query shorter than `MIN_QUERY_CHARS`
+   shows a visible, localized hint ("Enter at least 2 characters.") in the status
+   region instead of doing nothing (WP0 A8).
+7. **Static test.** The grep-based guard of § 5.4 is extended: no `button` without
+   a name, no `input` without a label association.
+
+Out of scope here (2.1.0, RFC 042): making page tiles keyboard-focusable and the
+grid navigation pattern; system-locale detection; screen-reader verification on
+Windows and macOS.
+
 ## 6. Alternatives considered
 
 - **Keep strings in state and format at the edge.** Rejected: the bug *is*
@@ -124,6 +162,7 @@ flows.
 - `OpenFailure` conversion tests (password path never reaches the display path).
 - Grep-based guard tests (no `{e:?}`-style formatting in `crates/app/src`
   outside tests; icon-only buttons have `aria-label`).
+- AT-SPI dumps of the viewer, search results/no results, zen and dialogs show: named controls only, `lang` set, a `main` landmark, a `status`/`alert` live node (dump files in the review request).
 - Manual: force each failure (stop engine thread in a debug build, bad query,
   missing `xdg-open`) and verify localized, path-free messages in both languages.
 

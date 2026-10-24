@@ -87,8 +87,14 @@ Precondition: RFC 036 slice committed (its CI changes must already guard these p
    - Move `fixtures/` → `crates/pdf_engine/tests/fixtures/` with `git mv`; update `fixtures/generate_fixtures.py` output path and its docstring commands, `crates/pdf_engine/tests/smoke/main.rs` fixture helper, `ci/archive-source.sh`, `docs/src/contributors/dev.md`, `docs/src/contributors/testing.md`. Historical RFC text keeps the old path. Regenerate fixtures with the generator and confirm **byte-identical** output for every fixture except the externally generated `password-protected.pdf` (leave it as is).
    - Run the source-archive smoke (`ci/archive-source.sh`) and confirm the archive contains the new fixture location.
 
+### Additional items (owner decisions 2026-10-24)
+- **Versioning policy**: create `docs/src/contributors/versioning.md` per RFC 038 (public API = documented user-facing behavior; patch/minor/major rules; major is an owner decision); add it to `SUMMARY.md`; link from `dev.md` and `ROADMAP.md`.
+- **MSIX languages**: add `<Resource Language="ja-JP" />` next to `en-US` in `packaging/windows/AppxManifest.xml` (Store listing text exists in `packaging/windows/store-listing.md`; do not edit it). Do not add a Japanese-UI claim anywhere (system-locale detection is not fixed yet).
+- **PRIVACY.md** is committed and linked as already specified; also add its URL to `packaging/windows/store-listing.md` checklist item 2 only if the architect asks.
+- `dist/` removal (already listed above) is done by this slice; RFC 036 (earlier) fixes the workflow side so that no stray file can reach a release.
+
 ### Non-change scope
-No code behavior, CI logic (RFC 036 owns it), shortcuts text, or release actions. No MSIX `ja` resource (pending owner confirmation of Store languages).
+No code behavior, CI logic (RFC 036 owns it), shortcuts text, or release actions.
 
 ### Required evidence
 Gate green; a link check over `README*.md`, `docs/`, `rfcs/` with no broken relative links (command and output in the review request); `git status` showing no `dist/` tracked; fixture byte-identity table; source-archive smoke output.
