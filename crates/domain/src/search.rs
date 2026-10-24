@@ -3,6 +3,7 @@
 use std::time::SystemTime;
 
 use crate::document::{DocumentGeneration, DocumentId, PageIndex};
+use crate::geometry::PageRect;
 
 /// Minimum visible characters before a search runs (RFC 010 §9).
 pub const MIN_QUERY_CHARS: usize = 2;
@@ -88,43 +89,7 @@ pub fn format_matched_pages(pages: &[PageIndex]) -> String {
     parts.join(", ")
 }
 
-// ── RFC 011: Highlight coordinates ───────────────────────────────────────────
-
-/// Coordinate space used by a [`PageRect`].
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum PageCoordinateSpace {
-    /// PDF native: origin bottom-left, y increases upward (PDFium default).
-    PdfPointsBottomLeft,
-    /// Normalized: origin top-left, y increases downward (image-aligned).
-    NormalizedTopLeft,
-}
-
-/// A rectangle in page-local coordinates (RFC 011 §5).
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct PageRect {
-    pub x: f32,
-    pub y: f32,
-    pub width: f32,
-    pub height: f32,
-    pub space: PageCoordinateSpace,
-}
-
-impl PageRect {
-    /// Convert from PDF bottom-left space to normalized top-left space.
-    /// `page_height_points` is the page's logical height in PDF points.
-    pub fn to_top_left(self, page_height_points: f32) -> Self {
-        match self.space {
-            PageCoordinateSpace::NormalizedTopLeft => self,
-            PageCoordinateSpace::PdfPointsBottomLeft => PageRect {
-                x: self.x,
-                y: page_height_points - (self.y + self.height),
-                width: self.width,
-                height: self.height,
-                space: PageCoordinateSpace::NormalizedTopLeft,
-            },
-        }
-    }
-}
+// ── RFC 011: Highlight coordinates (display space, RFC 034) ─────────────────
 
 /// All highlight rectangles for one search match (may span multiple lines).
 #[derive(Clone, Debug, PartialEq)]

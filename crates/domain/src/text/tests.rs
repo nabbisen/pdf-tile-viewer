@@ -1,5 +1,5 @@
 use crate::document::{DocumentGeneration, DocumentId, PageIndex};
-use crate::search::{PageCoordinateSpace, PageRect};
+use crate::geometry::PageRect;
 use crate::text::{PageTextLayer, TextLayerCacheKey, TextLayerRequest, TextLayerSegment};
 
 #[test]
@@ -47,7 +47,6 @@ fn page_text_layer_segments_preserve_extraction_order() {
                 y: 20.0,
                 width: 30.0,
                 height: 12.0,
-                space: PageCoordinateSpace::PdfPointsBottomLeft,
             },
         }],
     };

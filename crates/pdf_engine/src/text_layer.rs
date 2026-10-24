@@ -48,13 +48,13 @@ pub fn extract_page_text_layer(
         segments.push(TextLayerSegment {
             segment_index,
             text: raw_text,
-            rect: domain::search::PageRect {
-                x: bounds.left().value,
-                y: bounds.bottom().value,
-                width: bounds.width().value,
-                height: bounds.height().value,
-                space: domain::search::PageCoordinateSpace::PdfPointsBottomLeft,
-            },
+            rect: crate::engine::legacy_bottom_left_to_display(
+                session.pages[request.page_index.0].display_height_points,
+                bounds.left().value,
+                bounds.bottom().value,
+                bounds.width().value,
+                bounds.height().value,
+            ),
         });
     }
 

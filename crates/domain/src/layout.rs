@@ -101,15 +101,13 @@ pub struct TileLayout {
     pub tiles: Vec<PageTileLayout>,
 }
 
-/// Effective rendered size of a page at a scale, honoring 90°/270° rotation.
+/// Rendered size of a page at a scale. The descriptor already holds display
+/// geometry (rotation applied, RFC 034), so there is no swap.
 fn tile_size(page: &PageDescriptor, scale: ViewerScale) -> (f32, f32) {
-    let rot = page.rotation_degrees.rem_euclid(360);
-    let (w, h) = if rot == 90 || rot == 270 {
-        (page.height_points, page.width_points)
-    } else {
-        (page.width_points, page.height_points)
-    };
-    (w * scale.0, h * scale.0)
+    (
+        page.display_width_points * scale.0,
+        page.display_height_points * scale.0,
+    )
 }
 
 /// Auto pages-per-row (RFC 006 §7): representative width is the first page.
@@ -256,39 +254,28 @@ pub fn scroll_target_for_page(layout: &TileLayout, page: PageIndex) -> Option<f3
 
 // ── RFC 011: Coordinate transforms ───────────────────────────────────────────
 
-use crate::search::{PageCoordinateSpace, PageRect};
+use crate::geometry::PageRect;
 
-/// Transform a page-space rect to rendered-image-space pixels (RFC 011 §7).
+/// Transform a display-space rect to rendered-image-space pixels (RFC 011 §7, RFC 034).
 ///
-/// `page` gives the logical page dimensions (PDF points).
-/// `rendered_w/h` give the actual bitmap dimensions in pixels.
-/// The output rect is in image-space (origin top-left, y down).
+/// `page` gives the displayed page size (PDF points); `rect` is in display space
+/// (top-left origin, y down). `rendered_w/h` give the actual bitmap dimensions in
+/// pixels. The output rect is in image space (origin top-left, y down). No flip,
+/// no rotation: the engine already did both.
 pub fn page_rect_to_image_rect(
     page: &PageDescriptor,
     rect: PageRect,
     rendered_width_px: u32,
     rendered_height_px: u32,
 ) -> RectPx {
-    // Work in effective (rotation-aware) page dimensions for scale factors.
-    let rot = page.rotation_degrees.rem_euclid(360);
-    let (page_w, page_h) = if rot == 90 || rot == 270 {
-        (page.height_points, page.width_points)
-    } else {
-        (page.width_points, page.height_points)
-    };
-
-    // Normalise to top-left space first.
-    let tl = rect.to_top_left(page_h);
-    debug_assert_eq!(tl.space, PageCoordinateSpace::NormalizedTopLeft);
-
-    let scale_x = rendered_width_px as f32 / page_w;
-    let scale_y = rendered_height_px as f32 / page_h;
+    let scale_x = rendered_width_px as f32 / page.display_width_points;
+    let scale_y = rendered_height_px as f32 / page.display_height_points;
 
     RectPx {
-        x: tl.x * scale_x,
-        y: tl.y * scale_y,
-        width: tl.width * scale_x,
-        height: tl.height * scale_y,
+        x: rect.x * scale_x,
+        y: rect.y * scale_y,
+        width: rect.width * scale_x,
+        height: rect.height * scale_y,
     }
 }
 

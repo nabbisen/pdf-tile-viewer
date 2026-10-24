@@ -1,26 +1,25 @@
 use super::*;
+use domain::geometry::PageRect;
 use domain::navigation::{
     DestinationView, NavigationDestination, NavigationLimitStatus, PageLink, PageLinkId,
 };
-use domain::search::{PageCoordinateSpace, PageRect, TextHighlight};
+use domain::search::TextHighlight;
 use domain::text::TextLayerSegment;
 
 fn descriptor() -> PageDescriptor {
     PageDescriptor {
         page_index: PageIndex(0),
-        width_points: 612.0,
-        height_points: 792.0,
-        rotation_degrees: 0,
+        display_width_points: 612.0,
+        display_height_points: 792.0,
     }
 }
 
 fn page_rect() -> PageRect {
     PageRect {
         x: 100.0,
-        y: 700.0,
+        y: 72.0, // display space (top-left origin): near the top of the page
         width: 120.0,
         height: 20.0,
-        space: PageCoordinateSpace::PdfPointsBottomLeft,
     }
 }
 

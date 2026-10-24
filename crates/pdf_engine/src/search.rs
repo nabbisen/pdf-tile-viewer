@@ -110,20 +110,20 @@ pub fn search_document_with_highlights(
             Err(e) => return Err(SearchError::SearchFailed(e.to_string())),
         };
 
+        let page_height = session.pages[index].display_height_points;
         let mut highlights: Vec<domain::search::TextHighlight> = Vec::new();
         for (match_idx, segments) in search.iter(PdfSearchDirection::SearchForward).enumerate() {
-            let rects: Vec<domain::search::PageRect> = segments
+            let rects: Vec<domain::geometry::PageRect> = segments
                 .iter()
                 .map(|seg| {
                     let b = seg.bounds();
-                    // PDFium bottom-left coordinate space.
-                    domain::search::PageRect {
-                        x: b.left().value,
-                        y: b.bottom().value,
-                        width: b.width().value,
-                        height: b.height().value,
-                        space: domain::search::PageCoordinateSpace::PdfPointsBottomLeft,
-                    }
+                    crate::engine::legacy_bottom_left_to_display(
+                        page_height,
+                        b.left().value,
+                        b.bottom().value,
+                        b.width().value,
+                        b.height().value,
+                    )
                 })
                 .collect();
             if !rects.is_empty() {

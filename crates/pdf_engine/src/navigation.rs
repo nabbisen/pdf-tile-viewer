@@ -4,13 +4,13 @@
 //! generation-tagged, and bounded by [`NavigationResourceLimits`].
 
 use domain::document::PageIndex;
+use domain::geometry::PageRect;
 use domain::navigation::{
     DestinationView, DisabledNavigationReason, DocumentOutline, DocumentOutlineRequest,
     ExternalUriTarget, NavigationDestination, NavigationError, NavigationLimitStatus,
     NavigationResourceLimits, NavigationTarget, OutlineNode, OutlineNodeId, OutlineTitle, PageLink,
     PageLinkId, PageLinkSet, PageLinksRequest, external_uri_target,
 };
-use domain::search::{PageCoordinateSpace, PageRect};
 use pdfium_render::prelude::*;
 
 use crate::engine::PdfEngine;
@@ -176,7 +176,13 @@ pub fn extract_page_links(
 
         links.push(PageLink {
             id: PageLinkId(link_index),
-            rect: pdf_rect_to_page_rect(rect),
+            rect: crate::engine::legacy_bottom_left_to_display(
+                session.pages[request.page_index.0].display_height_points,
+                rect.left().value,
+                rect.bottom().value,
+                rect.width().value,
+                rect.height().value,
+            ),
             target: link_target(link.destination(), link.action(), &request.limits, None),
         });
     }
@@ -344,13 +350,15 @@ fn destination_view(settings: Option<PdfDestinationViewSettings>) -> Destination
     }
 }
 
+/// TEMPORARY (RFC 034 commit 1): destination rectangles are still raw user-space
+/// values here; the engine-conversion commit converts them with the destination
+/// page's geometry. The UI ignores view hints today (page-only navigation).
 fn pdf_rect_to_page_rect(rect: PdfRect) -> PageRect {
     PageRect {
         x: rect.left().value,
         y: rect.bottom().value,
         width: rect.width().value,
         height: rect.height().value,
-        space: PageCoordinateSpace::PdfPointsBottomLeft,
     }
 }
 

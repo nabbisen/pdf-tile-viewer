@@ -101,15 +101,16 @@ impl DocumentPassword {
     }
 }
 
-/// Canonical page geometry. Width/height are PDF points (1/72 inch).
-/// Layout and coordinate-transform code must use these descriptors and must
-/// not query the PDF engine for page size (RFC 004 §11).
+/// Canonical page geometry: display geometry — rotation and crop already applied
+/// (RFC 034). Width/height are the size of the page as displayed, in PDF points
+/// (1/72 inch). Layout and coordinate-transform code must use these descriptors
+/// and must not query the PDF engine for page size (RFC 004 §11); nothing above the
+/// engine has any rotation logic.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct PageDescriptor {
     pub page_index: PageIndex,
-    pub width_points: f32,
-    pub height_points: f32,
-    pub rotation_degrees: i32,
+    pub display_width_points: f32,
+    pub display_height_points: f32,
 }
 
 #[derive(Clone, Debug, PartialEq)]

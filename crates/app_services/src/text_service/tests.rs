@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use domain::document::{DocumentGeneration, DocumentId, PageIndex};
-use domain::search::{PageCoordinateSpace, PageRect};
+use domain::geometry::PageRect;
 use domain::text::{PageTextLayer, TextLayerCacheKey, TextLayerRequest, TextLayerSegment};
 
 use crate::text_service::{TextLayerCache, estimate_layer_bytes, layer_matches_request};
@@ -39,7 +39,6 @@ fn layer_for(document_id: u64, page: usize, generation: u64, text: &str) -> Arc<
                 y: 20.0,
                 width: 30.0,
                 height: 12.0,
-                space: PageCoordinateSpace::PdfPointsBottomLeft,
             },
         }],
     })

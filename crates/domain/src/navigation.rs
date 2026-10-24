@@ -5,7 +5,7 @@
 //! layers consume it.
 
 use crate::document::{DocumentGeneration, DocumentId, PageIndex};
-use crate::search::PageRect;
+use crate::geometry::PageRect;
 
 pub const DEFAULT_MAX_OUTLINE_NODES: usize = 4096;
 pub const DEFAULT_MAX_OUTLINE_DEPTH: usize = 16;
@@ -167,6 +167,8 @@ pub struct NavigationDestination {
     pub view: DestinationView,
 }
 
+/// Destination view hints. All coordinates are in **display space** (top-left
+/// origin, y down, PDF points; RFC 034), converted by the engine.
 #[derive(Clone, Debug, PartialEq)]
 pub enum DestinationView {
     PageOnly,

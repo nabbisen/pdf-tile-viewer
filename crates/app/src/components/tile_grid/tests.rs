@@ -1,12 +1,12 @@
 use super::*;
-use domain::search::{PageCoordinateSpace, PageRect, TextHighlight};
+use domain::geometry::PageRect;
+use domain::search::TextHighlight;
 
 fn descriptor() -> PageDescriptor {
     PageDescriptor {
         page_index: PageIndex(0),
-        width_points: 612.0,
-        height_points: 792.0,
-        rotation_degrees: 0,
+        display_width_points: 612.0,
+        display_height_points: 792.0,
     }
 }
 
@@ -17,10 +17,9 @@ fn highlights() -> PageHighlightSet {
             match_index: 0,
             page_rects: vec![PageRect {
                 x: 0.0,
-                y: 712.8,
+                y: 0.0, // display space: the top 10% of the page
                 width: 612.0,
                 height: 79.2,
-                space: PageCoordinateSpace::PdfPointsBottomLeft,
             }],
         }],
     }

@@ -138,6 +138,26 @@ impl PdfEngine {
     }
 }
 
+/// TEMPORARY (RFC 034 slice, commit 1; removed in the engine-conversion commit):
+/// flips a PDF user-space rectangle (bottom-left origin) into top-left display
+/// space for an **unrotated** page of height `page_height`. This keeps 0° pages
+/// unchanged while the domain types are renamed; rotated and cropped pages are
+/// handled by `user_space` afterwards.
+pub(crate) fn legacy_bottom_left_to_display(
+    page_height: f32,
+    left: f32,
+    bottom: f32,
+    width: f32,
+    height: f32,
+) -> domain::geometry::PageRect {
+    domain::geometry::PageRect {
+        x: left,
+        y: page_height - (bottom + height),
+        width,
+        height,
+    }
+}
+
 fn map_pdfium_load_error(error: PdfiumError) -> DocumentError {
     match error {
         PdfiumError::PdfiumLibraryInternalError(internal) => match internal {
@@ -160,12 +180,10 @@ fn collect_page_descriptors(
     let pages = document.pages();
     let mut out = Vec::with_capacity(pages.len() as usize);
     for (index, page) in pages.iter().enumerate() {
-        let rotation = page.rotation().map(|r| r.as_degrees() as i32).unwrap_or(0);
         out.push(PageDescriptor {
             page_index: PageIndex(index),
-            width_points: page.width().value,
-            height_points: page.height().value,
-            rotation_degrees: rotation,
+            display_width_points: page.width().value,
+            display_height_points: page.height().value,
         });
     }
     Ok(out)

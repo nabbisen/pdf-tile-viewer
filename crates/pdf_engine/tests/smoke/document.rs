@@ -17,14 +17,14 @@ fn open_reports_correct_geometry_and_page_count() {
     assert_eq!(page.page_index, PageIndex(0));
     // US Letter: 612 x 792 points.
     assert!(
-        (page.width_points - 612.0).abs() < 0.5,
+        (page.display_width_points - 612.0).abs() < 0.5,
         "width {}",
-        page.width_points
+        page.display_width_points
     );
     assert!(
-        (page.height_points - 792.0).abs() < 0.5,
+        (page.display_height_points - 792.0).abs() < 0.5,
         "height {}",
-        page.height_points
+        page.display_height_points
     );
 }
 
@@ -40,9 +40,14 @@ fn large_document_opens_and_reports_correct_page_count() {
     assert_eq!(session.metadata.page_count, 50);
     // All pages should be US Letter with 0° rotation.
     for (i, page) in session.pages.iter().enumerate() {
-        assert!((page.width_points - 612.0).abs() < 1.0, "page {i} width");
-        assert!((page.height_points - 792.0).abs() < 1.0, "page {i} height");
-        assert_eq!(page.rotation_degrees, 0, "page {i} rotation");
+        assert!(
+            (page.display_width_points - 612.0).abs() < 1.0,
+            "page {i} width"
+        );
+        assert!(
+            (page.display_height_points - 792.0).abs() < 1.0,
+            "page {i} height"
+        );
     }
 
     let closed = block_on(engine.close_document(session.id)).unwrap();

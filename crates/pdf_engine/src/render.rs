@@ -40,8 +40,10 @@ pub fn render_page(
         .map_err(|e| RenderError::RenderFailed(e.to_string()))?;
 
     let scale = request.scale_bucket.as_scale();
-    let target_w = ((descriptor.width_points * scale).round() as i32).clamp(1, MAX_PIXEL_EDGE);
-    let target_h = ((descriptor.height_points * scale).round() as i32).clamp(1, MAX_PIXEL_EDGE);
+    let target_w =
+        ((descriptor.display_width_points * scale).round() as i32).clamp(1, MAX_PIXEL_EDGE);
+    let target_h =
+        ((descriptor.display_height_points * scale).round() as i32).clamp(1, MAX_PIXEL_EDGE);
 
     let config = PdfRenderConfig::new()
         .set_target_width(target_w)

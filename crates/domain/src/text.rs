@@ -6,7 +6,7 @@
 //! select/copy on this page?"
 
 use crate::document::{DocumentGeneration, DocumentId, PageIndex};
-use crate::search::PageRect;
+use crate::geometry::PageRect;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct TextLayerRequest {

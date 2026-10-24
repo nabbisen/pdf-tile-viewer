@@ -5,6 +5,7 @@
 //! - No platform I/O. All types here are computable and testable in isolation.
 
 pub mod document;
+pub mod geometry;
 pub mod layout;
 pub mod navigation;
 pub mod render;

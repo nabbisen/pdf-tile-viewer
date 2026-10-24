@@ -5,9 +5,8 @@ fn a4_pages(n: usize) -> Vec<PageDescriptor> {
     (0..n)
         .map(|i| PageDescriptor {
             page_index: PageIndex(i),
-            width_points: 595.0,
-            height_points: 842.0,
-            rotation_degrees: 0,
+            display_width_points: 595.0,
+            display_height_points: 842.0,
         })
         .collect()
 }
@@ -65,21 +64,18 @@ fn mixed_page_sizes_do_not_overlap_and_rows_take_max_height() {
     let pages = vec![
         PageDescriptor {
             page_index: PageIndex(0),
-            width_points: 595.0,
-            height_points: 842.0,
-            rotation_degrees: 0,
+            display_width_points: 595.0,
+            display_height_points: 842.0,
         },
         PageDescriptor {
             page_index: PageIndex(1),
-            width_points: 842.0,
-            height_points: 595.0, // landscape, shorter
-            rotation_degrees: 0,
+            display_width_points: 842.0,
+            display_height_points: 595.0, // landscape, shorter
         },
         PageDescriptor {
             page_index: PageIndex(2),
-            width_points: 595.0,
-            height_points: 842.0,
-            rotation_degrees: 0,
+            display_width_points: 595.0,
+            display_height_points: 842.0,
         },
     ];
     let layout = compute_layout(
@@ -104,12 +100,13 @@ fn mixed_page_sizes_do_not_overlap_and_rows_take_max_height() {
 }
 
 #[test]
-fn rotation_90_swaps_effective_tile_dimensions() {
+fn tile_size_uses_display_dimensions_as_given() {
+    // A page whose display geometry is already landscape (e.g. /Rotate 90 applied by the
+    // engine) is laid out as landscape: width and height are NOT swapped again (RFC 034).
     let pages = vec![PageDescriptor {
         page_index: PageIndex(0),
-        width_points: 595.0,
-        height_points: 842.0,
-        rotation_degrees: 90,
+        display_width_points: 842.0,
+        display_height_points: 595.0,
     }];
     let layout = compute_layout(
         &TileLayoutInput {
