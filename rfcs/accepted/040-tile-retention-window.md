@@ -188,3 +188,25 @@ assumption of this RFC that the measurements do not support.
   (RFC-FUTURE F14), is decided after the investigation in
   `rfcs/handoffs/040-tile-retention-window/webkit-memory-investigation.md`
   (idle decay of the WebKit memory; a custom-protocol prototype; the image-heavy case).
+
+### 9.1 Investigation results (2026-10-24, text-1000, 1042×1134 window, one tile per row)
+
+| Step (total MB; app / WebKit) | `data:` URLs (`07c71fa`) | prototype: custom protocol (never merged) |
+|---|---:|---:|
+| after open | 494 (233 / 274) | 496 (232 / 276) |
+| after scroll down (pass 1) | 936 (381 / 577) | 794 (353 / 461) |
+| back to top (pass 1) | 1 029 (383 / 671) | 871 (364 / 528) |
+| idle +30 s / +120 s | 1 029 / 1 029 | 871 / 869 |
+| second down and back | 978 → 1 016 | 871 → 879 |
+
+- WebKit's memory is **retained, not lazily reclaimed** (no decay while idle) and **plateaus**
+  (no growth on the second pass): the earlier statement that UI memory "grows without bound"
+  is corrected to "grows to a plateau set by WebKit's own caching plus the app's bounded
+  render cache" (≈ 670 MB of WebKit processes here; unverified on smaller machines).
+- A custom image protocol lowers the total by about 15 % and does not reach the 55 % target.
+- Behavior of the policy at user level is as specified (far tiles released and refilled;
+  tiles stay `Ready` on small scrolls; search and zoom unaffected).
+- New finding (not fixable here): after a fast scroll over large images the scheduler keeps
+  rendering pages already scrolled past for tens of seconds (no cancellation, repeated
+  requests); it belongs to the render-pipeline RFC (F14).
+- Pending: the image-heavy document (where the app process dominated in WP0).

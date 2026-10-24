@@ -112,8 +112,10 @@ change_scale(current + 0.2);
   1000-page text PDF. Releasing items from UI state does not release the memory the
   WebView holds for them. **Measure the application process and the WebView
   processes separately** before promising a bound; do not assume the second follows
-  the first. What the WebView memory consists of is under investigation
-  (`data:` URLs are the suspect).
+  the first. In our measurements the WebView's memory was **retained** (no decay while
+  idle) but **plateaued** rather than growing without bound, and moving the bytes from
+  `data:` URLs to a custom protocol lowered the total by only about 15 %. The
+  WebView's own image caching is the likely driver; its size is platform-dependent.
 - **Remedy under evaluation.** Serve images through a custom protocol instead of
   megabytes of base64 (**Source:** `dioxus-desktop` provides `use_asset_handler`).
   If you add a protocol handler, serve only cache entries addressed by opaque ids,

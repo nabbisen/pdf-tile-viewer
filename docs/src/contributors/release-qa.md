@@ -122,3 +122,5 @@ Before every release candidate, on the build that will be published, on each
 platform that ships (Linux, Windows, macOS). Add a line here whenever a shortcut,
 gesture, or workflow is added or documented; a documented behavior that is not on
 this list is untested.
+- [ ] **Windows memory check (owner, release candidates):** open a long document (for example a 1000-page text PDF and a 100-page image-heavy PDF), scroll from the first to the last page and back twice, and note in Task Manager (Details) the sum of `pdf-tile-viewer.exe` and its `msedgewebview2.exe` children before opening, after the first down-and-back and after the second. Record the numbers in the release-candidate notes; the WebView2 behavior has not been measured yet (RFC 040 § 9.1).
+

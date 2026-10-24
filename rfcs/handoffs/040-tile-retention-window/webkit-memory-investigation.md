@@ -27,3 +27,9 @@ RFC 040's measured acceptance is not met: the app process roughly halves, but th
 
 ## Prohibited
 Committing the prototype to `main`; tuning window or cap to chase a number; a third run of any set without asking the architect; changing the acceptance text.
+
+---
+
+## Round 2 (architect, 2026-10-24, after the review of Q1–Q4)
+
+Ruling: Q1, Q2 and Q4 are **complete and accepted**; no further prototype and no repeat of them. **Only one run remains: Q3'** — image-100 on `a8ca205` ("before", your rebuilt binary) and on `07c71fa` ("after"), once each, at the same window conditions as Q1/Q2 (1042×1134, one tile per row). Replace the fixed waits by the recorded-state wait you proposed: poll the accessibility tree once per second (at most 5 minutes) until the tile of the last page has an `image` element, and do this before every RSS reading (after open, after scroll down, after scroll back, after the second down and back). Report the table (app / WebKit / total) and, as a **separate line**, how long the backlog took to clear after each scroll (seconds until the last-page tile had its image). Abort at the first anomaly; no repeat without asking. Then update the review request and tell the owner only its path.

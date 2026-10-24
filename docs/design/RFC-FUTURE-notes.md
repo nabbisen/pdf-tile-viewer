@@ -306,3 +306,14 @@ can hang rendering or abort the app. Candidate: a child-process engine with a
 serializable message protocol (RFC 016 § 14 "Separate PDFium worker process").
 Owner decision D6 (2026-10-21): open as a roadmap theme; discuss at the
 roadmap checkpoint.
+
+### F14 inputs from the RFC 040 investigation (2026-10-24)
+
+- WebKit-side memory plateaus at a platform-dependent level and is not reclaimed while idle;
+  a custom image protocol lowered the total by about 15 % on Linux. The web view's behavior
+  on Windows (WebView2) and macOS (WKWebView) has not been measured: do that before designing.
+- **Render backlog:** every scroll event re-requests all tiles in the margin and nothing cancels
+  stale requests, so after a fast scroll over large images the app renders pages the user has
+  already left for tens of seconds. The RFC must cover coalescing, priorities and cancellation
+  (engine protocol change) together with the transport.
+
