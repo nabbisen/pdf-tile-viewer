@@ -1,5 +1,5 @@
 # cargo-deny configuration (RFC 036 § 5.5): advisories, licences, bans, sources.
-# CI runs `cargo deny check` (non-blocking until the first report is triaged).
+# CI runs `cargo deny check` as a blocking job.
 # Do not suppress an advisory without a written reason next to the entry.
 
 [graph]
@@ -14,8 +14,8 @@ targets = [
 
 [advisories]
 # Vulnerabilities and unmaintained/yanked crates are reported; every ignore needs a
-# written reason. The open vulnerability findings of the first report (2026-10-24)
-# are deliberately NOT ignored; they are listed in the RFC 036 review request.
+# written reason. The four vulnerability findings of the first report (2026-10-24:
+# crossbeam-epoch, quick-xml x2, webbrowser) were fixed by lockfile-only updates.
 ignore = [
     { id = "RUSTSEC-2024-0436", reason = "paste is an unmaintained proc-macro used only at build time by rav1e (via image/ravif, AVIF encoding); no safe upgrade exists; no runtime code." },
     { id = "RUSTSEC-2024-0370", reason = "proc-macro-error is an unmaintained proc-macro used only at build time by glib-macros/gtk3-macros (Dioxus Desktop GTK stack); no safe upgrade exists; no runtime code." },
