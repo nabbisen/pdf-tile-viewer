@@ -11,6 +11,12 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Search highlights, text selection areas and link areas on pages with a `/Rotate`
+  of 90°, 180° or 270° or with a crop box that does not start at the origin are now
+  placed correctly (they were computed for upright, uncropped pages only). The
+  engine now converts all page geometry, including link and outline destination
+  coordinates, to the displayed page in one place (RFC 034). Pages whose geometry
+  PDFium reports inconsistently are still shown; only their overlays are omitted.
 - Dependency advisories fixed by lockfile-only updates: `crossbeam-epoch`
   0.9.18 → 0.9.21 (RUSTSEC-2026-0204), `webbrowser` 1.2.1 → 1.2.5
   (RUSTSEC-2026-0257), `wayland-scanner` 0.31.10 → 0.31.11 and `quick-xml`
