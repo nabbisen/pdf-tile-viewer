@@ -316,10 +316,32 @@ jobs:
             echo "prerelease=false" >> "$GITHUB_OUTPUT"
           fi
 
+      # Release notes are the CHANGELOG section of this version (written by people)
+      # plus a fixed footer; pre-release tags use the same mechanism. Fails if the
+      # section is missing, undated or empty.
+      - name: Write release notes from the CHANGELOG
+        env:
+          TAG: ${{ github.ref_name }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          version="$(grep '^version' Cargo.toml | head -1 | sed 's/.*= *"//;s/".*//')"
+          {
+            bash ci/extract-changelog.sh "${version}"
+            echo
+            echo "---"
+            echo
+            echo "These builds are **unsigned**: Windows and macOS may show a security warning on first launch."
+            echo "Extract the whole archive and keep \`bin/\` and \`resources/\` together in the same directory."
+            echo
+            echo "Full changelog: https://github.com/${REPO}/blob/${TAG}/CHANGELOG.md"
+          } > "${RUNNER_TEMP}/release-notes.md"
+          cat "${RUNNER_TEMP}/release-notes.md"
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
           files: release-files/*
           prerelease: ${{ steps.prerelease.outputs.prerelease }}
-          generate_release_notes: true
+          body_path: ${{ runner.temp }}/release-notes.md
           fail_on_unmatched_files: true

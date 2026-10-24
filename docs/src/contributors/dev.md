@@ -188,7 +188,7 @@ work slices. The Rust toolchain is set up by the local composite action
 | `check & test (macos-arm64, windows-x64)` | `cargo check --workspace`, `cargo test --workspace`, PDFium smoke on the verified platform asset | yes (see note) |
 | `release tooling` | `shellcheck ci/*.sh`, `ci/verify-version-consistency.sh`, and the self-tests of every release guard | yes |
 | `actionlint` | pinned, checksum-verified `actionlint` over `.github/workflows` (also shellchecks `run:` scripts) | yes |
-| `cargo deny` | advisories, licences, bans, sources (`deny.toml`) | **no** until the first report is triaged |
+| `cargo deny` | advisories, licences, bans, sources (`deny.toml`) | yes (the only ignores are the two documented unmaintained build-time proc-macros) |
 
 macOS Intel is covered by the release matrix only. The macOS/Windows jobs are new;
 do not make them required branch checks until they have been green for a week.
@@ -230,7 +230,10 @@ exactly its own archive. A source archive (`ci/archive-source.sh`) is built in
 parallel **outside the checkout** (a checkout can still track an old tarball under
 `dist/`). The final `release` job — the only job with `contents: write` — refuses
 to publish unless `ci/verify-release-assets.sh` finds exactly the five expected,
-correctly versioned files, then creates the GitHub Release.
+correctly versioned files, then creates the GitHub Release. The release notes are
+the **CHANGELOG section of that version** (`ci/extract-changelog.sh`, which fails if
+the dated section is missing or empty) plus a fixed footer; pre-release tags use the
+same mechanism. GitHub's auto-generated notes are not used.
 
 The packaged-artifact smoke can also be run manually after creating an archive:
 
@@ -269,8 +272,8 @@ Order of work for a release (owner: tagging and publishing; DEC-001):
    `git tag -a X.Y.Z <commit> -m "X.Y.Z" && git push origin X.Y.Z`.
 5. `release.yml` publishes the GitHub Release, then `msix-store.yml` builds the
    `.msix` artifact; the Store upload stays manual. Verify the published assets
-   (the five names above) and replace the auto-generated release notes with the
-   CHANGELOG text.
+   (the five names above) and read the release notes on the Release page: they are
+   the CHANGELOG text plus the footer.
 6. If a workflow fails: never re-tag a published name; fix forward on `main` and use
    the next patch version. A run that failed before the GitHub Release existed can
    be re-run from the Actions tab.
@@ -304,6 +307,25 @@ Bump procedure (one commit; tag and hashes change together):
    --jq '.assets[] | "\(.name) \(.digest)"'`). If the sources disagree, stop.
 3. Add the lines to `ci/pdfium-checksums.txt`; run `bash ci/verify-sha256-self-test.sh`
    and `bash ci/fetch-pdfium.sh`, then the smoke tests.
+
+### Dependency advisories and Dependabot
+
+`cargo deny` is a blocking CI job: a new advisory against the committed `Cargo.lock`
+turns `main` red (as a new lint would), which is intended. Fix it with a
+**lockfile-only** update of the named crates — `cargo update -p <crate>` (never a
+bare `cargo update`, which churns the whole lockfile), no `Cargo.toml` change — then
+run the full gate and a release-build smoke check (the shipped binary changes with
+the lockfile). If the fix needs a manifest change or a major bump, write an RFC/handoff
+instead. An advisory may be ignored in `deny.toml` only with a written reason (for
+example an unmaintained build-time proc-macro without an upgrade path).
+
+Dependabot opens weekly pull requests for Cargo dependencies and workflow actions
+(`.github/dependabot.yml`). Between work slices the owner merges **only** pull
+requests that change nothing but the lockfile (or a pinned action SHA) and pass CI.
+Anything that edits a manifest, a major version, and anything for `pdfium-render`
+is not merged from a bot PR: `pdfium-render` is bumped only together with the PDFium
+pin and checksums (DEC-012, above), and the config ignores it; `dirs >= 7` and
+`base64 >= 0.23` are ignored as API-changing proposals awaiting a reviewed change.
 
 ### Trying workflow changes on a fork (dry run)
 

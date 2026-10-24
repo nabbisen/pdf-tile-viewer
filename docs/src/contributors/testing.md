@@ -90,6 +90,7 @@ bash ci/verify-release-tag-self-test.sh         # tag == version, dated CHANGELO
 bash ci/verify-release-assets-self-test.sh      # exactly the five expected release files
 bash ci/set-version-self-test.sh                # the only tool that changes versions
 bash ci/verify-version-consistency-self-test.sh # Cargo, MSIX manifest, CHANGELOG agree
+bash ci/extract-changelog-self-test.sh          # release notes are the dated CHANGELOG section
 bash ci/smoke-release-artifact-self-test.sh     # malformed package layouts are rejected
 bash ci/verify-version-consistency.sh           # the check itself, on this tree
 shellcheck ci/*.sh
@@ -101,8 +102,7 @@ shellcheck ci/*.sh
 `rustfmt`, `clippy`, check and tests on Linux (including `cargo test -p app` and the
 PDFium smoke tests on the checksum-verified asset), check, tests and the PDFium smoke
 tests on macOS (arm64) and Windows, the release-tooling self-tests above, `actionlint`
-on the workflows, and `cargo deny` (advisories, licences, bans; non-blocking until
-the first report is triaged). Details and the release procedure:
+on the workflows, and `cargo deny` (advisories, licences, bans; blocking). Details and the release procedure:
 [Local Development](dev.md#continuous-integration-and-releases).
 
 ## Why Dioxus-specific test kinds are not used

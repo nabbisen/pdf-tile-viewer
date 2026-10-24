@@ -1,5 +1,6 @@
 # Update pull requests for pinned workflow actions and Cargo dependencies
-# (RFC 036 § 5.4). Weekly; the owner merges them between slices.
+# (RFC 036 § 5.4). Weekly; the owner merges them between work slices (only
+# lockfile-only PRs that pass CI; see docs/src/contributors/dev.md).
 version: 2
 updates:
   - package-ecosystem: github-actions
@@ -14,3 +15,15 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    ignore:
+      # pdfium-render is bumped only together with the PDFium pin and its checksums
+      # (DEC-012; "PDFium pin and checksums" in dev.md): the crate's symbol set must
+      # match the pinned PDFium build.
+      - dependency-name: "pdfium-render"
+      # Major-version proposals that change a direct dependency's API and need a
+      # reviewed change of their own (not a lockfile update). Later versions are
+      # not ignored, so useful updates keep coming.
+      - dependency-name: "dirs"
+        versions: [">= 7"]
+      - dependency-name: "base64"
+        versions: [">= 0.23"]
