@@ -9,6 +9,7 @@ baseline: PDF Tile Viewer 2.0.0
 priority: Corrective
 depends_on: RFC 012, RFC 013, RFC 026
 amends: RFC 013 (§ shortcuts, § Escape), RFC 012 (§ keyboard)
+amended: 2026-10-24 — § 5.4 two-step rollout (owner decision B; versioning review)
 origin: architect onboarding review 2026-10-21 (internal), owner decisions D1
 ---
 
@@ -127,9 +128,24 @@ Rules encoded by the resolver:
 ### 5.4 Dismissal
 
 `Escape` → `Dismiss` → close the top-most **visible** layer in this order:
-`Dialog` → `Zoom` → `Search` → `Outline` → `Zen` (exit). With nothing to
-dismiss, Escape does nothing. It never changes `Phase`. Leaving the document is
-done only with the Back button.
+`Dialog` → `Zoom` → `Search` → `Outline` → `Zen` (exit). Exactly one layer is
+closed per press and the event never reaches a second handler.
+
+**Two-step rollout (amendment 2026-10-24, owner decision B).** With nothing to
+dismiss:
+
+| Release | Escape behavior when no layer is open and the focus is inside the viewer |
+|---|---|
+| **2.0.x (this RFC's first release, planned 2.0.2)** | **unchanged and documented:** returns to the dashboard (`shortcuts.md`: "close zoom overlay → close search → exit zen → back to dashboard"). Only the *bug* is fixed: an Escape that closes a layer must not also leave the document |
+| **2.1.0** | Escape does nothing; leaving the document is done only with the Back button. `Phase` is never changed by Escape |
+
+Reason: removing a documented shortcut behavior is not a bug fix and does not
+belong in a patch release (semantic-versioning review, 2026-10-24); a minor
+release is where users expect behavior to change. Implementation: the resolver
+returns `Dismiss` with a `NothingToDismiss` outcome; a single constant
+`ESCAPE_LEAVES_DOCUMENT_WHEN_IDLE: bool` (in `domain::shortcuts`) selects the
+2.0.x or 2.1.0 behavior, with unit tests for both values. The 2.1.0 step is
+tracked in `ROADMAP.md`; the CHANGELOG of that release lists it under "Changed".
 
 ### 5.5 Modal focus contract
 
@@ -154,8 +170,9 @@ to Fixed starts from the **currently displayed column count** (not a hard-coded
 - **JavaScript `document.activeElement` check in the viewer handler.**
   Rejected: asynchronous (cannot `prevent_default` in time), adds JS logic to a
   Rust-first app.
-- **Keep Escape-to-dashboard.** Rejected (owner decision D1): it is a
-  navigation action hidden behind a dismissal key.
+- **Keep Escape-to-dashboard.** Rejected as the end state (owner decision D1): it is a
+  navigation action hidden behind a dismissal key. Retained temporarily in 2.0.x
+  only to respect semantic versioning (§ 5.4).
 
 ## 7. Security and privacy
 
@@ -182,7 +199,9 @@ and disabled-input findings before the handoff is issued.
 
 - No viewer shortcut fires while any editable control has focus.
 - No overlay or dialog key reaches the viewer root.
-- Escape never leaves the document; dismissal order matches § 5.4.
+- Escape closes at most one layer per press and no closing press also leaves the
+  document; dismissal order matches § 5.4. (The idle Escape → dashboard fallback
+  remains in 2.0.x and is removed in 2.1.0.)
 - Auto→Fixed starts at the visible column count; Fixed→Auto restores auto.
 - `shortcuts.md` documents the same table the resolver implements.
 
@@ -192,4 +211,4 @@ and disabled-input findings before the handoff is issued.
 |---|---:|---|
 | WebView differences in focus handling | Medium | Manual matrix on all three engines before acceptance |
 | Helper bypassed by a future input | Medium | Grep-based test plus review checklist |
-| Behavior change surprises existing users (Escape) | Low | Documented in CHANGELOG; Back button remains visible |
+| Behavior change surprises existing users (Escape) | Low | Idle fallback kept until 2.1.0; CHANGELOG "Changed" entry then; Back button remains visible |

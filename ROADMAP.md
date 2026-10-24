@@ -34,7 +34,8 @@ RFC designs live in `rfcs/proposed/`; the ADR and detailed roadmap are in
 | `2.0.0-beta.11` | Final beta before 2.0.0; password-protected PDF opening |
 | `2.0.0 RC` | Release-candidate validation after RFC 026 follow-up acceptance |
 | `2.0.0` | Released (tag `2.0.0`) |
-| `2.1.0` | Post-2.0 candidates: settings/history policy, picker/zoom polish, optional platform investigations |
+| `2.0.2` | Corrective train (RFC 033–040): fixes only; planned December 2026 |
+| `2.1.0` | Post-2.0 candidates: settings/history policy, viewport tracking, grid keyboard navigation, picker/zoom polish; **Escape no longer leaves the document when idle (RFC 033, step 2)** |
 
 ---
 
