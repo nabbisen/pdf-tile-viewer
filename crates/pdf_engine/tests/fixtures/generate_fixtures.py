@@ -12,6 +12,38 @@ Fixtures:
                           3 pages with outline entries, internal links, URI
                           links, and blocked action examples for RFC 026.
   not-a-pdf.pdf           wrong magic bytes, for intake-rejection tests.
+  rotate-0.pdf, rotate-90.pdf, rotate-180.pdf, rotate-270.pdf
+                          RFC 034 geometry fixtures: one 612x792 page each,
+                          identical content, /Rotate 0/90/180/270. Text
+                          "Hello tile viewer" (Helvetica 24) with its baseline
+                          origin at user space (72, 700); one internal link
+                          annotation /Rect [72 650 240 680] whose destination
+                          is the same page, /XYZ 100 500 0.
+  crop-offset.pdf         RFC 034: MediaBox [0 0 612 792], CropBox
+                          [50 100 562 692] (non-zero crop origin, displayed
+                          512x592). Text origin at user space (72, 600); link
+                          /Rect [72 400 240 440], destination /XYZ 100 500 0.
+  mixed-rotation.pdf      RFC 034: four 612x792 pages with /Rotate 0, 90,
+                          180, 270 (display 612x792, 792x612, 612x792,
+                          792x612). Same text and link as rotate-*.pdf; the
+                          link on page N points to page (N+1) mod 4,
+                          /XYZ 100 500 0.
+
+Expected display-space geometry (RFC 034 section 5.3: origin top-left, y down,
+points; user-space point (ux, uy) in page box (x0 y0 x1 y1)):
+  r0   (ux-x0, y1-uy)    r90  (uy-y0, ux-x0)
+  r180 (x1-ux, uy-y0)    r270 (y1-uy, x1-ux)
+Link rect [72 650 240 680] on the 612x792 page -> display (x, y, w, h):
+  rotate-0   (72, 112, 168, 30)     rotate-90  (650, 72, 30, 168)
+  rotate-180 (372, 650, 168, 30)    rotate-270 (112, 372, 30, 168)
+Destination (100, 500) -> display point:
+  rotate-0 (100, 292)  rotate-90 (500, 100)  rotate-180 (512, 500)
+  rotate-270 (292, 512)
+crop-offset (r0, box 50 100 562 692): link [72 400 240 440] -> (22, 252, 168, 40);
+  destination (100, 500) -> (50, 192); displayed page 512x592.
+The text rectangle is whatever PDFium reports for the glyphs in user space (the
+same for every rotation); the smoke tests convert it by hand with the formulas
+above and compare within 0.5 pt.
 
 Carve-out:
   password-protected.pdf  generated from single-page-basic.pdf with qpdf 12.3.2
@@ -248,6 +280,59 @@ def build_navigation_pdf() -> bytes:
     return assemble_objects(objects)
 
 
+def build_geometry_pdf(pages: list[dict]) -> bytes:
+    """Assemble RFC 034 geometry fixtures. Each page dict has: rotate (int),
+    crop (optional [x0, y0, x1, y1]), text_xy (x, y), link_rect (4 numbers),
+    dest (target page index, x, y). Objects: 1 Catalog, 2 Pages, 3 Font,
+    4..3+n Pages, 4+n..3+2n contents, 4+2n..3+3n link annotations."""
+    n = len(pages)
+    first_page, first_content, first_annot = 4, 4 + n, 4 + 2 * n
+    kids = " ".join(f"{first_page + i} 0 R" for i in range(n))
+    objects: list[bytes] = [
+        b"<< /Type /Catalog /Pages 2 0 R >>",
+        f"<< /Type /Pages /Kids [{kids}] /Count {n} >>".encode(),
+        b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+    ]
+    for i, page in enumerate(pages):
+        crop = ""
+        if page.get("crop"):
+            crop = "/CropBox [%s] " % " ".join(str(v) for v in page["crop"])
+        objects.append(
+            (
+                f"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] {crop}"
+                f"/Rotate {page['rotate']} "
+                f"/Resources << /Font << /F1 3 0 R >> >> "
+                f"/Annots [{first_annot + i} 0 R] "
+                f"/Contents {first_content + i} 0 R >>"
+            ).encode()
+        )
+    for page in pages:
+        x, y = page["text_xy"]
+        stream = f"BT /F1 24 Tf {x} {y} Td (Hello tile viewer) Tj ET".encode()
+        objects.append(
+            b"<< /Length %d >>\nstream\n%s\nendstream" % (len(stream), stream)
+        )
+    for page in pages:
+        target, dx, dy = page["dest"]
+        rect = " ".join(str(v) for v in page["link_rect"])
+        objects.append(
+            (
+                f"<< /Type /Annot /Subtype /Link /Rect [{rect}] /Border [0 0 0] "
+                f"/Dest [{first_page + target} 0 R /XYZ {dx} {dy} 0] >>"
+            ).encode()
+        )
+    return assemble_objects(objects)
+
+
+def standard_page(rotate: int, target: int = 0) -> dict:
+    return {
+        "rotate": rotate,
+        "text_xy": (72, 700),
+        "link_rect": [72, 650, 240, 680],
+        "dest": (target, 100, 500),
+    }
+
+
 def main() -> None:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -275,12 +360,41 @@ def main() -> None:
 
     (OUT_DIR / "not-a-pdf.pdf").write_bytes(b"GIF89a this is not a pdf\n")
 
+    for rotate in (0, 90, 180, 270):
+        (OUT_DIR / f"rotate-{rotate}.pdf").write_bytes(
+            build_geometry_pdf([standard_page(rotate)])
+        )
+    (OUT_DIR / "crop-offset.pdf").write_bytes(
+        build_geometry_pdf(
+            [
+                {
+                    "rotate": 0,
+                    "crop": [50, 100, 562, 692],
+                    "text_xy": (72, 600),
+                    "link_rect": [72, 400, 240, 440],
+                    "dest": (0, 100, 500),
+                }
+            ]
+        )
+    )
+    (OUT_DIR / "mixed-rotation.pdf").write_bytes(
+        build_geometry_pdf(
+            [standard_page(r, (i + 1) % 4) for i, r in enumerate((0, 90, 180, 270))]
+        )
+    )
+
     for name in (
         "single-page-basic.pdf",
         "multi-page-search.pdf",
         "fifty-pages-benchmark.pdf",
         "navigation-links-outline.pdf",
         "not-a-pdf.pdf",
+        "rotate-0.pdf",
+        "rotate-90.pdf",
+        "rotate-180.pdf",
+        "rotate-270.pdf",
+        "crop-offset.pdf",
+        "mixed-rotation.pdf",
     ):
         print(f"wrote {OUT_DIR / name}")
 
