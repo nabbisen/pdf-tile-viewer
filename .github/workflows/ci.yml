@@ -1,23 +1,36 @@
 name: CI
 
-# Continuous integration: formatting, type-check, and tests on every push
-# to main and every pull request. Mirrors the local gate documented in
-# docs/src/contributors/testing.md.
+# Continuous integration: formatting, lints, type-check and tests on every push
+# to main and every pull request; also callable (workflow_call) so that the
+# "Prepare release" workflow can run it on the commit it creates (pushes made
+# with the built-in token do not start other workflows). Mirrors the local gate
+# documented in docs/src/contributors/testing.md.
 
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_call:
+    inputs:
+      ref:
+        description: Commit SHA (or ref) to check out and test.
+        required: false
+        type: string
+        default: ""
+
+permissions:
+  contents: read
 
 # Cancel superseded runs on the same ref to save CI minutes.
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ inputs.ref || github.ref }}
   cancel-in-progress: true
 
 env:
   CARGO_TERM_COLOR: always
-  # Pinned so smoke tests are reproducible (RFC 003 §10 / fetch-pdfium.sh).
+  # Pinned so smoke tests are reproducible; the archive hash is pinned in
+  # ci/pdfium-checksums.txt (RFC 003 §10, RFC 036 §5.1).
   PDFIUM_RELEASE_TAG: chromium/7920
 
 jobs:
@@ -25,34 +38,46 @@ jobs:
     name: rustfmt
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - name: Install Rust (with rustfmt)
-        run: |
-          rustup toolchain install stable --profile minimal --component rustfmt
-          rustup default stable
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+          persist-credentials: false
+      - uses: ./.github/actions/setup-rust
       - name: cargo fmt --check
         run: cargo fmt --all --check
 
-  test:
-    name: check & test
+  clippy:
+    name: clippy
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-
-      - name: Install Rust
-        run: |
-          rustup toolchain install stable --profile minimal
-          rustup default stable
-
-      - name: Cache cargo registry and target
-        uses: actions/cache@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-cargo-
+          ref: ${{ inputs.ref || github.sha }}
+          persist-credentials: false
+      - uses: ./.github/actions/setup-rust
+        with:
+          cache: "true"
+          cache-key: clippy
+      - name: Install GUI system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev libgtk-3-dev libxdo-dev libssl-dev pkg-config
+      - name: cargo clippy (blocking, RFC 036 § 5.6)
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+  test:
+    name: check & test (linux)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+          persist-credentials: false
+      - uses: ./.github/actions/setup-rust
+        with:
+          cache: "true"
+          cache-key: test
 
       - name: Install GUI system dependencies
         run: |
@@ -69,10 +94,127 @@ jobs:
       - name: Library + service unit tests (no PDFium)
         run: cargo test --workspace --exclude app
 
-      - name: Fetch pinned PDFium (linux-x64)
+      - name: GUI crate unit tests
+        run: cargo test -p app
+
+      - name: Fetch pinned PDFium (linux-x64, checksum-verified)
         run: bash ci/fetch-pdfium.sh linux-x64
 
       - name: Engine smoke tests (with PDFium)
         env:
           PDF_TILE_VIEWER_PDFIUM_DIR: ${{ github.workspace }}/ci/.pdfium
         run: cargo test -p pdf_engine --test smoke
+
+  # macOS and Windows used to compile for the first time at tag time (RFC 036 G-06).
+  # macOS Intel is covered by the release matrix only.
+  cross-platform:
+    name: check & test (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macos-arm64
+            os: macos-latest
+            pdfium_target: mac-arm64
+          - name: windows-x64
+            os: windows-latest
+            pdfium_target: win-x64
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+          persist-credentials: false
+      - uses: ./.github/actions/setup-rust
+        with:
+          cache: "true"
+          cache-key: test-${{ matrix.name }}
+
+      - name: cargo check (workspace)
+        shell: bash
+        run: cargo check --workspace
+
+      - name: cargo test (workspace)
+        shell: bash
+        run: cargo test --workspace
+
+      - name: Fetch pinned PDFium (${{ matrix.pdfium_target }}, checksum-verified)
+        shell: bash
+        env:
+          PDFIUM_TARGET: ${{ matrix.pdfium_target }}
+        run: bash ci/fetch-pdfium.sh "${PDFIUM_TARGET}"
+
+      - name: Engine smoke tests (with PDFium)
+        shell: bash
+        env:
+          PDF_TILE_VIEWER_PDFIUM_DIR: ${{ github.workspace }}/ci/.pdfium
+        run: cargo test -p pdf_engine --test smoke
+
+  # Release tooling: shell lint, version consistency, and the self-tests of every
+  # ci/*.sh guard (RFC 036 § 5.1, 5.2, 5.4a, 5.7).
+  release-tooling:
+    name: release tooling
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+          persist-credentials: false
+      - uses: ./.github/actions/setup-rust
+        with:
+          cache: "true"
+          cache-key: tooling
+      - name: shellcheck ci scripts
+        run: shellcheck ci/*.sh
+      - name: Version consistency (Cargo, MSIX manifest, CHANGELOG)
+        run: bash ci/verify-version-consistency.sh
+      - name: Self-test verify-sha256
+        run: bash ci/verify-sha256-self-test.sh
+      - name: Self-test verify-release-tag
+        run: bash ci/verify-release-tag-self-test.sh
+      - name: Self-test verify-release-assets
+        run: bash ci/verify-release-assets-self-test.sh
+      - name: Self-test set-version
+        run: bash ci/set-version-self-test.sh
+      - name: Self-test verify-version-consistency
+        run: bash ci/verify-version-consistency-self-test.sh
+      - name: Self-test packaged-artifact smoke layouts
+        run: bash ci/smoke-release-artifact-self-test.sh
+
+  actionlint:
+    name: actionlint
+    runs-on: ubuntu-latest
+    env:
+      # Pinned release binary; checksum = GitHub release-asset digest (2026-10-24).
+      ACTIONLINT_VERSION: "1.7.12"
+      ACTIONLINT_SHA256: "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+          persist-credentials: false
+      - name: Install actionlint (pinned, checksum-verified)
+        run: |
+          set -euo pipefail
+          archive="actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          curl -fsSL --retry 3 -o "${RUNNER_TEMP}/${archive}" \
+            "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/${archive}"
+          echo "${ACTIONLINT_SHA256}  ${RUNNER_TEMP}/${archive}" | sha256sum --check -
+          tar -xzf "${RUNNER_TEMP}/${archive}" -C "${RUNNER_TEMP}" actionlint
+      - name: "actionlint (also shellchecks the run scripts)"
+        run: '"${RUNNER_TEMP}/actionlint" -color'
+
+  # Dependency advisories, licences, bans, sources (RFC 036 § 5.5). Non-blocking
+  # until the first report has been triaged (see deny.toml).
+  cargo-deny:
+    name: cargo deny
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+          persist-credentials: false
+      - uses: EmbarkStudios/cargo-deny-action@3c6349835b2b7b196a839186cb8b78e02f7b5f25 # v2.1.1
+        with:
+          command: check

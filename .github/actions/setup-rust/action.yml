@@ -1,0 +1,52 @@
+name: Set up the pinned Rust toolchain
+description: >
+  Installs the toolchain pinned in rust-toolchain.toml (RFC 036 § 5.6), optional
+  extra targets, and optionally a cargo cache. Requires a checkout first.
+
+inputs:
+  targets:
+    description: Space-separated extra rustup targets to add (e.g. release targets).
+    required: false
+    default: ""
+  cache:
+    description: "Restore/save the cargo registry and target directory ('true' or 'false')."
+    required: false
+    default: "false"
+  cache-key:
+    description: Cache key prefix (the key also hashes Cargo.lock and rust-toolchain.toml).
+    required: false
+    default: cargo
+
+runs:
+  using: composite
+  steps:
+    - name: Install pinned toolchain
+      shell: bash
+      env:
+        TARGETS: ${{ inputs.targets }}
+      run: |
+        set -euo pipefail
+        # No argument: rustup installs what rust-toolchain.toml names (channel, components, profile).
+        rustup toolchain install --no-self-update
+        if [ -n "${TARGETS}" ]; then
+          # shellcheck disable=SC2086 # word splitting of the target list is intended
+          rustup target add ${TARGETS}
+        fi
+        rustup show
+        expected="$(sed -n 's/^channel *= *"\(.*\)"/\1/p' rust-toolchain.toml)"
+        actual="$(rustc --version)"
+        case "${actual}" in
+          "rustc ${expected} "*) echo "toolchain OK: ${actual}" ;;
+          *) echo "::error::rustc is '${actual}', rust-toolchain.toml pins '${expected}'"; exit 1 ;;
+        esac
+
+    - name: Cache cargo registry and target
+      if: ${{ inputs.cache == 'true' }}
+      uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-${{ inputs.cache-key }}-${{ hashFiles('**/Cargo.lock', 'rust-toolchain.toml') }}
+        restore-keys: ${{ runner.os }}-${{ inputs.cache-key }}-

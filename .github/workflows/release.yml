@@ -9,6 +9,12 @@ name: Release
 # a release. This workflow does not run on branch pushes. A pre-release tag
 # (containing '-alpha', '-beta', or '-rc') is marked as a GitHub pre-release.
 #
+# The `verify-tag` job runs first and blocks everything else unless the tag
+# equals the workspace version, the CHANGELOG has a dated heading for it, the
+# version files agree, and the tag's commit is on main (RFC 036 § 5.2, § 5.7).
+# The `release` job refuses to publish unless exactly the five expected assets
+# exist (RFC 036 § 5.4a).
+#
 # RFC 018 packaged-artifact smoke runs a host helper that binds the packaged
 # PDFium library. Each runner OS/architecture must therefore match the
 # artifact/PDFium architecture it builds.
@@ -21,16 +27,34 @@ on:
       - "[0-9]+.[0-9]+.[0-9]+"
       - "[0-9]+.[0-9]+.[0-9]+-*"
 
+# Least privilege (RFC 036 § 5.3): read-only by default; only the `release` job
+# that creates the GitHub Release gets write access.
 permissions:
-  contents: write # required to create a Release and upload assets
+  contents: read
 
 env:
   CARGO_TERM_COLOR: always
   PDFIUM_RELEASE_TAG: chromium/7920
 
 jobs:
+  verify-tag:
+    name: verify tag
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # full history: ancestry check against origin/main
+          persist-credentials: false
+      - name: Tag equals version, dated CHANGELOG heading, commit on main
+        env:
+          TAG: ${{ github.ref_name }}
+        run: bash ci/verify-release-tag.sh "${TAG}"
+      - name: Version files agree (Cargo, MSIX manifest, CHANGELOG)
+        run: bash ci/verify-version-consistency.sh
+
   build:
     name: build ${{ matrix.name }}
+    needs: verify-tag
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -66,13 +90,13 @@ jobs:
             bin_file: pdf-tile-viewer
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
-      - name: Install Rust
-        run: |
-          rustup toolchain install stable --profile minimal
-          rustup default stable
-          rustup target add ${{ matrix.rust_target }}
+      - uses: ./.github/actions/setup-rust
+        with:
+          targets: ${{ matrix.rust_target }}
 
       - name: Install Linux GUI dependencies
         if: runner.os == 'Linux'
@@ -89,23 +113,31 @@ jobs:
           echo "version=$v" >> "$GITHUB_OUTPUT"
           echo "App version: $v"
 
-      # ── Fetch the platform PDFium and place it where the build expects ──────
+      # ── Fetch the platform PDFium, verify its pinned SHA-256, place it ──────
       - name: Fetch PDFium (${{ matrix.pdfium_target }})
         shell: bash
+        env:
+          PDFIUM_TARGET: ${{ matrix.pdfium_target }}
+          PLATFORM_SEGMENT: ${{ matrix.platform_segment }}
+          LIB_FILE: ${{ matrix.lib_file }}
         run: |
           set -euo pipefail
-          dest="resources/pdfium/${{ matrix.platform_segment }}"
+          dest="resources/pdfium/${PLATFORM_SEGMENT}"
           mkdir -p "$dest"
-          url="https://github.com/bblanchon/pdfium-binaries/releases/download/${PDFIUM_RELEASE_TAG}/pdfium-${{ matrix.pdfium_target }}.tgz"
+          asset="pdfium-${PDFIUM_TARGET}.tgz"
+          url="https://github.com/bblanchon/pdfium-binaries/releases/download/${PDFIUM_RELEASE_TAG}/${asset}"
           echo "Fetching $url"
           curl -fSL --retry 3 -o /tmp/pdfium.tgz "$url"
+          # (/tmp, not RUNNER_TEMP: GNU tar on Windows reads "D:\..." as a remote host.)
+          # Fail closed before anything is extracted (RFC 036 § 5.1).
+          bash ci/verify-sha256.sh /tmp/pdfium.tgz "${PDFIUM_RELEASE_TAG}" "${asset}"
           mkdir -p /tmp/pdfium-extract
           tar -xzf /tmp/pdfium.tgz -C /tmp/pdfium-extract
           # bblanchon archives place the library under lib/ (unix) or bin/ (windows)
-          if [ -f "/tmp/pdfium-extract/lib/${{ matrix.lib_file }}" ]; then
-            cp "/tmp/pdfium-extract/lib/${{ matrix.lib_file }}" "$dest/"
+          if [ -f "/tmp/pdfium-extract/lib/${LIB_FILE}" ]; then
+            cp "/tmp/pdfium-extract/lib/${LIB_FILE}" "$dest/"
           else
-            cp "/tmp/pdfium-extract/bin/${{ matrix.lib_file }}" "$dest/"
+            cp "/tmp/pdfium-extract/bin/${LIB_FILE}" "$dest/"
           fi
           ls -l "$dest"
 
@@ -114,34 +146,50 @@ jobs:
         shell: bash
         env:
           NO_STRIP: "1"
-        run: cargo build --release -p app --target ${{ matrix.rust_target }}
+          RUST_TARGET: ${{ matrix.rust_target }}
+        run: cargo build --release -p app --target "${RUST_TARGET}"
 
       # ── Engine smoke test against the fetched PDFium (RFC 014 §7) ───────────
       - name: Verify PDFium binding (smoke test)
         shell: bash
         env:
           PDF_TILE_VIEWER_PDFIUM_DIR: ${{ github.workspace }}/resources/pdfium/${{ matrix.platform_segment }}
-        run: cargo test -p pdf_engine --test smoke --release --target ${{ matrix.rust_target }} -- --test-threads=1
+          RUST_TARGET: ${{ matrix.rust_target }}
+        run: cargo test -p pdf_engine --test smoke --release --target "${RUST_TARGET}" -- --test-threads=1
 
       # ── Stage the artifact (RFC 014 §6 required contents) ──────────────────
       - name: Stage artifact
         shell: bash
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          MATRIX_NAME: ${{ matrix.name }}
+          RUST_TARGET: ${{ matrix.rust_target }}
+          PLATFORM_SEGMENT: ${{ matrix.platform_segment }}
+          LIB_FILE: ${{ matrix.lib_file }}
+          BIN_FILE: ${{ matrix.bin_file }}
         run: |
           set -euo pipefail
-          name="pdf-tile-viewer-v${{ steps.version.outputs.version }}-${{ matrix.name }}"
+          name="pdf-tile-viewer-v${VERSION}-${MATRIX_NAME}"
           stage="dist/$name"
-          mkdir -p "$stage/bin" "$stage/resources/pdfium/${{ matrix.platform_segment }}"
-          cp "target/${{ matrix.rust_target }}/release/${{ matrix.bin_file }}" "$stage/bin/"
-          cp "resources/pdfium/${{ matrix.platform_segment }}/${{ matrix.lib_file }}" \
-             "$stage/resources/pdfium/${{ matrix.platform_segment }}/"
+          mkdir -p "$stage/bin" "$stage/resources/pdfium/${PLATFORM_SEGMENT}"
+          cp "target/${RUST_TARGET}/release/${BIN_FILE}" "$stage/bin/"
+          cp "resources/pdfium/${PLATFORM_SEGMENT}/${LIB_FILE}" \
+             "$stage/resources/pdfium/${PLATFORM_SEGMENT}/"
           cp LICENSE NOTICE CHANGELOG.md README.md "$stage/"
+          # SHA-256 of the bundled PDFium library (sha256sum, or shasum on macOS).
+          if command -v sha256sum >/dev/null 2>&1; then
+            lib_sha="$(sha256sum "$stage/resources/pdfium/${PLATFORM_SEGMENT}/${LIB_FILE}" | awk '{print $1}')"
+          else
+            lib_sha="$(shasum -a 256 "$stage/resources/pdfium/${PLATFORM_SEGMENT}/${LIB_FILE}" | awk '{print $1}')"
+          fi
           cat > "$stage/notes.txt" <<EOF
-          PDF Tile Viewer v${{ steps.version.outputs.version }} — ${{ matrix.name }}
+          PDF Tile Viewer v${VERSION} — ${MATRIX_NAME}
 
           Unsigned build. PDFium ${PDFIUM_RELEASE_TAG} bundled in resources/.
+          Bundled PDFium library SHA-256 (${LIB_FILE}): ${lib_sha}
 
           Launch from the extracted directory:
-            ./bin/${{ matrix.bin_file }}
+            ./bin/${BIN_FILE}
 
           Keep the bundled resources/ directory at the top level of the extracted archive.
           Do not move the executable away from the extracted resources/ directory.
@@ -165,6 +213,7 @@ jobs:
           set -euo pipefail
           tar -czf "dist/${artifact_name}.tar.gz" -C "${stage_dir}" .
           ls -lh "dist/${artifact_name}.tar.gz"
+          echo "artifact_file=dist/${artifact_name}.tar.gz" >> "$GITHUB_ENV"
 
       - name: Compress artifact (zip)
         if: runner.os == 'Windows'
@@ -172,6 +221,7 @@ jobs:
         run: |
           Compress-Archive -Path "dist/$env:artifact_name/*" -DestinationPath "dist/$env:artifact_name.zip"
           Get-ChildItem "dist/$env:artifact_name.zip"
+          "artifact_file=dist/$env:artifact_name.zip" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
       - name: Smoke final artifact layout (tar.gz)
         if: runner.os != 'Windows'
@@ -189,29 +239,40 @@ jobs:
           PACKAGE_ARTIFACT_SMOKE_BIN="target/release/package_artifact_smoke.exe" \
             bash ci/smoke-release-artifact.sh "dist/${artifact_name}.zip"
 
+      # Exactly this build's own archive is uploaded (explicit path).
       - name: Upload artifact for release job
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ${{ env.artifact_name }}
-          path: |
-            dist/${{ env.artifact_name }}.tar.gz
-            dist/${{ env.artifact_name }}.zip
-          if-no-files-found: ignore
+          path: ${{ env.artifact_file }}
+          if-no-files-found: error
           retention-days: 7
 
   # ── Source archive (matches ci/archive-source.sh layout) ─────────────────
   source:
     name: source archive
+    needs: verify-tag
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # Built into a fresh directory outside the checkout: the checkout may still
+      # track an old release tarball under dist/ (RFC 036 finding S-04).
       - name: Build source archive
-        run: bash ci/archive-source.sh dist
+        id: archive
+        run: |
+          set -euo pipefail
+          out="${RUNNER_TEMP}/source-out"
+          bash ci/archive-source.sh "${out}"
+          version="$(grep '^version' Cargo.toml | head -1 | sed 's/.*= *"//;s/".*//')"
+          echo "file=${out}/pdf-tile-viewer-v${version}.tar.gz" >> "$GITHUB_OUTPUT"
       - name: Upload source archive
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: source-archive
-          path: dist/*.tar.gz
+          path: ${{ steps.archive.outputs.file }}
+          if-no-files-found: error
           retention-days: 7
 
   # ── Publish the GitHub Release with all collected artifacts ──────────────
@@ -219,9 +280,15 @@ jobs:
     name: publish release
     needs: [build, source]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # create the Release and upload assets: the only write scope in this workflow
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
       - name: Download all artifacts
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           path: artifacts
 
@@ -231,6 +298,13 @@ jobs:
           find artifacts -type f \( -name '*.tar.gz' -o -name '*.zip' \) \
             -exec cp {} release-files/ \;
           ls -lh release-files
+
+      # Gate (RFC 036 § 5.4a): exactly the five expected, correctly versioned assets.
+      - name: Verify release assets
+        run: |
+          set -euo pipefail
+          version="$(grep '^version' Cargo.toml | head -1 | sed 's/.*= *"//;s/".*//')"
+          bash ci/verify-release-assets.sh release-files "${version}"
 
       - name: Determine pre-release status
         id: prerelease
@@ -243,7 +317,7 @@ jobs:
           fi
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
           files: release-files/*
           prerelease: ${{ steps.prerelease.outputs.prerelease }}

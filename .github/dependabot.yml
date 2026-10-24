@@ -1,0 +1,16 @@
+# Update pull requests for pinned workflow actions and Cargo dependencies
+# (RFC 036 § 5.4). Weekly; the owner merges them between slices.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directories:
+      - "/"
+      - "/.github/actions/*"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+  - package-ecosystem: cargo
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5

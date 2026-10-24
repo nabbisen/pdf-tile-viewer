@@ -1,0 +1,58 @@
+# cargo-deny configuration (RFC 036 § 5.5): advisories, licences, bans, sources.
+# CI runs `cargo deny check` (non-blocking until the first report is triaged).
+# Do not suppress an advisory without a written reason next to the entry.
+
+[graph]
+# The shipped targets (release.yml matrix). Platform-specific dependencies are
+# checked for all of them.
+targets = [
+    "x86_64-unknown-linux-gnu",
+    "x86_64-pc-windows-msvc",
+    "aarch64-apple-darwin",
+    "x86_64-apple-darwin",
+]
+
+[advisories]
+# Vulnerabilities and unmaintained/yanked crates are reported; every ignore needs a
+# written reason. The open vulnerability findings of the first report (2026-10-24)
+# are deliberately NOT ignored; they are listed in the RFC 036 review request.
+ignore = [
+    { id = "RUSTSEC-2024-0436", reason = "paste is an unmaintained proc-macro used only at build time by rav1e (via image/ravif, AVIF encoding); no safe upgrade exists; no runtime code." },
+    { id = "RUSTSEC-2024-0370", reason = "proc-macro-error is an unmaintained proc-macro used only at build time by glib-macros/gtk3-macros (Dioxus Desktop GTK stack); no safe upgrade exists; no runtime code." },
+]
+
+[licenses]
+# Licences observed in the dependency tree on 2026-10-24 (`cargo deny list`),
+# all permissive or weak-copyleft compatible with distributing a binary under
+# Apache-2.0. LGPL-2.1-or-later appears only as one alternative of the
+# "MIT OR Apache-2.0 OR LGPL-2.1-or-later" expression of r-efi and is NOT allowed
+# on its own.
+allow = [
+    "0BSD",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "CC0-1.0",
+    "ISC",
+    "MIT",
+    "MIT-0",
+    "MPL-2.0",
+    "Unicode-3.0",
+    "Unlicense",
+    "Zlib",
+]
+confidence-threshold = 0.9
+
+[bans]
+# Duplicate versions are common in GUI stacks (windows-*, rand, syn, ...) and are
+# reported as warnings only; wildcard dependencies are not allowed.
+multiple-versions = "warn"
+wildcards = "deny"
+allow-wildcard-paths = true   # path dependencies of the workspace itself
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+allow-git = []

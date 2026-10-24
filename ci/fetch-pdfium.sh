@@ -21,9 +21,19 @@ DEST_DIR="${SCRIPT_DIR}/.pdfium"
 
 URL="https://github.com/bblanchon/pdfium-binaries/releases/download/${PDFIUM_RELEASE_TAG}/pdfium-${TARGET}.tgz"
 
+# The dynamic library inside the archive: lib/ on unix, bin/ on Windows (where lib/
+# only holds the import library).
+case "${TARGET}" in
+    linux-*) LIB_FILE="libpdfium.so" ;;
+    mac-*)   LIB_FILE="libpdfium.dylib" ;;
+    win-*)   LIB_FILE="pdfium.dll" ;;
+    *) echo "ERROR: unsupported target '${TARGET}'" >&2; exit 1 ;;
+esac
+
 mkdir -p "${DEST_DIR}"
-TMP_TGZ="$(mktemp /tmp/pdfium-XXXXXX.tgz)"
-trap 'rm -f "${TMP_TGZ}"' EXIT
+TMP_TGZ="$(mktemp /tmp/pdfium.XXXXXX)"  # no suffix after the Xs (BSD/macOS mktemp); /tmp also on Windows (git bash)
+TMP_EXTRACT="$(mktemp -d /tmp/pdfium-extract.XXXXXX)"
+trap 'rm -rf "${TMP_TGZ}" "${TMP_EXTRACT}"' EXIT
 
 echo "Fetching ${URL}"
 curl -fSL --retry 3 -o "${TMP_TGZ}" "${URL}"
@@ -31,8 +41,15 @@ curl -fSL --retry 3 -o "${TMP_TGZ}" "${URL}"
 # Fail closed on a wrong or unpinned archive, before anything is extracted (RFC 036 § 5.1).
 bash "${SCRIPT_DIR}/verify-sha256.sh" "${TMP_TGZ}" "${PDFIUM_RELEASE_TAG}" "pdfium-${TARGET}.tgz"
 
-tar -xzf "${TMP_TGZ}" -C "${DEST_DIR}" --strip-components=1 lib 2>/dev/null \
-  || tar -xzf "${TMP_TGZ}" -C "${DEST_DIR}" --strip-components=1 bin 2>/dev/null
+tar -xzf "${TMP_TGZ}" -C "${TMP_EXTRACT}"
+if [[ -f "${TMP_EXTRACT}/lib/${LIB_FILE}" ]]; then
+    cp "${TMP_EXTRACT}/lib/${LIB_FILE}" "${DEST_DIR}/"
+elif [[ -f "${TMP_EXTRACT}/bin/${LIB_FILE}" ]]; then
+    cp "${TMP_EXTRACT}/bin/${LIB_FILE}" "${DEST_DIR}/"
+else
+    echo "ERROR: ${LIB_FILE} not found in pdfium-${TARGET}.tgz" >&2
+    exit 1
+fi
 
 ls -l "${DEST_DIR}"
 echo "PDFium (${PDFIUM_RELEASE_TAG}, ${TARGET}) ready in ${DEST_DIR}"

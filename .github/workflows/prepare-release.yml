@@ -1,0 +1,115 @@
+name: Prepare release
+
+# Prepares a release commit on main (RFC 036 § 5.7). Run it from the Actions tab
+# with the version to release, AFTER the CHANGELOG section "## [<version>] - unreleased"
+# has been written and merged to main.
+#
+# It: requires a successful CI run on the head of main; runs ci/set-version.sh
+# (Cargo.toml, Cargo.lock, MSIX manifest, CHANGELOG date); commits as
+# github-actions[bot] ("Prepare release <version>"); pushes to main without force
+# (fails if main moved); then runs CI (ci.yml as a reusable workflow) on that
+# commit, because pushes made with the built-in token do not start other workflows.
+#
+# THIS WORKFLOW NEVER CREATES A TAG. Tagging and publishing stay a human act
+# (DEC-001): after it and its CI are green and the architect's readiness check is
+# done, the owner tags the printed commit.
+#
+# Note: if branch protection is ever enabled on main, github-actions[bot] needs an
+# explicit bypass for the push below (documented in docs/src/contributors/dev.md).
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to prepare, e.g. 2.0.2 or 2.1.0-rc.1 (CHANGELOG needs '## [<version>] - unreleased')"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: prepare-release
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    name: prepare release commit
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # push the release commit to main
+      actions: read # read-only query: is CI green on the head of main?
+    outputs:
+      commit: ${{ steps.push.outputs.commit }}
+    steps:
+      - name: Require main
+        env:
+          REF: ${{ github.ref }}
+        run: |
+          if [ "${REF}" != "refs/heads/main" ]; then
+            echo "::error::Run this workflow on main (got ${REF})."
+            exit 1
+          fi
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          # persist-credentials stays on: the push below uses the built-in token
+          # that checkout configures (no personal tokens, no new secrets).
+
+      - name: Require a successful CI run on the head of main
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          head="$(git rev-parse HEAD)"
+          ok="$(gh run list --repo "${REPO}" --workflow ci.yml --branch main --commit "${head}" \
+                  --status success --json conclusion --jq 'length')"
+          if [ "${ok}" -lt 1 ]; then
+            echo "::error::No successful CI run found for ${head}. Wait for CI on main (or fix it) and run again."
+            exit 1
+          fi
+          echo "CI is green for ${head}."
+
+      - uses: ./.github/actions/setup-rust
+
+      - name: Set version (ci/set-version.sh)
+        env:
+          VERSION: ${{ inputs.version }}
+        run: bash ci/set-version.sh "${VERSION}"
+
+      - name: Commit and push (no force)
+        id: push
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit --all --message "Prepare release ${VERSION}"
+          git push origin HEAD:main
+          commit="$(git rev-parse HEAD)"
+          echo "commit=${commit}" >> "$GITHUB_OUTPUT"
+          {
+            echo "### Release ${VERSION} prepared"
+            echo
+            echo "Commit: \`${commit}\`"
+            echo
+            echo "CI runs on this commit in the next job. After it is green and the readiness check is done, the owner tags **this commit**:"
+            echo
+            echo '```'
+            echo "git fetch && git tag -a ${VERSION} ${commit} -m \"${VERSION}\" && git push origin ${VERSION}"
+            echo '```'
+            echo
+            echo "No tag was created by this workflow."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  ci:
+    name: CI on the release commit
+    needs: prepare
+    uses: ./.github/workflows/ci.yml
+    with:
+      ref: ${{ needs.prepare.outputs.commit }}
+    permissions:
+      contents: read
