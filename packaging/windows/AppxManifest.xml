@@ -4,10 +4,11 @@
   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
   xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10"
   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities">
-  <!-- The package version is replaced by stage-msix.sh via msix-store.yml. -->
+  <!-- Package version: always <Cargo core X.Y.Z>.0 (the Store reserves the 4th segment).
+       Written by ci/set-version.sh; checked by ci/verify-version-consistency.sh. -->
   <Identity Name="nabbisen.pdf-tile-viewer"
             Publisher="CN=C4BA37E8-8670-4C82-8365-5ECB57373921"
-            Version="@VERSION@" />
+            Version="2.0.1.0" />
   <Properties>
     <DisplayName>pdf-tile-viewer</DisplayName>
     <PublisherDisplayName>nabbisen</PublisherDisplayName>

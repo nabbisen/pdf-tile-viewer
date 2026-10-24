@@ -16,13 +16,15 @@
 #
 # Produces <output_dir> containing:
 #   pdf-tile-viewer.exe
-#   AppxManifest.xml          (version substituted from Cargo.toml)
+#   AppxManifest.xml          (copied unchanged; its version is VERIFIED, not substituted)
 #   Assets/                   (Store logos)
 #   resources/pdfium/windows-x86_64/pdfium.dll
+# and, next to <output_dir>, a file msix-version.txt holding the package version
+# (single source for the .msix file name in msix-store.yml).
 #
-# The MSIX Version is a 4-part numeric X.Y.Z.R. Pre-release suffixes
-# (-beta.N etc.) are NOT permitted by MSIX, so only the semver core is used.
-# The 4th part (revision) defaults to 0; override with MSIX_REVISION.
+# The MSIX version is always "<Cargo core X.Y.Z>.0" (RFC 036 § 5.7): the Microsoft
+# Store reserves the fourth segment, and a pre-release suffix is not permitted.
+# ci/set-version.sh writes it into the manifest; this script fails if it differs.
 
 set -euo pipefail
 
@@ -35,15 +37,19 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 MANIFEST_SRC="${REPO_ROOT}/packaging/windows/AppxManifest.xml"
 ASSETS_SRC="${REPO_ROOT}/packaging/windows/Assets"
 
-# ── Derive the MSIX 4-part version from Cargo.toml ───────────────────────────
+# ── Expected MSIX version from Cargo.toml, verified against the manifest ─────
 FULL_VERSION=$(grep '^version' "${REPO_ROOT}/Cargo.toml" | head -1 | sed 's/.*= *"//;s/".*//')
-# Strip any pre-release / build suffix: 2.1.0-beta.1 -> 2.1.0
 SEMVER_CORE="${FULL_VERSION%%-*}"
-REVISION="${MSIX_REVISION:-0}"
-MSIX_VERSION="${SEMVER_CORE}.${REVISION}"
+MSIX_VERSION="${SEMVER_CORE}.0"
+MANIFEST_VERSION="$(grep -o -E '[[:space:]]Version="[^"]*"' "${MANIFEST_SRC}" | sed -E 's/.*"([^"]*)"/\1/')"
 
-echo "Cargo version : ${FULL_VERSION}"
-echo "MSIX version  : ${MSIX_VERSION}"
+echo "Cargo version    : ${FULL_VERSION}"
+echo "MSIX version     : ${MSIX_VERSION}"
+echo "Manifest version : ${MANIFEST_VERSION}"
+if [[ "${MANIFEST_VERSION}" != "${MSIX_VERSION}" ]]; then
+    echo "ERROR: manifest version '${MANIFEST_VERSION}' != '${MSIX_VERSION}' (run ci/set-version.sh)" >&2
+    exit 1
+fi
 
 # ── Assemble the package root ────────────────────────────────────────────────
 rm -rf "${OUTPUT_DIR}"
@@ -54,10 +60,8 @@ cp "${BUILT_EXE}"  "${OUTPUT_DIR}/pdf-tile-viewer.exe"
 cp "${PDFIUM_DLL}" "${OUTPUT_DIR}/resources/pdfium/windows-x86_64/pdfium.dll"
 cp "${ASSETS_SRC}"/*.png "${OUTPUT_DIR}/Assets/"
 
-# Substitute the version placeholder in the manifest.
-sed \
-    -e "s/@VERSION@/${MSIX_VERSION}/g" \
-    "${MANIFEST_SRC}" > "${OUTPUT_DIR}/AppxManifest.xml"
+cp "${MANIFEST_SRC}" "${OUTPUT_DIR}/AppxManifest.xml"
+printf '%s\n' "${MSIX_VERSION}" > "$(dirname "${OUTPUT_DIR}")/msix-version.txt"
 
 echo "Staged MSIX root at ${OUTPUT_DIR}:"
 find "${OUTPUT_DIR}" -type f | sort
