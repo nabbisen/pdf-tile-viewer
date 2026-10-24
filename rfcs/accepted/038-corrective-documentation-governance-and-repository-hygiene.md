@@ -111,7 +111,7 @@ behavior (owned by RFC 033–037), rewriting published git history, new features
 - Remove `dist/pdf-tile-viewer-v2.0.0-linux-x64.tar.gz` from the index and add
   `/dist/` to `.gitignore`. The blob stays in history (rewriting published
   history is unsafe).
-- Delete the local-only tag `2.0.1` (commit `5c69522`; recorded here for
+- ~~Delete the local-only tag `2.0.1`~~ **Obsolete (2026-10-24):** the stray tag was replaced by the *published* release tag `2.0.1` (commit `800e51d`); it must **not** be deleted. Original text: delete the local-only tag `2.0.1` (commit `5c69522`; recorded here for
   recovery). The tag-guard in RFC 036 prevents recurrence. Tag operations remain
   owner-confirmed (DEC-001).
 - Move fixtures from `fixtures/` to `crates/pdf_engine/tests/fixtures/` (the

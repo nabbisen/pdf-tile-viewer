@@ -1,3 +1,5 @@
+> **Historical record — executed 2026-10-22** (results: `.git-exclude/review-request/wp0-evidence-run/`, unpublished). Fixture paths below use the old `fixtures/` location; since RFC 038 B′ they live in `crates/pdf_engine/tests/fixtures/`. Re-use of this protocol (RFC 033 and 037 handoffs) must use the new path.
+
 # Handoff — Evidence Run (WP0): preconditions for RFC 033 and verification input for RFC 034/035 and the render-pipeline RFC
 
 Governing RFC: [`../../accepted/033-keyboard-routing-and-dismissal-model.md`](../../accepted/033-keyboard-routing-and-dismissal-model.md) § 9 ("the evidence run must confirm or withdraw the zoom-overlay propagation and disabled-input findings before the handoff is issued").

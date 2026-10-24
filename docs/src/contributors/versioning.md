@@ -2,8 +2,8 @@
 
 PDF Tile Viewer uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 This page says what the project treats as its **public API**, and when each part of
-the version number increases. The owner decides the version of every release; a major
-version change is **always** an owner decision (see
+the version number increases. Every release version is proposed by the architect and authorized by the owner; a major
+version change is **always** the owner's own decision (see
 [Release procedure](dev.md#release-procedure)).
 
 ## What is the public API

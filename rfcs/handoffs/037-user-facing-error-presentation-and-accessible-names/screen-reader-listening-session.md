@@ -5,7 +5,7 @@ Governing work: RFC 037 § 5.6 and RFC 033 § 5.5. Run **after** RFC 033 and RFC
 ## Setup
 - **Linux:** use a session where Orca can grab keys (for example GNOME). In the niri/Wayland session used for development Orca cannot inject its navigation keys, so only focus-driven speech can be judged. Start the app with a scratch config: `XDG_CONFIG_HOME=$(mktemp -d)`.
 - **Windows (when available):** Narrator or NVDA with the MSIX build. **macOS:** VoiceOver. Mark each platform you did not run as "not run".
-- Documents: `fixtures/navigation-links-outline.pdf`, `fixtures/multi-page-search.pdf`, `fixtures/password-protected.pdf` (password `pdf-tile-viewer-test`), `fixtures/not-a-pdf.pdf`.
+- Documents: `crates/pdf_engine/tests/fixtures/navigation-links-outline.pdf`, `…/multi-page-search.pdf`, `…/password-protected.pdf` (password `pdf-tile-viewer-test`), `…/not-a-pdf.pdf`.
 
 ## Scenarios — write what is *said*, and mark Good / Unclear / Silent / Wrong
 | # | Scenario | What should be heard |

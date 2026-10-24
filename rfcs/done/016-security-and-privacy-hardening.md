@@ -5,6 +5,7 @@ language: English
 date: 2026-06-07
 status: Implemented (2.0.0-beta.2)
 baseline: PDF Tile Viewer v1.1.2 reverse-engineered design + approved Dioxus goal-state design
+amended_by: RFC 036 (native library integrity: pinned checksums)
 ---
 
 # RFC-016 — Security and Privacy Hardening

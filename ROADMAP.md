@@ -3,7 +3,7 @@
 Tracks the milestone plan for the Dioxus + PDFium migration and what comes next.
 The RFC index is `rfcs/README.md` (RFCs move between `proposed/`, `accepted/`,
 `done/` and `archive/` as they progress); the ADR and the detailed migration roadmap
-are in `docs/design/`. Version numbers are the owner's decisions; the rules for what
+are in `docs/design/`. Version numbers are proposed by the architect and authorized by the owner (a major version is always the owner's decision); the rules for what
 a patch, minor or major release means are in
 [Versioning policy](docs/src/contributors/versioning.md).
 
