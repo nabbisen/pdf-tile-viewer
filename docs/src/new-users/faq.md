@@ -3,7 +3,7 @@
 **Does the app send my PDFs anywhere?**
 
 No. PDF Tile Viewer is strictly local-first. Your files are read from disk
-and never leave your machine.
+and never leave your machine. See the [Privacy Policy](https://github.com/nabbisen/pdf-tile-viewer/blob/main/PRIVACY.md).
 
 **Can it open password-protected PDFs?**
 

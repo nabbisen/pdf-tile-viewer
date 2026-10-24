@@ -28,7 +28,3 @@ app  (Dioxus Desktop binary)
 - **Generation-tagged results**: every async result carries `document_id +
   generation` so stale renders/searches can be discarded without races.
 
-## Known technical debt
-
-- `app/components/zoom_overlay.rs` was 323 ELOC; split into `zoom_overlay/util.rs`
-  (PNG dimensions + highlight-rect helpers), now 295 ELOC — within the 300 soft limit.

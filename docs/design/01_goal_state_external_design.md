@@ -113,6 +113,14 @@ The v1.1.2 app provides the following visible user functions. The target design 
 | Window title includes opened path | Preserve, but consider privacy setting |
 | Persistent settings | Preserve with schema version |
 
+> **Not carried into v2 (added 2026-10).** Three items of the v1.1.2 baseline were
+> intentionally **not** implemented in v2: *Ctrl + mouse drag panning* (the v1 app's
+> "mouse drag move"), *zoom overlay background lock*, and *zoom overlay
+> transparency* (the rows marked "Preserve" above for the last two were not
+> delivered; the settings key `viewer.zoom_overlay_alpha` stays reserved and
+> non-functional). "Feature parity" in the migration documents refers to the core
+> workflow. See the CHANGELOG `[Unreleased]` → Documentation.
+
 ---
 
 ## 5. Architectural Summary

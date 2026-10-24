@@ -37,10 +37,11 @@
 _(manga by m. thanks)_
 
 - 🟨 PDF ページのタイルレイアウト表示
-- ✊ Ctrl キーを押しながらマウスドラッグして移動
 - 🔧 倍率 / 行あたりページ が変更可能
 - 🔍 ページのズーム表示
 - 📝 ズーム表示でのテキスト選択
+- 🔖 PDF のアウトライン / しおりによるナビゲーション
+- 🔗 PDF 内部リンクの移動と、外部リンクのコピー専用表示（アプリから開くことはしません）
 - 🗺 テキスト検索
 - 🍵 禅モード
 - 🗄 一部設定の保存 (アプリ再起動後も有効)
@@ -53,3 +54,7 @@ _(manga by m. thanks)_
 - **[新規ユーザー向け](docs/src/new-users/):** features, tutorials, FAQ
 - **[中級ユーザー向け](docs/src/intermediate/):** settings reference, keyboard shortcuts
 - **[コントリビューター向け](docs/src/contributors/):** architecture overview, RFC index, local dev guide
+
+## プライバシー
+
+PDF Tile Viewer はお使いのコンピューター上だけで動作し、データを収集しません。詳しくは[プライバシーポリシー](PRIVACY.md)（英語）をご覧ください。

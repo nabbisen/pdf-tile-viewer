@@ -30,7 +30,7 @@ controls in the viewer toolbar.
 | `viewer.pages_per_row` | object | `{ "mode": "auto" }` | `{ "mode": "auto" }` or `{ "mode": "fixed", "value": N }`. |
 | `viewer.show_page_numbers` | `bool` | `false` | Show per-tile page number labels. |
 | `viewer.zoom_overlay_scale` | `float` | `2.7` | Render scale for the zoom overlay (0.2–8.0). |
-| `viewer.zoom_overlay_alpha` | `float \| null` | `null` | Overlay background transparency (0.0–1.0). `null` = not set. |
+| `viewer.zoom_overlay_alpha` | `float \| null` | `null` | **Reserved — not functional in 2.x.** (The zoom overlay has no transparency control.) |
 
 ---
 
@@ -39,8 +39,13 @@ controls in the viewer toolbar.
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `privacy.show_full_path_in_title` | `bool` | `false` | When `true`, the window title shows the full file path instead of just the filename. |
-| `privacy.persist_recent_files` | `bool` | `false` | *(Schema only — session history is always ephemeral in 2.0.0.)* |
-| `privacy.include_full_paths_in_diagnostics` | `bool` | `false` | *(Schema only — not yet used by diagnostics.)* |
+| `privacy.persist_recent_files` | `bool` | `false` | **Reserved — not functional in 2.x.** Setting it to `true` does nothing: the session history is never saved. |
+| `privacy.include_full_paths_in_diagnostics` | `bool` | `false` | **Reserved — not functional in 2.x.** (There are no diagnostics yet.) |
+
+> **Warning — `privacy.persist_recent_files` has no effect.** The list of recently
+> opened files on the dashboard is kept in memory only and is cleared when the app
+> closes, whatever this key says. Persistent history is a planned feature with its own
+> privacy controls and is not part of 2.x.
 
 PDF passwords are not settings. They are never written to `settings.json` and
 must be entered again when needed.
@@ -52,7 +57,7 @@ must be entered again when needed.
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `advanced.render_cache_budget_mb` | `int \| null` | `null` (256 MB) | In-memory render cache budget. Minimum enforced at 64 MB. |
-| `advanced.diagnostics_enabled` | `bool` | `false` | *(Schema only — diagnostics panel not yet implemented.)* |
+| `advanced.diagnostics_enabled` | `bool` | `false` | **Reserved — not functional in 2.x.** (No diagnostics panel exists.) |
 
 ---
 
@@ -62,9 +67,9 @@ must be entered again when needed.
 |-----|------|---------|-------------|
 | `window.width` | `int \| null` | `null` | Saved on document open (measured from viewport); restored at next launch. |
 | `window.height` | `int \| null` | `null` | Saved on document open; restored at next launch. |
-| `window.maximized` | `bool` | `false` | *(Schema only — maximized state not yet tracked.)* |
+| `window.maximized` | `bool` | `false` | **Reserved — not functional in 2.x.** (The maximized state is not tracked.) |
 
-> **Note on "Schema only" fields:** these keys exist in the settings schema
-> (and are preserved in your `settings.json` if written by hand), but the
-> current release does not read or write them yet. They are reserved for
-> future milestones without a breaking settings-file change.
+> **Note on "Reserved" keys:** these keys exist in the settings schema (and are
+> preserved in your `settings.json` if written by hand), but the application does not
+> read or act on them in 2.x. They are kept so that a future version can use them
+> without a breaking change to the settings file.

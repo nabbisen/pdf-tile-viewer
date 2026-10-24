@@ -43,7 +43,6 @@ Sorry for inconvenience, but we are volunteers and the certificates are expensiv
 _(manga by m. thanks)_
 
 - 🟨 Tile layout view on PDF pages
-- ✊ Mouse drag move with Ctrl key pushed
 - 🔧 Scale / pages-per-row changers
 - 🔍 Page zoom view
 - 📝 Text selection in zoom view
@@ -61,3 +60,8 @@ Full documentation lives in `docs/` (mdbook format):
 - **[New users](docs/src/new-users/):** features, tutorials, FAQ
 - **[Intermediate users](docs/src/intermediate/):** settings reference, keyboard shortcuts
 - **[Contributors](docs/src/contributors/):** architecture overview, RFC index, local dev guide
+
+## Privacy
+
+PDF Tile Viewer runs entirely on your computer and collects no data: see the
+[Privacy Policy](PRIVACY.md).

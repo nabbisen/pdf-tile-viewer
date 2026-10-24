@@ -32,5 +32,6 @@
 - [Local Development](contributors/dev.md)
 - [Running Tests](contributors/testing.md)
 - [Release QA Checklist](contributors/release-qa.md)
+- [Versioning Policy](contributors/versioning.md)
 - [Adding a Translation](contributors/i18n.md)
 - [Lessons for Dioxus Desktop Apps](contributors/dioxus-desktop-lessons.md)

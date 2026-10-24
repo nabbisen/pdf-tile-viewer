@@ -16,6 +16,23 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   (RUSTSEC-2026-0257), `wayland-scanner` 0.31.10 → 0.31.11 and `quick-xml`
   0.39.4 → 0.41.0 (RUSTSEC-2026-0194, -0195); `serde_json` 1.0.150 → 1.0.154.
 
+### Documentation
+
+- Clarified what v2 does **not** include. PDF Tile Viewer 2 has no Ctrl + drag
+  panning, no zoom-overlay background lock, and no zoom-overlay transparency
+  control; these v1 behaviors were intentionally not carried over. Earlier
+  "feature parity with v1.1.x" wording meant the core workflow (open, tile grid,
+  scale, search, zoom, zen mode), not every v1 gesture. Removed the Ctrl + drag
+  claim from the READMEs.
+- Settings reference: the keys `privacy.persist_recent_files`,
+  `privacy.include_full_paths_in_diagnostics`, `advanced.diagnostics_enabled`,
+  `window.maximized` and `viewer.zoom_overlay_alpha` exist in the file schema but are
+  **reserved and not functional** in 2.x; in particular, setting
+  `privacy.persist_recent_files` to `true` has no effect.
+- Added the versioning policy (contributor guide), linked the privacy policy from
+  the READMEs, and corrected documentation drift (platform list, RFC index, roadmap,
+  architecture notes).
+
 ---
 
 ## [2.0.1] - 2026-10-24
@@ -32,7 +49,7 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
-## [2.0.0]
+## [2.0.0] - 2026-07-14
 
 ### Added
 

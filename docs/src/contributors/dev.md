@@ -262,7 +262,10 @@ enabled, `github-actions[bot]` needs an explicit bypass for this push.
 
 ### Release procedure
 
-Order of work for a release (owner: tagging and publishing; DEC-001):
+Order of work for a release (owner: tagging and publishing; DEC-001). What a
+patch, minor or major version means is defined in the
+[Versioning Policy](versioning.md).
+
 
 1. Write the CHANGELOG section as `## [X.Y.Z] - unreleased` (people write release
    notes) and commit it to `main`; wait for CI.
