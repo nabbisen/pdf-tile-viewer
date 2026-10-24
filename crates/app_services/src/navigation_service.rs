@@ -239,6 +239,11 @@ impl NavigationService {
     pub fn page_link_page_count(&self) -> usize {
         self.cache.lock().unwrap().page_link_page_count()
     }
+
+    #[cfg(test)]
+    pub(crate) fn cache(&self) -> &Arc<Mutex<NavigationCache>> {
+        &self.cache
+    }
 }
 
 pub fn default_outline_request(

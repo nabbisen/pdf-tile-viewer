@@ -144,6 +144,22 @@ impl EngineHandle {
         ))
     }
 
+    /// A handle with no worker behind it: every request fails with [`EngineGone`].
+    ///
+    /// For callers that need the services' cache logic without PDFium (tests of
+    /// `app_services`); it never binds or spawns anything.
+    pub fn unavailable() -> Self {
+        let (sender, _receiver) = mpsc::channel::<Command>();
+        EngineHandle {
+            sender,
+            load_report: PdfiumLoadReport {
+                resolved_dir: PathBuf::new(),
+                version: None,
+            },
+            identity: std::sync::Arc::new(()),
+        }
+    }
+
     pub fn open_document(
         &self,
         path: PathBuf,

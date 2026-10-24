@@ -197,6 +197,11 @@ impl TextLayerService {
     pub fn cache_entry_count(&self) -> usize {
         self.cache.lock().unwrap().entry_count()
     }
+
+    #[cfg(test)]
+    pub(crate) fn cache(&self) -> &Arc<Mutex<TextLayerCache>> {
+        &self.cache
+    }
 }
 
 pub fn layer_matches_request(layer: &PageTextLayer, request: &TextLayerRequest) -> bool {

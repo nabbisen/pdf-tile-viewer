@@ -192,6 +192,9 @@ impl RenderService {
             if let Some(bytes) = cache.get(&key) {
                 return Ok(bytes);
             }
+            if cache.is_session_closed(key.document_id, key.document_generation) {
+                return Err(RenderError::DocumentNotOpen);
+            }
         }
 
         // Cache miss — delegate to the engine worker.
@@ -207,6 +210,10 @@ impl RenderService {
 
         {
             let mut cache = self.cache.lock().unwrap();
+            // The session may have been closed while the engine rendered.
+            if cache.is_session_closed(key.document_id, key.document_generation) {
+                return Err(RenderError::DocumentNotOpen);
+            }
             cache.insert(key, bytes.clone());
         }
         Ok(bytes)
@@ -229,6 +236,11 @@ impl RenderService {
 
     pub fn cache_entry_count(&self) -> usize {
         self.cache.lock().unwrap().entry_count()
+    }
+
+    #[cfg(test)]
+    pub(crate) fn cache(&self) -> &Arc<Mutex<RenderCache>> {
+        &self.cache
     }
 }
 

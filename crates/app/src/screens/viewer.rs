@@ -8,6 +8,7 @@ use dioxus::prelude::*;
 use app_services::navigation_service::{NavigationService, default_outline_request};
 use app_services::platform::reveal_in_file_manager;
 use app_services::render_service::RenderService;
+use app_services::session_service::SessionService;
 use app_services::settings_service::SettingsStore;
 use domain::document::PageIndex;
 use domain::layout::{
@@ -37,8 +38,16 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
     let settings_store: SettingsStore = use_context();
     let navigation_service: NavigationService = use_context();
     let render_service: RenderService = use_context();
+    let session_service: SessionService = use_context();
 
     let session = view.session.clone();
+
+    // The viewer owns the open session: leaving it (back to the dashboard) closes the
+    // session in every cache and in the engine (RFC 035). Plain values only, no `spawn`.
+    use_drop({
+        let (id, generation) = (session.id, session.generation);
+        move || session_service.close(id, generation)
+    });
     let page_count = session.pages.len();
     let display_name = session.display_name.clone();
     let doc_path = match &session.source {
