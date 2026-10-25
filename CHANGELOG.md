@@ -11,6 +11,14 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Error and status messages are now written for people and translated (RFC 037). A failed search, a page
+  that cannot be rendered, a file manager that cannot be opened, an outline that cannot be read and a
+  wrong page number in "Go to page" each show a plain, localized sentence in English or Japanese; the
+  internal text (`SearchFailed("…")` and similar) is no longer shown. A search for fewer than two
+  characters now says so instead of doing nothing, and "1 match" / "N matches" use the right form.
+- Accessibility: icon buttons, the tile-size slider and the page-number fields have names; results and
+  errors are announced as live regions; the viewer has a main landmark (also in zen mode); the window
+  title and the page language follow the interface language and the open document.
 - Keyboard handling is now one consistent model (RFC 033). Typing `z`, `0`, `-`, `+` or `=` in the
   search box, the jump-to-page or columns field, or the password field no longer changes the zoom or
   toggles zen mode; keys pressed in the zoom overlay or in a dialog no longer reach the tile grid

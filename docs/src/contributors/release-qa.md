@@ -95,6 +95,15 @@ must not close or freeze at any step.
 - [ ] In the overlay, press **Next** (or `→`) until the last page: `Escape` still closes the overlay.
 - [ ] `Escape` with a dialog on top of the overlay closes only the dialog; the next `Escape` closes only the overlay; the next one (nothing open) returns to the dashboard.
 
+## 5b. Names, messages and language (RFC 037)
+
+- [ ] Every control in the viewer has a name that matches its meaning (no control is announced as an emoji or as nothing): the search, reveal, zen and exit-zen buttons, the tile-size slider (with its value, e.g. "1.4×"), the page-number checkbox, the jump-to-page and columns fields.
+- [ ] A search with results says "1 match found / 1p" for one match and "N matches found / Pp" otherwise; a search for fewer than two characters shows "Enter at least 2 characters."; a search without results says so.
+- [ ] A wrong page number in "Go to page" shows one sentence ("Enter a page number between 1 and the last page.").
+- [ ] Opening a file that is not a PDF, or **Show in File Manager** without a file manager, shows a plain sentence without a path or technical text.
+- [ ] The same messages appear in Japanese after switching the interface language.
+- [ ] The window title and the web document title are `<file> — PDF Tile Viewer` (or the app name on the dashboard); with a screen reader, results and errors are announced without moving the focus (owner's listening session).
+
 ## 6. Search
 
 - [ ] The 🔍 button opens the search panel.

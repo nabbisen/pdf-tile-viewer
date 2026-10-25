@@ -92,11 +92,22 @@ change_scale(current + 0.2);
   - Dialogs need an **inert background**, not only `aria-modal`. Screens other
     than the first lacked a `main` landmark. Plural strings ("1 matches") need
     plural-aware i18n.
+  - Two controls with the same accessible name are as confusing as none: the
+    toolbar's search toggle and the panel's "Search" button both said "Search";
+    the toggle is now "Find in document".
+  - Error text built from `{:?}` reaches users unnoticed. Store a catalog key in
+    the UI state, never a formatted error; map each failure family with one
+    exhaustive `match`; keep `clippy::use_debug` on.
   The inert background and the focus rules for dialogs, panels and zen mode were
   fixed in 2.0.2 (RFC 033; `inert` is supported by WebKitGTK and was verified on
-  Linux); names, document title and language, live regions and landmarks are
-  tracked in RFC 037. Keyboard navigation of the tile grid and a fuller
-  screen-reader pass are planned for the next minor release.
+  Linux). Names, document title and language, live regions, the `main` landmark
+  and plural forms were fixed in 2.0.2 (RFC 037) and verified on Linux from the
+  accessibility tree (no unnamed control in 13 UI states; one `main`; `status`
+  and `alert` regions that exist before their text changes) and, for `lang`,
+  from the page itself (this WebKitGTK does not expose `lang` through AT-SPI, so a
+  debug build reads `document.documentElement.lang` back). Whether a screen reader
+  *announces* them is not verified yet. Keyboard navigation of the tile grid and a
+  fuller screen-reader pass are planned for the next minor release.
 - **Limits.** The screen reader tested (Orca) cannot inject its own navigation
   keys on Wayland, so reading page content was not evaluated; Narrator and
   VoiceOver were not run. Plan a **human listening session**.
@@ -148,7 +159,8 @@ change_scale(current + 0.2);
 
 - **Observed.** Returning to the start screen left the native document, its
   session and caches alive (about +100 MB per open of a large file). Tie native
-  resources to an explicit close path. Tracked in RFC 035.
+  resources to an explicit close path. Fixed in 2.0.2 (RFC 035): the viewer closes
+  its session on unmount and the engine's session count stays at one.
 - **Source.** Dioxus provides `use_drop` for unmount hooks and `spawn_forever` for
   tasks that must outlive a scope; tasks started with `spawn` are cancelled with
   their scope. If the backend command is sent when you call it (as it is here), a
