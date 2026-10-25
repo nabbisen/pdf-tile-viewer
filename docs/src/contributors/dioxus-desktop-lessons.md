@@ -116,6 +116,12 @@ change_scale(current + 0.2);
   idle) but **plateaued** rather than growing without bound, and moving the bytes from
   `data:` URLs to a custom protocol lowered the total by only about 15 %. The
   WebView's own image caching is the likely driver; its size is platform-dependent.
+- **The saving depends on the content (Observed).** On a 100-page image-heavy PDF the
+  same retention window halved the total after scrolling to the end and back (about
+  0.8 GB instead of 1.6 GB, and it plateaued), because there the application process
+  dominated. On a 1000-page text PDF the total fell by only about 9 %, because the
+  WebView's own memory dominated. Measure each document type you care about; one
+  number does not describe a viewer.
 - **Remedy under evaluation.** Serve images through a custom protocol instead of
   megabytes of base64 (**Source:** `dioxus-desktop` provides `use_asset_handler`).
   If you add a protocol handler, serve only cache entries addressed by opaque ids,

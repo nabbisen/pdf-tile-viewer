@@ -209,4 +209,33 @@ assumption of this RFC that the measurements do not support.
 - New finding (not fixable here): after a fast scroll over large images the scheduler keeps
   rendering pages already scrolled past for tens of seconds (no cancellation, repeated
   requests); it belongs to the render-pipeline RFC (F14).
-- Pending: the image-heavy document (where the app process dominated in WP0).
+- The image-heavy document is reported in § 9.2.
+
+### 9.2 Image-heavy result (2026-10-25, image-100, 1042×1134 window, one tile per row)
+
+One run per build, recorded-state wait (poll the accessibility tree until the destination
+tile has its image), then the RSS reading; no anomaly.
+
+| Step (total MB) | before (`a8ca205`) | after (`07c71fa`) |
+|---|---:|---:|
+| after open | 584 | 590 |
+| scroll down (pass 1) | 894 | 749 |
+| back to top (pass 1) | 1 566 | 805 (**51 %** of before) |
+| second down and back | 1 742 | 836 (48 %) |
+
+- **Met on this document:** ≤ 55 % after one down-and-back (51 % of the base commit; 53 % of
+  the 2.0.1 reference of § 2, which was measured at another window geometry) and plateau
+  (second pass adds 3.9 %; the base commit keeps growing, +11 %).
+- **Overall acceptance of § 7 remains partly met:** image-100 meets the 55 % criterion,
+  text-1000 does not (91 %, § 9). The criterion is not changed. The saving is largest where
+  the application process dominates (image-heavy), and small where the WebView's own memory
+  dominates (long text documents).
+- The base commit's figure approaches "every page resident" (1.7 GB for 100 large pages), so
+  the ratio is document-size dependent: a longer image-heavy document would show a larger
+  saving, a shorter one a smaller one.
+- Single run per build, Linux/WebKitGTK only; WebView2 is unmeasured (release-QA Windows
+  memory check). The time for the first scroll down to finish rendering (31 s before, 41 s
+  after; 0–2 s afterwards) is one sample each; no conclusion is drawn from the difference. It
+  is the render backlog of F14.
+- **Decision for 2.0.2 (owner):** ship as is. User-facing wording stays "reduced memory
+  growth", with the measured image-heavy figure stated as a measurement, not a guarantee.

@@ -316,4 +316,11 @@ roadmap checkpoint.
   stale requests, so after a fast scroll over large images the app renders pages the user has
   already left for tens of seconds. The RFC must cover coalescing, priorities and cancellation
   (engine protocol change) together with the transport.
+- Measured on image-100 (Linux): the first full scroll down took 31 s (without RFC 040) and
+  41 s (with it) until the last page's image appeared; later scrolls took 0-2 s because the
+  render cache served them. One sample each. A "last tile has an image" wait is not a
+  quiescence test (earlier requests may still be running): the RFC needs a recorded
+  "render queue empty" state to measure against.
+- With retention, the saving depends on the document: image-heavy 100 pages about 50 %,
+  1000 text pages about 9 %. Judge a transport change per document type.
 
