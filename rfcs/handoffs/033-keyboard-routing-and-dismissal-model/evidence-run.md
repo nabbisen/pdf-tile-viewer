@@ -9,7 +9,7 @@ Schedule: first dev task, **4 working days** (Parts A, B, C; was 3 before Part C
 
 Background: the architect onboarding review found suspected defects by reading code. This task turns suspicions into evidence and measures large-document behavior. Do not fix anything; report.
 
-Environment: Linux (niri). Resize the window to 1280×720 first. Screenshots: `niri msg action screenshot-window --id <id> --path <relative-path-from-project-root>` (not ImageMagick `import`). Focus the window before typing with `xdotool`. Debug build with `PDF_TILE_VIEWER_PDFIUM_DIR=$(pwd)/ci/.pdfium`.
+Environment: Linux (niri). Window 1280×720 obtained at launch (the isolated `settings.json`), never by resizing a running window. Screenshots: `niri msg action screenshot-window --id <id> --path <absolute-path-under-project-root>` (niri rejects relative paths; not ImageMagick `import`). Keys: `wtype` only (xdotool keys do not reach this app); `xdotool` is for pointer actions on the X11 backend. Current rules: `.git-exclude/rules/project-instructions-gui-common.md`. Debug build with `PDF_TILE_VIEWER_PDFIUM_DIR=$(pwd)/ci/.pdfium`.
 
 ---
 
@@ -36,7 +36,7 @@ Record each as **Confirmed / Not reproduced / Differs**, with a screenshot or ex
 Why: the owner asked whether screen readers work on our app after an accessibility deficit was found in another WebKitGTK-based project (a Flatpak whose WebKit sandbox/app-id setup hid the accessibility tree). We do not ship a Flatpak (Linux release is a tarball), so that exact cause is out of scope (**C10**), but our own accessibility must be measured. RFC 013 § 9–§ 10 and RFC 037 § 5.4 state requirements; this part checks them with evidence. **Observe and report; do not fix.**
 
 ### Safety rules for input tools (mandatory)
-- `wtype` and `xdotool` send keys to **whatever window has focus**. The desktop also holds other terminals and sessions. **Before every `wtype`/`xdotool` call** run `niri msg --json windows` and confirm the focused window is the app (`app_id` `pdf-tile-viewer`) or its file-chooser dialog; if not, focus it with `niri msg action focus-window --id <id>` and re-check. Never type while any other window is focused.
+- `wtype` sends keys to **whatever window has focus** (`xdotool` keys do not reach this app; probed 2026-10-25). The desktop also holds other terminals and sessions. **Immediately before every `wtype` call** run `niri msg -j focused-window` and confirm its `pid` is the instance under test (or its file-chooser dialog) or its file-chooser dialog; if not, focus it with `niri msg action focus-window --id <id>` and re-check. Never type while any other window is focused.
 - Prefer AT-SPI actions (`atspi.py press|focus`) over synthesized keys wherever possible; use `wtype` only for things that need real key events (shortcut and Tab-order tests).
 - Close the app after each run. Never leave a test window open between sessions.
 
