@@ -59,14 +59,14 @@ must not close or freeze at any step.
 - [ ] `Z` enters zen mode: toolbar and controls are hidden, only the exit `×` remains.
 - [ ] `Z` again (or `×`) leaves zen mode.
 - [ ] `Escape` in zen mode (nothing else open) leaves zen mode.
-- [ ] `Escape` with nothing open returns to the dashboard — **documented today; changes with RFC 033** (Escape will stop leaving the document; update this line then).
-- [ ] Typing `z`, `0`, `-`, `+`, `=` in the search box types the characters without zen or scale changes — **known failing until RFC 033**.
-- [ ] Same for the jump-to-page input and the columns input — **known failing until RFC 033**.
+- [ ] `Escape` with nothing open returns to the dashboard (documented 2.0.x behavior; from 2.1.0 it will do nothing, update this line then).
+- [ ] Typing `z`, `0`, `-`, `+`, `=` in the search box types the characters without zen or scale changes.
+- [ ] Same for the jump-to-page input and the columns input.
 
 ## 4. Pages per row, page numbers, jump
 
 - [ ] **Auto** adapts the number of columns to the window width (resize the window, columns follow) — **known failing until the viewport-tracking RFC**.
-- [ ] The columns toggle can switch to **Fixed** and a number 1–24 sets the column count — **known failing until RFC 033** (unreachable today).
+- [ ] The columns control can switch to **Fixed** (starting at the number of columns shown), a number 1–24 sets the column count, and **Auto** restores the automatic count.
 - [ ] The page-number checkbox shows and hides a number under each tile.
 - [ ] Jump: typing `40` and pressing Enter (or **Go**) scrolls page 40 into view.
 - [ ] Jump: an invalid number shows an inline hint and does not scroll.
@@ -78,11 +78,22 @@ must not close or freeze at any step.
 - [ ] `Home` shows page 1; `End` shows the last page.
 - [ ] `+` and `=` raise the overlay zoom by 30 percentage points; `-` lowers it; limits 50% and 800%.
 - [ ] The overlay's own `+`/`−` buttons do the same; neither the keys nor the buttons close the application.
-- [ ] While the overlay is open, `+` / `-` do not change the tile-grid scale after closing — **known failing until RFC 033**.
-- [ ] `Escape` closes the overlay and the viewer stays open — **known failing until RFC 033** (today it also returns to the dashboard).
+- [ ] While the overlay is open, `+` / `-` do not change the tile-grid scale after closing.
+- [ ] `Escape` closes the overlay and the viewer stays open (one press closes one layer; also after stepping to the last page with the **Next** button).
 - [ ] The **Close** button closes the overlay and the viewer stays open.
 - [ ] With a search active, highlights appear on the zoomed page at the matching text.
 - [ ] Dragging over text selects it; copying yields the selected text.
+
+## 5a. Focus and layers (RFC 033)
+
+- [ ] Opening a document focuses the viewer: `Z` works without clicking first.
+- [ ] Opening the search panel puts the cursor in its field; `Escape` there closes the panel and focuses the 🔍 button.
+- [ ] Opening the outline focuses its first entry; closing it focuses the **Outline** button.
+- [ ] Entering zen mode keeps shortcuts working; `Escape` (or `×`) leaves it and focuses the zen button.
+- [ ] The zoom overlay focuses its **Close** button; `Tab` / `Shift + Tab` stay inside it; the page behind it is inert (no focus, no clicks); closing it returns the focus to the viewer.
+- [ ] The external-link dialog and the password prompt behave the same; closing the dialog returns the focus to the link that opened it.
+- [ ] In the overlay, press **Next** (or `→`) until the last page: `Escape` still closes the overlay.
+- [ ] `Escape` with a dialog on top of the overlay closes only the dialog; the next `Escape` closes only the overlay; the next one (nothing open) returns to the dashboard.
 
 ## 6. Search
 

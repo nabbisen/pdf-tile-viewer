@@ -11,6 +11,18 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Keyboard handling is now one consistent model (RFC 033). Typing `z`, `0`, `-`, `+` or `=` in the
+  search box, the jump-to-page or columns field, or the password field no longer changes the zoom or
+  toggles zen mode; keys pressed in the zoom overlay or in a dialog no longer reach the tile grid
+  underneath; one `Escape` closes exactly one layer (dialog, zoom overlay, search, outline, zen) and
+  never also leaves the document. `Escape` with nothing open still returns to the dashboard in this
+  release (that step is planned for 2.1.0).
+- Dialogs and the zoom overlay now keep the keyboard and the focus: focus moves into the layer, `Tab`
+  stays inside, the page behind is inert while it is open, and the focus returns to where it was when
+  it closes. The same focus rules apply to the search and outline panels and to leaving zen mode
+  (focus used to be lost on the page body, which made the keyboard inert).
+- The columns control is now **Auto | Fixed** with a number field for Fixed (it used to be impossible
+  to reach Fixed from Auto). Switching to Fixed starts at the number of columns shown at that moment.
 - Reduced memory growth while scrolling through long documents (RFC 040): rendered pages
   are kept only within about two screen heights of the view (and at most 80 at a time);
   pages further away are released and show the loading placeholder when you scroll back

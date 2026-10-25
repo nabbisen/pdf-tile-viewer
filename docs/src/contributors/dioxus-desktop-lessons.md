@@ -51,7 +51,7 @@ change_scale(current + 0.2);
   **every descendant**, including text inputs and overlays rendered inside it.
 - **Observed.** Typing `z` in a search box toggled a viewer mode and removed the
   search panel; `0` reset the zoom while a page number was being typed; `Escape`
-  inside an overlay closed it *and* left the document. Tracked in RFC 033.
+  inside an overlay closed it *and* left the document. Fixed in 2.0.2 (RFC 033).
 - **A design that works:**
   1. one pure resolver, `resolve(context, key) -> Option<Action>`, unit-tested
      without any UI;
@@ -60,7 +60,11 @@ change_scale(current + 0.2);
   3. editable fields use **one shared helper** (do not rely on every developer
      remembering to stop propagation);
   4. a documented **dismissal order**; Escape dismisses the top-most transient
-     layer and never navigates away.
+     layer and never navigates away;
+  5. a modal layer must **keep the focus inside itself**: a focused control that
+     becomes disabled (a "Next" button on the last page, a zoom button at its
+     limit) silently drops the focus to the page body, where the layer receives no
+     key at all (not even Escape). Watch for it and put the focus back.
 
 ## 3. Accessibility in a WebView desktop application
 
@@ -88,8 +92,11 @@ change_scale(current + 0.2);
   - Dialogs need an **inert background**, not only `aria-modal`. Screens other
     than the first lacked a `main` landmark. Plural strings ("1 matches") need
     plural-aware i18n.
-  Tracked in RFC 033 and RFC 037; keyboard navigation of the tile grid and a
-  fuller screen-reader pass are planned for the next minor release.
+  The inert background and the focus rules for dialogs, panels and zen mode were
+  fixed in 2.0.2 (RFC 033; `inert` is supported by WebKitGTK and was verified on
+  Linux); names, document title and language, live regions and landmarks are
+  tracked in RFC 037. Keyboard navigation of the tile grid and a fuller
+  screen-reader pass are planned for the next minor release.
 - **Limits.** The screen reader tested (Orca) cannot inject its own navigation
   keys on Wayland, so reading page content was not evaluated; Narrator and
   VoiceOver were not run. Plan a **human listening session**.
