@@ -237,5 +237,5 @@ tile has its image), then the RSS reading; no anomaly.
   memory check). The time for the first scroll down to finish rendering (31 s before, 41 s
   after; 0–2 s afterwards) is one sample each; no conclusion is drawn from the difference. It
   is the render backlog of F14.
-- **Decision for 2.0.2 (owner):** ship as is. User-facing wording stays "reduced memory
+- **Decision for 2.0.2 (owner, approved 2026-10-25):** ship as is. User-facing wording stays "reduced memory
   growth", with the measured image-heavy figure stated as a measurement, not a guarantee.
