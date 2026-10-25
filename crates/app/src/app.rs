@@ -2,7 +2,7 @@
 
 use std::path::PathBuf;
 
-use dioxus::document::Title;
+use dioxus::document::{self, Title};
 use dioxus::prelude::*;
 
 use app_services::document_service::{self, OpenDocumentOutcome};
@@ -17,6 +17,7 @@ use domain::document::DocumentPassword;
 use crate::components::error_panel::ErrorPanel;
 use crate::components::password_prompt::PasswordPrompt;
 use crate::i18n::{self, Locale, MessageKey, t};
+use crate::page_meta;
 use crate::screens::dashboard::Dashboard;
 use crate::screens::viewer::Viewer;
 use crate::state::{self, OpenDocumentView, PasswordPromptState, Phase};
@@ -67,6 +68,31 @@ pub fn App() -> Element {
     // Provide settings store for downstream save callbacks.
     use_context_provider(|| settings_store);
 
+    // One title for the window and for the web document (RFC 016 § 7: full path only when opted in).
+    let window_title = use_memo(move || {
+        let app_title = t(locale(), MessageKey::AppTitle);
+        match &*phase.read() {
+            Phase::Viewer(view) => {
+                let name = if settings.read().privacy.show_full_path_in_title {
+                    match &view.session.source {
+                        domain::document::DocumentSource::LocalFile { path, .. } => {
+                            path.display().to_string()
+                        }
+                    }
+                } else {
+                    view.session.display_name.clone()
+                };
+                page_meta::title_text(app_title, Some(&name))
+            }
+            _ => page_meta::title_text(app_title, None),
+        }
+    });
+    // `<html lang>` and `document.title` follow the locale and the open document.
+    use_effect(move || {
+        let script = page_meta::meta_script(page_meta::lang_tag(locale()), &window_title.read());
+        let _ = document::eval(&script);
+    });
+
     let body = match &*phase.read() {
         Phase::Dashboard => {
             let open_picker = open_action(
@@ -116,22 +142,7 @@ pub fn App() -> Element {
     rsx! {
         style { {STYLE} }
         // Window title: privacy.show_full_path_in_title controls the path (RFC 016 §7).
-        {match &*phase.read() {
-            Phase::Viewer(view) => {
-                let app_title = t(locale(), MessageKey::AppTitle);
-                let title = if settings.read().privacy.show_full_path_in_title {
-                    match &view.session.source {
-                        domain::document::DocumentSource::LocalFile { path, .. } => {
-                            format!("{} — {app_title}", path.display())
-                        }
-                    }
-                } else {
-                    format!("{} — {app_title}", view.session.display_name)
-                };
-                rsx! { Title { "{title}" } }
-            }
-            _ => rsx! { Title { {t(locale(), MessageKey::AppTitle)} } },
-        }}
+        Title { "{window_title.read()}" }
         div { class: "app-shell",
             if let Some(boot_error) = state::engine_boot_error() {
                 {

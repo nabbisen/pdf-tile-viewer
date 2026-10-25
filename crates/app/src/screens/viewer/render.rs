@@ -17,6 +17,7 @@ use domain::layout::{
 };
 use domain::render::{RenderFlags, RenderOutputFormat, RenderPageRequest, ScaleBucket};
 
+use crate::i18n::failure;
 use crate::state::{TileImageState, TileImages};
 
 /// Prefetch window above and below the visible area (px).
@@ -156,7 +157,10 @@ pub fn schedule_visible_renders(
                     let mut images = ti.write();
                     // A failed re-render does not remove the image that is already shown.
                     if !matches!(images.get(&page_index), Some(TileImageState::Ready { .. })) {
-                        images.insert(page_index, TileImageState::Failed(format!("{e:?}")));
+                        images.insert(
+                            page_index,
+                            TileImageState::Failed(failure::render_failed(&e)),
+                        );
                     }
                 }
             }

@@ -14,7 +14,8 @@ pub enum OutlinePanelState {
     Idle,
     Loading,
     Ready(DocumentOutline),
-    Unavailable,
+    /// Why the outline could not be read, as a catalog key.
+    Unavailable(MessageKey),
 }
 
 #[component]
@@ -53,8 +54,8 @@ pub fn OutlinePanel(
                 OutlinePanelState::Idle | OutlinePanelState::Loading => rsx! {
                     p { class: "muted outline-status", {t(locale(), MessageKey::OutlineLoading)} }
                 },
-                OutlinePanelState::Unavailable => rsx! {
-                    p { class: "muted outline-status", {t(locale(), MessageKey::OutlineUnavailable)} }
+                OutlinePanelState::Unavailable(key) => rsx! {
+                    p { class: "muted outline-status", role: "alert", {t(locale(), key)} }
                 },
                 OutlinePanelState::Ready(outline) if outline.roots.is_empty() => rsx! {
                     p { class: "muted outline-status", {t(locale(), MessageKey::OutlineEmpty)} }

@@ -10,6 +10,8 @@ use std::sync::OnceLock;
 
 use domain::document::{DocumentSession, PageIndex};
 use domain::render::ScaleBucket;
+
+use crate::i18n::MessageKey;
 use pdf_engine::worker::EngineHandle;
 
 /// Result of pre-UI engine boot. `Err` carries a user-presentable
@@ -46,7 +48,8 @@ pub enum TileImageState {
         uri: String,
         bucket: ScaleBucket,
     },
-    Failed(String),
+    /// Why the render failed, as a catalog key: no formatted error ever reaches the UI (RFC 037).
+    Failed(MessageKey),
 }
 
 /// Per-document tile-image map: page index → render state.
@@ -94,5 +97,7 @@ pub enum SearchState {
     NoResults {
         query: SearchQuery,
     },
-    Failed(String),
+    /// A submitted query was shorter than `MIN_QUERY_CHARS`: shown as a hint, nothing was searched.
+    QueryTooShort,
+    Failed(MessageKey),
 }

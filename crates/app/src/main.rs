@@ -5,10 +5,15 @@
 //! 2. Resolve + bind PDFium on the engine worker thread (RFC 003).
 //! 3. Launch Dioxus Desktop with the configured window.
 
+// `{:?}` in UI code is how internal error text reaches users (RFC 037 § 5.5); tests are exempt. The one
+// sanctioned place is `i18n::failure::log_detail` (stderr, debug builds).
+#![cfg_attr(not(test), warn(clippy::use_debug))]
+
 mod app;
 mod components;
 mod i18n;
 mod keys;
+mod page_meta;
 mod screens;
 mod state;
 

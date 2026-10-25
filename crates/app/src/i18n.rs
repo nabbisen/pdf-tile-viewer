@@ -65,7 +65,6 @@ pub enum MessageKey {
     ErrWrongExtension,
     ErrNotAPdf,
     ErrUnreadable,
-    ErrEncryptedUnsupported,
     ErrPdfParseFailed,
     ErrTooLarge,
     ErrUnknown,
@@ -83,7 +82,6 @@ pub enum MessageKey {
     OutlineClose,
     OutlineLoading,
     OutlineEmpty,
-    OutlineUnavailable,
     OutlineUntitled,
     OutlineUnsupported,
     OutlineExpand,
@@ -94,7 +92,6 @@ pub enum MessageKey {
     SearchSummaryMatches, // summary text; distinct from badge text for context-specific copy.
     SearchNoMatches,
     Searching,
-    SearchErrorPrefix,
     SearchPagesPrefix,
     SearchMatchBadgeSuffix,
     CloseSearch,
@@ -132,6 +129,17 @@ pub enum MessageKey {
     ZenModeExit,
     ReopenDocument,
     PageCountSuffix,
+    ErrDocumentNotOpen,
+    ErrSearchFailed,
+    ErrNavigationFailed,
+    ErrRevealNoFolder,
+    ErrRevealFailed,
+    SearchQueryTooShort,
+    JumpInvalidPage,
+    SearchToggleLabel,
+    TileSizeLabel,
+    SearchSummaryMatchOne,
+    SearchMatchBadgeOne,
 }
 
 impl MessageKey {
@@ -157,7 +165,6 @@ impl MessageKey {
         MessageKey::ErrWrongExtension,
         MessageKey::ErrNotAPdf,
         MessageKey::ErrUnreadable,
-        MessageKey::ErrEncryptedUnsupported,
         MessageKey::ErrPdfParseFailed,
         MessageKey::ErrTooLarge,
         MessageKey::ErrUnknown,
@@ -175,7 +182,6 @@ impl MessageKey {
         MessageKey::OutlineClose,
         MessageKey::OutlineLoading,
         MessageKey::OutlineEmpty,
-        MessageKey::OutlineUnavailable,
         MessageKey::OutlineUntitled,
         MessageKey::OutlineUnsupported,
         MessageKey::OutlineExpand,
@@ -186,7 +192,6 @@ impl MessageKey {
         MessageKey::SearchSummaryMatches,
         MessageKey::SearchNoMatches,
         MessageKey::Searching,
-        MessageKey::SearchErrorPrefix,
         MessageKey::SearchPagesPrefix,
         MessageKey::SearchMatchBadgeSuffix,
         MessageKey::CloseSearch,
@@ -224,6 +229,17 @@ impl MessageKey {
         MessageKey::ZenModeExit,
         MessageKey::ReopenDocument,
         MessageKey::PageCountSuffix,
+        MessageKey::ErrDocumentNotOpen,
+        MessageKey::ErrSearchFailed,
+        MessageKey::ErrNavigationFailed,
+        MessageKey::ErrRevealNoFolder,
+        MessageKey::ErrRevealFailed,
+        MessageKey::SearchQueryTooShort,
+        MessageKey::JumpInvalidPage,
+        MessageKey::SearchToggleLabel,
+        MessageKey::TileSizeLabel,
+        MessageKey::SearchSummaryMatchOne,
+        MessageKey::SearchMatchBadgeOne,
     ];
 }
 
@@ -235,34 +251,41 @@ pub fn t(locale: Locale, key: MessageKey) -> &'static str {
     }
 }
 
-/// Map intake/engine errors to message keys at the UI boundary (§6).
+/// Map intake/engine errors to message keys at the UI boundary (§6). Exhaustive: a new
+/// `OpenFailure` variant fails compilation here. `PasswordRequired` cannot arrive (RFC 037 § 5.2).
 pub fn open_error_key(error: &app_services::document_service::OpenError) -> MessageKey {
     use app_services::document_service::{IntakeRejection, OpenError};
-    use domain::document::DocumentError;
+    use domain::document::OpenFailure;
     match error {
         OpenError::Rejected(IntakeRejection::NotFound) => MessageKey::ErrFileNotFound,
         OpenError::Rejected(IntakeRejection::NotAFile) => MessageKey::ErrNotAFile,
         OpenError::Rejected(IntakeRejection::WrongExtension) => MessageKey::ErrWrongExtension,
         OpenError::Rejected(IntakeRejection::NotAPdf) => MessageKey::ErrNotAPdf,
         OpenError::Rejected(IntakeRejection::Unreadable) => MessageKey::ErrUnreadable,
-        OpenError::Engine(DocumentError::FileNotFound) => MessageKey::ErrFileNotFound,
-        OpenError::Engine(DocumentError::FileNotReadable) => MessageKey::ErrUnreadable,
-        OpenError::Engine(DocumentError::UnsupportedFile) => MessageKey::ErrNotAPdf,
-        OpenError::Engine(DocumentError::EncryptedUnsupported) => {
-            MessageKey::ErrEncryptedUnsupported
-        }
-        OpenError::Engine(DocumentError::PasswordRequired) => {
-            debug_assert!(
-                std::env::var_os("PDF_TILE_VIEWER_ALLOW_PASSWORD_REQUIRED_ERROR_PATH").is_some(),
-                "PasswordRequired must be handled as an open outcome, not a display error"
-            );
-            MessageKey::ErrEncryptedUnsupported
-        }
-        OpenError::Engine(DocumentError::PdfParseFailed) => MessageKey::ErrPdfParseFailed,
-        OpenError::Engine(DocumentError::TooLargeForPolicy) => MessageKey::ErrTooLarge,
-        OpenError::Engine(DocumentError::PdfiumUnavailable) | OpenError::EngineUnavailable => {
+        OpenError::Engine(OpenFailure::FileNotFound) => MessageKey::ErrFileNotFound,
+        OpenError::Engine(OpenFailure::FileNotReadable) => MessageKey::ErrUnreadable,
+        OpenError::Engine(OpenFailure::UnsupportedFile) => MessageKey::ErrNotAPdf,
+        OpenError::Engine(OpenFailure::PdfParseFailed) => MessageKey::ErrPdfParseFailed,
+        OpenError::Engine(OpenFailure::TooLargeForPolicy) => MessageKey::ErrTooLarge,
+        OpenError::Engine(OpenFailure::PdfiumUnavailable) | OpenError::EngineUnavailable => {
             MessageKey::EngineUnavailableTitle
         }
-        OpenError::Engine(DocumentError::Unknown(_)) => MessageKey::ErrUnknown,
+        OpenError::Engine(OpenFailure::Unknown(_)) => MessageKey::ErrUnknown,
     }
 }
+
+/// Plural-aware choice between two catalog strings (RFC 037 § 5.6.5). English has one singular
+/// (exactly 1); Japanese has no plural form, so `other` is always used.
+pub fn plural(
+    locale: Locale,
+    count: usize,
+    one: &'static str,
+    other: &'static str,
+) -> &'static str {
+    match locale {
+        Locale::En if count == 1 => one,
+        Locale::En | Locale::Ja => other,
+    }
+}
+
+pub mod failure;

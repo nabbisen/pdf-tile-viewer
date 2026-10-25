@@ -30,9 +30,6 @@ pub fn message(key: MessageKey) -> Option<&'static str> {
         MessageKey::ErrWrongExtension => "開けるのは .pdf ファイルのみです。",
         MessageKey::ErrNotAPdf => "有効な PDF ドキュメントではありません。",
         MessageKey::ErrUnreadable => "ファイルを読み取れませんでした。",
-        MessageKey::ErrEncryptedUnsupported => {
-            "パスワード保護された PDF はまだサポートされていません。"
-        }
         MessageKey::ErrPdfParseFailed => "PDF を解析できませんでした。",
         MessageKey::ErrTooLarge => "このドキュメントはサイズ制限を超えています。",
         MessageKey::ErrUnknown => "予期しないエラーが発生しました。",
@@ -50,7 +47,6 @@ pub fn message(key: MessageKey) -> Option<&'static str> {
         MessageKey::OutlineClose => "アウトラインを閉じる",
         MessageKey::OutlineLoading => "アウトラインを読み込んでいます…",
         MessageKey::OutlineEmpty => "アウトラインはありません",
-        MessageKey::OutlineUnavailable => "アウトラインを利用できません",
         MessageKey::OutlineUntitled => "無題",
         MessageKey::OutlineUnsupported => "未対応のアウトライン先です",
         MessageKey::OutlineExpand => "展開",
@@ -61,7 +57,6 @@ pub fn message(key: MessageKey) -> Option<&'static str> {
         MessageKey::SearchSummaryMatches => "件一致",
         MessageKey::SearchNoMatches => "一致するテキストが見つかりません。",
         MessageKey::Searching => "検索中…",
-        MessageKey::SearchErrorPrefix => "エラー",
         MessageKey::SearchPagesPrefix => "ページ",
         MessageKey::SearchMatchBadgeSuffix => "件一致",
         MessageKey::CloseSearch => "検索を閉じる",
@@ -103,5 +98,18 @@ pub fn message(key: MessageKey) -> Option<&'static str> {
         MessageKey::ZenModeExit => "禅モードを終了 (Esc)",
         MessageKey::ReopenDocument => "再度開く",
         MessageKey::PageCountSuffix => "ページ",
+        MessageKey::ErrDocumentNotOpen => "このドキュメントはすでに閉じられています。",
+        MessageKey::ErrSearchFailed => "検索を完了できませんでした。もう一度お試しください。",
+        MessageKey::ErrNavigationFailed => {
+            "このドキュメントのアウトラインまたはリンクを読み取れませんでした。"
+        }
+        MessageKey::ErrRevealNoFolder => "このドキュメントのフォルダーを特定できませんでした。",
+        MessageKey::ErrRevealFailed => "ファイルマネージャーを開けませんでした。",
+        MessageKey::SearchQueryTooShort => "2 文字以上入力してください。",
+        MessageKey::JumpInvalidPage => "1 から最終ページまでのページ番号を入力してください。",
+        MessageKey::SearchToggleLabel => "ドキュメント内を検索",
+        MessageKey::TileSizeLabel => "タイルサイズ",
+        MessageKey::SearchSummaryMatchOne => "件一致",
+        MessageKey::SearchMatchBadgeOne => "件一致",
     })
 }

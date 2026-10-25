@@ -162,7 +162,10 @@ pub fn ZoomOverlay(
         }
         _ => Vec::new(),
     };
-    let show_text_unavailable = matches!(&*zoom_text_layer.read(), ZoomTextLayerState::Unavailable);
+    let text_unavailable_key = match &*zoom_text_layer.read() {
+        ZoomTextLayerState::Unavailable(key) => Some(*key),
+        _ => None,
+    };
     let page_alt = format!(
         "{} {display_num}",
         t(locale(), MessageKey::PageImageAltPrefix)
@@ -308,9 +311,9 @@ pub fn ZoomOverlay(
                                     }
                                     // RFC 023 selectable text layer in zoom view
                                     {text_layer::text_layer(&text_segment_rects, current_idx)}
-                                    if show_text_unavailable {
+                                    if let Some(key) = text_unavailable_key {
                                         div { class: "zoom-text-status",
-                                            {t(locale(), MessageKey::ZoomTextSelectionUnavailable)}
+                                            {t(locale(), key)}
                                         }
                                     }
                                     {link_layer::link_layer(
@@ -355,9 +358,9 @@ pub fn ZoomOverlay(
                                     span { class: "tile-loading-dot" }
                                 }
                             },
-                            ZoomImageState::Failed(msg) => rsx! {
-                                div { class: "zoom-placeholder error",
-                                    "⚠ {msg}"
+                            ZoomImageState::Failed(key) => rsx! {
+                                div { class: "zoom-placeholder error", role: "alert",
+                                    "⚠ " {t(locale(), *key)}
                                 }
                             },
                         }

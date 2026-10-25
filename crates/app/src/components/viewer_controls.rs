@@ -32,8 +32,10 @@ pub fn ViewerControls(
     let locale: Memo<Locale> = use_context();
     let mut show_secondary = use_signal(|| false);
     let mut jump_input = use_signal(String::new);
-    let mut jump_error: Signal<Option<String>> = use_signal(|| None);
+    let mut jump_error: Signal<Option<MessageKey>> = use_signal(|| None);
     // Escape in any control here hands the keyboard back to the viewer container.
+    // The slider's value as text: "1.4×" (the number alone says little to a screen reader).
+    let scale_text = format!("{:.1}×", *scale.read());
     let leave_field = Callback::new(|_: ()| modal::focus_by_id("viewer-root"));
     let jump_now = Callback::new(move |_: ()| {
         handle_jump(&jump_input.read(), page_count, &on_jump, &mut jump_error);
@@ -58,6 +60,8 @@ pub fn ViewerControls(
                 input {
                     r#type: "range",
                     class: "scale-slider",
+                    "aria-label": t(locale(), MessageKey::TileSizeLabel),
+                    "aria-valuetext": "{scale_text}",
                     min: "{(ViewerScale::MIN * 10.0) as i32}",
                     max: "{(ViewerScale::MAX * 10.0) as i32}",
                     step: "1",
@@ -140,6 +144,7 @@ pub fn ViewerControls(
                     label { class: "control-label",
                         input {
                             r#type: "checkbox",
+                            "aria-label": t(locale(), MessageKey::PageNumbersLabel),
                             checked: *show_page_numbers.read(),
                             onchange: move |evt| show_page_numbers.set(evt.checked()),
                             onkeydown: editable_field_keys(leave_field, None),
@@ -150,8 +155,9 @@ pub fn ViewerControls(
 
                 // Jump to page
                 div { class: "control-group",
-                    label { class: "control-label", {t(locale(), MessageKey::JumpToPageLabel)} }
+                    label { class: "control-label", r#for: "jump-input", {t(locale(), MessageKey::JumpToPageLabel)} }
                     input {
+                        id: "jump-input",
                         r#type: "number",
                         class: "jump-input",
                         min: "1",
@@ -166,8 +172,10 @@ pub fn ViewerControls(
                         onclick: move |_| jump_now.call(()),
                         {t(locale(), MessageKey::JumpGoButton)}
                     }
-                    if let Some(err) = &*jump_error.read() {
-                        span { class: "muted jump-error", "{err}" }
+                    span { role: "alert",
+                        if let Some(key) = *jump_error.read() {
+                            span { class: "muted jump-error", {t(locale(), key)} }
+                        }
                     }
                 }
             }
@@ -179,15 +187,23 @@ fn handle_jump(
     raw: &str,
     page_count: usize,
     on_jump: &Callback<usize>,
-    jump_error: &mut Signal<Option<String>>,
+    jump_error: &mut Signal<Option<MessageKey>>,
 ) {
-    match raw.trim().parse::<usize>() {
-        Ok(n) if n >= 1 && n <= page_count => {
+    match parse_jump_target(raw, page_count) {
+        Some(index) => {
             jump_error.set(None);
-            on_jump.call(n - 1);
+            on_jump.call(index);
         }
-        Ok(_) => jump_error.set(Some(format!("1–{page_count}"))),
-        Err(_) => jump_error.set(Some("?".to_string())),
+        // one localized message for every invalid input (RFC 037 § 5.3)
+        None => jump_error.set(Some(MessageKey::JumpInvalidPage)),
+    }
+}
+
+/// Zero-based page index for the typed number, or `None` when it is not a page of this document.
+pub(crate) fn parse_jump_target(raw: &str, page_count: usize) -> Option<usize> {
+    match raw.trim().parse::<usize>() {
+        Ok(n) if n >= 1 && n <= page_count => Some(n - 1),
+        _ => None,
     }
 }
 

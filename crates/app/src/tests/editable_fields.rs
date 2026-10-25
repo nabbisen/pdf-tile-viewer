@@ -2,83 +2,32 @@
 //! `editable_field_keys`, so keys typed into it can never reach the viewer's shortcut handler.
 //! A new editable control without the helper fails this test.
 
-use std::fs;
-use std::path::{Path, PathBuf};
+use super::source_scan::{app_sources, element_blocks};
 
 /// Line numbers (1-based) of `input {` / `textarea {` elements whose block does not call
 /// `editable_field_keys(`.
 fn elements_without_helper(source: &str) -> Vec<usize> {
-    let bytes = source.as_bytes();
-    let mut offenders = Vec::new();
-    for tag in ["input", "textarea"] {
-        let needle = format!("{tag} {{");
-        let mut from = 0;
-        while let Some(found) = source[from..].find(&needle) {
-            let start = from + found;
-            from = start + needle.len();
-            // a whole word, not the tail of an identifier such as `search_input {`
-            let word_start = start == 0
-                || !(bytes[start - 1].is_ascii_alphanumeric() || bytes[start - 1] == b'_');
-            // not inside a `//` comment
-            let line_start = source[..start].rfind('\n').map_or(0, |i| i + 1);
-            let in_comment = source[line_start..start].contains("//");
-            if !word_start || in_comment {
-                continue;
-            }
-            // the element block: from the opening brace to its matching closing brace
-            let open = start + tag.len() + 1;
-            let mut depth = 0usize;
-            let mut end = source.len();
-            for (offset, byte) in bytes[open..].iter().enumerate() {
-                match byte {
-                    b'{' => depth += 1,
-                    b'}' => {
-                        depth -= 1;
-                        if depth == 0 {
-                            end = open + offset;
-                            break;
-                        }
-                    }
-                    _ => {}
-                }
-            }
-            if !source[open..end].contains("editable_field_keys(") {
-                offenders.push(source[..start].matches('\n').count() + 1);
-            }
-        }
-    }
+    let mut offenders: Vec<usize> = ["input", "textarea"]
+        .iter()
+        .flat_map(|tag| element_blocks(source, tag))
+        .filter(|block| !block.text.contains("editable_field_keys("))
+        .map(|block| block.line)
+        .collect();
     offenders.sort_unstable();
     offenders
 }
 
-fn rust_files(dir: &Path, out: &mut Vec<PathBuf>) {
-    for entry in fs::read_dir(dir).expect("readable source directory") {
-        let path = entry.expect("directory entry").path();
-        if path.is_dir() {
-            if path.file_name().is_some_and(|name| name != "tests") {
-                rust_files(&path, out);
-            }
-        } else if path.extension().is_some_and(|ext| ext == "rs") {
-            out.push(path);
-        }
-    }
-}
-
 #[test]
 fn every_input_element_uses_the_editable_field_helper() {
-    let src = Path::new(env!("CARGO_MANIFEST_DIR")).join("src");
-    let mut files = Vec::new();
-    rust_files(&src, &mut files);
     let mut checked = 0;
     let mut problems = Vec::new();
-    for file in files {
-        let source = fs::read_to_string(&file).expect("readable source file");
-        checked += source.matches("input {").count() + source.matches("textarea {").count();
+    for (path, source) in app_sources() {
+        checked += ["input", "textarea"]
+            .iter()
+            .map(|tag| element_blocks(&source, tag).len())
+            .sum::<usize>();
         for line in elements_without_helper(&source) {
-            problems.push(format!(
-                "{}:{line}",
-                file.strip_prefix(&src).unwrap().display()
-            ));
+            problems.push(format!("{}:{line}", path.display()));
         }
     }
     assert!(

@@ -12,7 +12,7 @@ use domain::document::{PageDescriptor, PageIndex};
 use domain::layout::{RectPx, TileLayout, page_rect_to_image_rect};
 use domain::search::{PageHighlightSet, PageSearchSummary};
 
-use crate::i18n::{Locale, MessageKey, t};
+use crate::i18n::{Locale, MessageKey, plural, t};
 use crate::state::{TileImageState, TileImages};
 
 #[component]
@@ -129,13 +129,13 @@ pub fn TileGrid(
                                                 span { class: "tile-loading-dot" }
                                             }
                                         },
-                                        TileImageState::Failed(_) => rsx! {
+                                        TileImageState::Failed(key) => rsx! {
                                             div {
                                                 class: "tile-placeholder error",
                                                 style: "width: {w}px; height: {h}px;",
                                                 span { "⚠" }
                                                 span { class: "muted",
-                                                    {t(locale(), MessageKey::ErrRenderFailed)}
+                                                    {t(locale(), *key)}
                                                 }
                                             }
                                         },
@@ -147,7 +147,12 @@ pub fn TileGrid(
                                     {
                                         let badge_label = format!(
                                             "{count} {}",
-                                            t(locale(), MessageKey::SearchMatchBadgeSuffix)
+                                            plural(
+                                                locale(),
+                                                count,
+                                                t(locale(), MessageKey::SearchMatchBadgeOne),
+                                                t(locale(), MessageKey::SearchMatchBadgeSuffix),
+                                            )
                                         );
                                         rsx! {
                                             div {

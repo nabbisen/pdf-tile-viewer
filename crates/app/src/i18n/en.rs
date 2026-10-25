@@ -31,7 +31,6 @@ pub fn message(key: MessageKey) -> &'static str {
         MessageKey::ErrWrongExtension => "Only .pdf files can be opened.",
         MessageKey::ErrNotAPdf => "This file is not a valid PDF document.",
         MessageKey::ErrUnreadable => "The file could not be read.",
-        MessageKey::ErrEncryptedUnsupported => "Password-protected PDFs are not supported yet.",
         MessageKey::ErrPdfParseFailed => "The PDF could not be parsed.",
         MessageKey::ErrTooLarge => "This document exceeds the size limit.",
         MessageKey::ErrUnknown => "An unexpected error occurred.",
@@ -51,7 +50,6 @@ pub fn message(key: MessageKey) -> &'static str {
         MessageKey::OutlineClose => "Close outline",
         MessageKey::OutlineLoading => "Loading outline…",
         MessageKey::OutlineEmpty => "No outline",
-        MessageKey::OutlineUnavailable => "Outline unavailable",
         MessageKey::OutlineUntitled => "Untitled",
         MessageKey::OutlineUnsupported => "Unsupported outline target",
         MessageKey::OutlineExpand => "Expand",
@@ -62,7 +60,6 @@ pub fn message(key: MessageKey) -> &'static str {
         MessageKey::SearchSummaryMatches => "matches found",
         MessageKey::SearchNoMatches => "No matches found.",
         MessageKey::Searching => "Searching…",
-        MessageKey::SearchErrorPrefix => "Error",
         MessageKey::SearchPagesPrefix => "p.",
         MessageKey::SearchMatchBadgeSuffix => "matches",
         MessageKey::CloseSearch => "Close search",
@@ -104,5 +101,18 @@ pub fn message(key: MessageKey) -> &'static str {
         MessageKey::ZenModeExit => "Exit Zen (Esc)",
         MessageKey::ReopenDocument => "Reopen",
         MessageKey::PageCountSuffix => "p",
+        MessageKey::ErrDocumentNotOpen => "This document is no longer open.",
+        MessageKey::ErrSearchFailed => "Search could not be completed. Try again.",
+        MessageKey::ErrNavigationFailed => {
+            "The outline or links of this document could not be read."
+        }
+        MessageKey::ErrRevealNoFolder => "The folder of this document could not be determined.",
+        MessageKey::ErrRevealFailed => "The file manager could not be opened.",
+        MessageKey::SearchQueryTooShort => "Enter at least 2 characters.",
+        MessageKey::JumpInvalidPage => "Enter a page number between 1 and the last page.",
+        MessageKey::SearchToggleLabel => "Find in document",
+        MessageKey::TileSizeLabel => "Tile size",
+        MessageKey::SearchSummaryMatchOne => "match found",
+        MessageKey::SearchMatchBadgeOne => "match",
     }
 }

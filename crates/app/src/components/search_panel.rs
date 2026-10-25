@@ -10,7 +10,8 @@ use dioxus::prelude::*;
 use domain::search::{SearchQuery, SearchRequest};
 use pdf_engine::worker::EngineHandle;
 
-use crate::i18n::{Locale, MessageKey, t};
+use crate::i18n::failure;
+use crate::i18n::{Locale, MessageKey, plural, t};
 use crate::keys::editable_field_keys;
 use crate::state::SearchState;
 
@@ -37,6 +38,8 @@ pub fn SearchPanel(
         let text = input_text.read().trim().to_string();
         let query = SearchQuery::plain(text);
         if !query.is_runnable() {
+            // A visible hint instead of doing nothing (RFC 037 § 5.6.6).
+            search_state.set(SearchState::QueryTooShort);
             return;
         }
         let request = SearchRequest {
@@ -46,7 +49,6 @@ pub fn SearchPanel(
         };
         let engine = engine.clone();
         let mut ss = search_state;
-        let engine_unavailable = t(locale(), MessageKey::EngineUnavailableTitle).to_string();
         spawn(async move {
             ss.set(SearchState::Searching);
             match engine.search_document_with_highlights(request).await {
@@ -62,8 +64,8 @@ pub fn SearchPanel(
                         });
                     }
                 }
-                Ok(Err(e)) => ss.set(SearchState::Failed(format!("{e:?}"))),
-                Err(_) => ss.set(SearchState::Failed(engine_unavailable)),
+                Ok(Err(e)) => ss.set(SearchState::Failed(failure::search_failed(&e))),
+                Err(_) => ss.set(SearchState::Failed(MessageKey::EngineUnavailableTitle)),
             }
         });
     });
@@ -73,24 +75,33 @@ pub fn SearchPanel(
         input_text.set(String::new());
     };
 
+    // The status text (results, no results, searching, short-query hint) and the failure text are
+    // separate live regions that exist before their text changes (RFC 037 § 5.6.3).
     let summary = match &*search_state.read() {
-        SearchState::Idle => None,
+        SearchState::Idle | SearchState::Failed(_) => None,
         SearchState::Searching => Some(t(locale(), MessageKey::Searching).to_string()),
         SearchState::Results { results, .. } => {
             let n = results.total_matches;
             let p = results.pages.len();
-            Some(format!(
-                "{n} {} / {}{}",
+            let label = plural(
+                locale(),
+                n,
+                t(locale(), MessageKey::SearchSummaryMatchOne),
                 t(locale(), MessageKey::SearchSummaryMatches),
-                p,
+            );
+            Some(format!(
+                "{n} {label} / {p}{}",
                 t(locale(), MessageKey::PageCountSuffix)
             ))
         }
         SearchState::NoResults { .. } => Some(t(locale(), MessageKey::SearchNoMatches).to_string()),
-        SearchState::Failed(msg) => Some(format!(
-            "{}: {msg}",
-            t(locale(), MessageKey::SearchErrorPrefix)
-        )),
+        SearchState::QueryTooShort => {
+            Some(t(locale(), MessageKey::SearchQueryTooShort).to_string())
+        }
+    };
+    let failure_text = match &*search_state.read() {
+        SearchState::Failed(key) => Some(t(locale(), *key)),
+        _ => None,
     };
 
     let matched_pages_str = match &*search_state.read() {
@@ -142,9 +153,16 @@ pub fn SearchPanel(
                 }
             }
 
-            if let Some(ref msg) = summary {
-                p { class: if matches!(*search_state.read(), SearchState::NoResults { .. }) { "search-summary no-results" } else { "search-summary" },
-                    "{msg}"
+            div { class: "search-status", role: "status", "aria-live": "polite",
+                if let Some(ref msg) = summary {
+                    p { class: if matches!(*search_state.read(), SearchState::NoResults { .. } | SearchState::QueryTooShort) { "search-summary no-results" } else { "search-summary" },
+                        "{msg}"
+                    }
+                }
+            }
+            div { class: "search-alert", role: "alert",
+                if let Some(text) = failure_text {
+                    p { class: "search-summary no-results", "{text}" }
                 }
             }
             if let Some(ref pages) = matched_pages_str {

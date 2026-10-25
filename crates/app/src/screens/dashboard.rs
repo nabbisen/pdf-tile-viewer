@@ -23,10 +23,10 @@ pub fn Dashboard(
     rsx! {
         main { class: "dashboard centered",
             h1 { {t(locale(), MessageKey::AppTitle)} }
-            // Error toast
-            if let Some(key) = *last_error.read() {
-                p { class: "toast-error", role: "alert",
-                    {t(locale(), key)}
+            // Error toast: a live region that exists before its text changes (RFC 037 § 5.6.3)
+            div { role: "alert",
+                if let Some(key) = *last_error.read() {
+                    p { class: "toast-error", {t(locale(), key)} }
                 }
             }
 

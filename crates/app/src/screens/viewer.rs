@@ -24,6 +24,7 @@ use crate::components::search_panel::SearchPanel;
 use crate::components::tile_grid::TileGrid;
 use crate::components::viewer_controls::ViewerControls;
 use crate::components::zoom_overlay::ZoomOverlay;
+use crate::i18n::failure;
 use crate::i18n::{Locale, MessageKey, t};
 use crate::keys::key_descriptor;
 use crate::state::{OpenDocumentView, Phase, SearchState, TileImageState, TileImages};
@@ -78,7 +79,7 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
             .collect()
     });
     let mut render_gen: Signal<u64> = use_signal(|| 0u64);
-    let mut reveal_error: Signal<Option<String>> = use_signal(|| None);
+    let mut reveal_error: Signal<Option<MessageKey>> = use_signal(|| None);
     let search_state: Signal<SearchState> = use_signal(SearchState::default);
     let mut outline_state: Signal<OutlinePanelState> = use_signal(|| OutlinePanelState::Idle);
     let mut zoom_page: Signal<Option<PageIndex>> = use_signal(|| None);
@@ -104,8 +105,15 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
                 {
                     outline_state.set(OutlinePanelState::Ready((*outline).clone()));
                 }
-                Ok(_) | Err(_) => {
-                    outline_state.set(OutlinePanelState::Unavailable);
+                Ok(_) => {
+                    outline_state.set(OutlinePanelState::Unavailable(
+                        MessageKey::ErrNavigationFailed,
+                    ));
+                }
+                Err(e) => {
+                    outline_state.set(OutlinePanelState::Unavailable(failure::navigation_failed(
+                        &e,
+                    )));
                 }
             }
         });
@@ -275,7 +283,7 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
         if let Some(ref p) = reveal_path
             && let Err(e) = reveal_in_file_manager(p)
         {
-            reveal_error.set(Some(format!("{e:?}")));
+            reveal_error.set(Some(failure::platform_failed(&e)));
         }
     });
 
@@ -346,7 +354,9 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
                     button {
                         id: "viewer-search-button",
                         class: if *show_search.read() { "ghost icon-btn active" } else { "ghost icon-btn" },
-                        title: t(locale(), MessageKey::SearchButton),
+                        title: t(locale(), MessageKey::SearchToggleLabel),
+                        "aria-label": t(locale(), MessageKey::SearchToggleLabel),
+                        "aria-expanded": if *show_search.read() { "true" } else { "false" },
                         onclick: move |_| show_search.toggle(),
                         "🔍"
                     }
@@ -354,17 +364,22 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
                         button {
                             class: "ghost icon-btn",
                             title: t(locale(), MessageKey::RevealInFileManager),
+                            "aria-label": t(locale(), MessageKey::RevealInFileManager),
                             onclick: move |_| on_reveal.call(()),
                             "📂"
                         }
                     }
-                    if let Some(ref e) = *reveal_error.read() {
-                        span { class: "toast-error", "{e}" }
+                    // a live region that exists before its text changes (RFC 037 § 5.6.3)
+                    span { role: "alert",
+                        if let Some(key) = *reveal_error.read() {
+                            span { class: "toast-error", {t(locale(), key)} }
+                        }
                     }
                     button {
                         id: "viewer-zen-button",
                         class: "ghost icon-btn",
                         title: t(locale(), MessageKey::ZenModeEnter),
+                        "aria-label": t(locale(), MessageKey::ZenModeEnter),
                         onclick: move |_| zen_mode.set(true),
                         "⊞"
                     }
@@ -395,7 +410,9 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
                     }
                 }
 
-                div {
+                // The tile grid is the page's main landmark (kept in zen mode, where the heading is
+                // present for assistive technology only).
+                main {
                     id: "viewer-scroll",
                     class: "tile-grid-scroll",
                     onscroll: move |evt: Event<ScrollData>| {
@@ -440,9 +457,11 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
             }
 
             if in_zen {
+                h1 { class: "sr-only", "{display_name}" }
                 button {
                     class: "zen-exit-btn",
                     title: t(locale(), MessageKey::ZenModeExit),
+                    "aria-label": t(locale(), MessageKey::ZenModeExit),
                     onclick: move |_| zen_mode.set(false),
                     "×"
                 }

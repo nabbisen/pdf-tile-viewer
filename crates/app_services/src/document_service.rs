@@ -8,7 +8,8 @@ use std::path::Path;
 use std::path::PathBuf;
 
 use domain::document::{
-    DocumentError, DocumentPassword, DocumentSession, PDF_MAGIC, header_is_pdf,
+    DocumentError, DocumentPassword, DocumentSession, OpenFailure, PDF_MAGIC, PasswordIsRequired,
+    header_is_pdf,
 };
 use pdf_engine::worker::EngineHandle;
 
@@ -60,7 +61,8 @@ pub fn validate_candidate(path: &Path) -> Result<(), IntakeRejection> {
 #[derive(Clone, Debug, PartialEq)]
 pub enum OpenError {
     Rejected(IntakeRejection),
-    Engine(DocumentError),
+    /// A failure that can be shown to the user; never `PasswordRequired` (see [`OpenFailure`]).
+    Engine(OpenFailure),
     EngineUnavailable,
 }
 
@@ -82,12 +84,16 @@ fn outcome_from_engine_result(
 ) -> Result<OpenDocumentOutcome, OpenError> {
     match result {
         Ok(session) => Ok(OpenDocumentOutcome::Opened(session)),
-        Err(DocumentError::PasswordRequired) => Ok(OpenDocumentOutcome::PasswordRequired(
-            PasswordRequiredContext {
-                path: path.to_path_buf(),
-            },
-        )),
-        Err(e) => Err(OpenError::Engine(e)),
+        // The one place where a password request is turned into an outcome; everything else
+        // becomes an `OpenFailure` that the UI may display.
+        Err(error) => match OpenFailure::try_from(error) {
+            Ok(failure) => Err(OpenError::Engine(failure)),
+            Err(PasswordIsRequired) => Ok(OpenDocumentOutcome::PasswordRequired(
+                PasswordRequiredContext {
+                    path: path.to_path_buf(),
+                },
+            )),
+        },
     }
 }
 

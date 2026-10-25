@@ -14,6 +14,9 @@ use domain::document::{DocumentGeneration, DocumentId, PageIndex};
 use domain::render::{RenderFlags, RenderOutputFormat, RenderPageRequest, ScaleBucket};
 use domain::text::TextLayerRequest;
 
+use crate::i18n::MessageKey;
+use crate::i18n::failure;
+
 use super::state::{ReadyImage, ZoomImageState, ZoomPageLinksState, ZoomTextLayerState};
 use super::util;
 
@@ -97,7 +100,7 @@ pub(super) fn use_page_image_loader(
                         *active_scale.peek(),
                         scale_bucket,
                     ) {
-                        zi.set(ZoomImageState::Failed(format!("{e:?}")));
+                        zi.set(ZoomImageState::Failed(failure::render_failed(&e)));
                     }
                 }
             }
@@ -143,7 +146,9 @@ pub(super) fn use_page_links_loader(
                     link_state.set(ZoomPageLinksState::Ready((*links).clone()));
                 }
                 Ok(_) => {}
-                Err(_) if is_current() => {
+                Err(e) if is_current() => {
+                    // links have no message of their own: the page simply has no link areas
+                    let _ = failure::navigation_failed(&e);
                     link_state.set(ZoomPageLinksState::Unavailable);
                 }
                 Err(_) => {}
@@ -192,14 +197,18 @@ pub(super) fn use_text_layer_loader(
                         ) =>
                 {
                     if layer.segments.is_empty() {
-                        text_state.set(ZoomTextLayerState::Unavailable);
+                        text_state.set(ZoomTextLayerState::Unavailable(
+                            MessageKey::ZoomTextSelectionUnavailable,
+                        ));
                     } else {
                         text_state.set(ZoomTextLayerState::Ready((*layer).clone()));
                     }
                 }
                 Ok(_) => {}
-                Err(_) if is_current() => {
-                    text_state.set(ZoomTextLayerState::Unavailable);
+                Err(e) if is_current() => {
+                    text_state.set(ZoomTextLayerState::Unavailable(failure::text_layer_failed(
+                        &e,
+                    )));
                 }
                 Err(_) => {}
             }

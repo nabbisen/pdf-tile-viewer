@@ -1,4 +1,5 @@
 use super::*;
+use crate::i18n::MessageKey;
 
 fn ready(bucket: u16) -> TileImageState {
     TileImageState::Ready {
@@ -22,7 +23,7 @@ fn pending_rendering_and_failed_tiles_need_a_render() {
         WANTED
     ));
     assert!(tile_needs_render(
-        Some(&TileImageState::Failed("RenderFailed".to_string())),
+        Some(&TileImageState::Failed(MessageKey::ErrRenderFailed)),
         WANTED
     ));
 }
@@ -70,7 +71,7 @@ fn victims_in_the_ready_state_return_to_pending() {
 
 #[test]
 fn rendering_pending_and_failed_tiles_are_untouched() {
-    let failed = TileImageState::Failed("RenderFailed".to_string());
+    let failed = TileImageState::Failed(MessageKey::ErrRenderFailed);
     let mut images = states(&[
         (0, TileImageState::Rendering(4)),
         (1, TileImageState::Pending),

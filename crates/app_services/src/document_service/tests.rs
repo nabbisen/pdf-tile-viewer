@@ -87,3 +87,45 @@ fn password_required_becomes_recoverable_outcome() {
         })
     );
 }
+
+#[test]
+fn every_other_engine_error_becomes_a_displayable_failure() {
+    use domain::document::OpenFailure;
+    let path = temp_dir().join("other.pdf");
+    for (error, expected) in [
+        (DocumentError::FileNotFound, OpenFailure::FileNotFound),
+        (DocumentError::FileNotReadable, OpenFailure::FileNotReadable),
+        (DocumentError::UnsupportedFile, OpenFailure::UnsupportedFile),
+        (
+            DocumentError::PdfiumUnavailable,
+            OpenFailure::PdfiumUnavailable,
+        ),
+        (DocumentError::PdfParseFailed, OpenFailure::PdfParseFailed),
+        (
+            DocumentError::TooLargeForPolicy,
+            OpenFailure::TooLargeForPolicy,
+        ),
+        (
+            DocumentError::Unknown("x".into()),
+            OpenFailure::Unknown("x".into()),
+        ),
+    ] {
+        let result = outcome_from_engine_result(&path, Err(error));
+        assert_eq!(
+            result,
+            Err(crate::document_service::OpenError::Engine(expected))
+        );
+    }
+}
+
+#[test]
+fn a_password_request_has_no_displayable_form() {
+    use domain::document::{OpenFailure, PasswordIsRequired};
+    assert_eq!(
+        OpenFailure::try_from(DocumentError::PasswordRequired),
+        Err(PasswordIsRequired)
+    );
+    // and it never comes out of the service as an error
+    let path = temp_dir().join("locked.pdf");
+    assert!(outcome_from_engine_result(&path, Err(DocumentError::PasswordRequired)).is_ok());
+}

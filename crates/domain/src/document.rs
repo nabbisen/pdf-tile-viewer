@@ -130,9 +130,46 @@ pub enum DocumentError {
     PdfiumUnavailable,
     PdfParseFailed,
     PasswordRequired,
-    EncryptedUnsupported,
+    /// Reserved for resource-limit work: no code path produces it yet (RFC 037 § 5.2).
     TooLargeForPolicy,
     Unknown(String),
+}
+
+/// The subset of [`DocumentError`] that can be **displayed** as a failure to open a document:
+/// everything except `PasswordRequired`, which is a recoverable outcome (the password prompt),
+/// never an error message (RFC 037 § 5.2). Making this a separate type means the display path
+/// cannot express "password required shown as a failure".
+#[derive(Clone, Debug, PartialEq)]
+pub enum OpenFailure {
+    FileNotFound,
+    FileNotReadable,
+    UnsupportedFile,
+    PdfiumUnavailable,
+    PdfParseFailed,
+    /// Reserved, see [`DocumentError::TooLargeForPolicy`].
+    TooLargeForPolicy,
+    Unknown(String),
+}
+
+/// `PasswordRequired` has no displayable form: converting it yields this marker instead.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct PasswordIsRequired;
+
+impl TryFrom<DocumentError> for OpenFailure {
+    type Error = PasswordIsRequired;
+
+    fn try_from(error: DocumentError) -> Result<Self, Self::Error> {
+        Ok(match error {
+            DocumentError::FileNotFound => OpenFailure::FileNotFound,
+            DocumentError::FileNotReadable => OpenFailure::FileNotReadable,
+            DocumentError::UnsupportedFile => OpenFailure::UnsupportedFile,
+            DocumentError::PdfiumUnavailable => OpenFailure::PdfiumUnavailable,
+            DocumentError::PdfParseFailed => OpenFailure::PdfParseFailed,
+            DocumentError::PasswordRequired => return Err(PasswordIsRequired),
+            DocumentError::TooLargeForPolicy => OpenFailure::TooLargeForPolicy,
+            DocumentError::Unknown(detail) => OpenFailure::Unknown(detail),
+        })
+    }
 }
 
 #[derive(Clone, Debug, PartialEq)]
