@@ -94,8 +94,15 @@ pub fn use_modal(
              if (!root) return false; \
              const active = document.activeElement; \
              const opener = (active && root.contains(active)) ? m.prev : active; \
-             m.stacks[{root}] = {{ opener, marks: m.isolate(root) }}; \
-             const first = document.getElementById({first}) || m.focusable(root)[0]; \
+             const firstControl = () => document.getElementById({first}) || m.focusable(root)[0]; \
+             // A focused control that becomes disabled (Next on the last page, a zoom limit) drops the focus to the page \
+             // body, where the layer would no longer receive keys: put it back on the first control. \
+             const watch = new MutationObserver(() => requestAnimationFrame(() => setTimeout(() => {{ \
+               const a = document.activeElement; \
+               if (root.isConnected && (!a || a === document.body)) {{ const f = firstControl(); if (f) f.focus(); }} }}, 0))); \
+             watch.observe(root, {{ subtree: true, childList: true, attributes: true, attributeFilter: ['disabled'] }}); \
+             m.stacks[{root}] = {{ opener, marks: m.isolate(root), watch }}; \
+             const first = firstControl(); \
              if (first) first.focus(); return true; }});",
             root = js_str(root_id),
             first = js_str(first_focus_id),
@@ -114,7 +121,7 @@ pub fn use_modal(
     use_drop(move || {
         run(&format!(
             "const m = window.__ptvModal; const st = m.stacks[{root}]; delete m.stacks[{root}]; \
-             if (st) m.release(st.marks); \
+             if (st) {{ m.release(st.marks); st.watch.disconnect(); }} \
              m.later(() => {{ let t = st && st.opener; \
              if (!t || !t.isConnected || t.disabled || t.closest('[inert]')) t = document.getElementById({fallback}); \
              if (!t) return false; t.focus(); return document.activeElement === t; }});",
