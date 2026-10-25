@@ -15,7 +15,7 @@ app. Out-of-range values are clamped silently.
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `ui.locale` | `string \| null` | `null` (system) | Force locale: `"en"` or `"ja"`. `null` follows the `LANG` environment variable. |
+| `ui.locale` | `string \| null` | `null` (system) | Force the interface language: `"en"` or `"ja"`. `null` uses the `LANG` environment variable when it is set to a real locale (for example `ja_JP.UTF-8`; empty, `C` and `POSIX` do not count), otherwise the operating system's language. A language the app does not have uses English. |
 
 ---
 

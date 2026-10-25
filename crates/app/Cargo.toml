@@ -20,3 +20,4 @@ dioxus                      = { workspace = true, features = ["desktop", "docume
 
 base64                      = { workspace = true }
 serde_json                  = { workspace = true }
+sys-locale                  = { workspace = true }

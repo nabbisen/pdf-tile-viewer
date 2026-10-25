@@ -69,3 +69,17 @@ Licensed under the MIT License or the Apache License, Version 2.0,
 at your option.
 
 Source repository: https://github.com/DioxusLabs/dioxus
+
+---
+
+## sys-locale
+
+Reads the operating system's preferred interface languages, so that the
+interface follows the system language on Windows, macOS and Linux.
+
+Copyright 2021 1Password
+
+Licensed under the MIT License or the Apache License, Version 2.0,
+at your option.
+
+Source repository: https://github.com/1Password/sys-locale

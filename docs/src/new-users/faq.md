@@ -68,3 +68,10 @@ back to them, then fill in again. Pages close to the view are never affected.
 This lowers the memory the application itself uses while you scroll through a long
 document. The web view that displays the pages may still hold more memory than
 needed; improving that is planned.
+
+**Why is the interface in English, and how do I change the language?**
+
+By default the app follows your system: the `LANG` environment variable when it names a real
+locale, otherwise the operating system's language. Japanese and English are available; any other
+system language shows English. To choose a language yourself, set `ui.locale` to `"en"` or `"ja"` in
+the [settings file](../intermediate/settings.md) and restart the app.

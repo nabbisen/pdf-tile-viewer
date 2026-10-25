@@ -36,12 +36,54 @@ impl Locale {
         }
     }
 
+    /// The only place that reads the environment and the operating system for the interface
+    /// language (RFC 043); every decision is made by the pure [`choose_locale`].
     fn from_system() -> Locale {
-        std::env::var("LANG")
-            .ok()
-            .map(|lang| Locale::from_tag(&lang))
-            .unwrap_or(Locale::En)
+        let lang = std::env::var("LANG").ok();
+        let os_locales: Vec<String> = sys_locale::get_locales().collect();
+        choose_locale(lang.as_deref(), &os_locales)
     }
+}
+
+/// The language subtag of a locale tag, lowercase: BCP 47 (`ja-JP`) and POSIX (`ja_JP.UTF-8@euro`)
+/// spellings alike are split on `-`, `_`, `.` and `@`; the first part is the language.
+fn language_subtag(tag: &str) -> String {
+    tag.trim()
+        .split(['-', '_', '.', '@'])
+        .next()
+        .unwrap_or("")
+        .to_ascii_lowercase()
+}
+
+/// The supported language named by a locale tag; `None` for an unsupported language and for
+/// `C` / `POSIX` / empty input.
+fn supported_language(tag: &str) -> Option<Locale> {
+    match language_subtag(tag).as_str() {
+        "ja" => Some(Locale::Ja),
+        "en" => Some(Locale::En),
+        _ => None,
+    }
+}
+
+/// `LANG` counts as unset when it is empty or the `C` / `POSIX` locale (any suffix, any case).
+fn lang_is_unset(lang: &str) -> bool {
+    matches!(language_subtag(lang).as_str(), "" | "c" | "posix")
+}
+
+/// The interface language when the user has not forced one (RFC 043 § 4). Pure.
+///
+/// 1. `LANG` set to a real locale decides alone: Japanese for `ja…`, English for anything else
+///    (the documented Linux behavior).
+/// 2. Otherwise the first language of `os_locales` (most preferred first) that is supported;
+///    a list with only unsupported languages, or an empty list, gives English.
+pub fn choose_locale(lang_env: Option<&str>, os_locales: &[String]) -> Locale {
+    if let Some(lang) = lang_env.filter(|lang| !lang_is_unset(lang)) {
+        return supported_language(lang).unwrap_or(Locale::En);
+    }
+    os_locales
+        .iter()
+        .find_map(|tag| supported_language(tag))
+        .unwrap_or(Locale::En)
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

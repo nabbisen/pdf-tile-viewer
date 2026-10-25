@@ -11,6 +11,12 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- The interface language now follows the operating system on Windows, macOS and Linux (RFC 043). It
+  used to be English unless the `LANG` environment variable said otherwise, which Windows and macOS
+  do not set, so a Japanese system showed English. `LANG` still decides first when it is set to a real
+  locale, and `ui.locale` still overrides everything. Also fixed: `LANG=ja_JP.UTF-8` (the usual
+  spelling) now selects Japanese; only `ja` and `ja-…` were recognised before. New dependency:
+  `sys-locale` (MIT OR Apache-2.0).
 - Error and status messages are now written for people and translated (RFC 037). A failed search, a page
   that cannot be rendered, a file manager that cannot be opened, an outline that cannot be read and a
   wrong page number in "Go to page" each show a plain, localized sentence in English or Japanese; the
