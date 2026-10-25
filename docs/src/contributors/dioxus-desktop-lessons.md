@@ -197,7 +197,12 @@ change_scale(current + 0.2);
 3. **Behavior-preserving refactors can be proven:** compare test-name sets,
    token-level move equivalence, and accessibility-tree identity rather than
    trusting a summary.
-4. **Design before code still pays off:** most findings were caught as design
+4. **JavaScript embedded in Rust strings needs its own syntax test.** A `\` line
+   continuation in a Rust string joins the lines, so a `//` comment swallowed the rest of
+   a page script and the whole focus feature silently did nothing while every Rust test
+   passed. Keep page scripts as multi-line templates built by pure functions, test their
+   structure, and run `node --check` on a dump of them.
+5. **Design before code still pays off:** most findings were caught as design
    premises and then confirmed by running; the one surprise was a trivial
    implementation error, which is why the release checklist matters.
 
