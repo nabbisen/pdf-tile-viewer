@@ -35,6 +35,8 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   0.9.18 → 0.9.21 (RUSTSEC-2026-0204), `webbrowser` 1.2.1 → 1.2.5
   (RUSTSEC-2026-0257), `wayland-scanner` 0.31.10 → 0.31.11 and `quick-xml`
   0.39.4 → 0.41.0 (RUSTSEC-2026-0194, -0195); `serde_json` 1.0.150 → 1.0.154.
+- Routine dependency updates (lockfile only): Dioxus 0.7.9 → 0.7.10, `serde` 1.0.228 → 1.0.229
+  (adds `syn` 3 as a build-time dependency of `serde_derive`), `futures-*` 0.3.32 → 0.3.34.
 
 ### Documentation
 
