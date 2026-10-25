@@ -91,6 +91,20 @@ pub fn App() -> Element {
     use_effect(move || {
         let script = page_meta::meta_script(page_meta::lang_tag(locale()), &window_title.read());
         let _ = document::eval(&script);
+        // Debug builds read the values back from the page, so the result can be verified from the
+        // real DOM (the accessibility tree of this web view does not expose `lang`).
+        if cfg!(debug_assertions) {
+            spawn(async move {
+                let read = document::eval(
+                    "return document.documentElement.lang + ' | ' + document.title;",
+                )
+                .join::<String>()
+                .await;
+                if let Ok(read) = read {
+                    eprintln!("[page-meta] lang | title = {read}");
+                }
+            });
+        }
     });
 
     let body = match &*phase.read() {
