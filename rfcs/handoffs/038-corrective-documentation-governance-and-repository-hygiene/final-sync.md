@@ -9,10 +9,12 @@ Governing RFC: [`../../accepted/038-corrective-documentation-governance-and-repo
 4. **RFC bookkeeping**: Status lines and `rfcs/README.md` (move RFC 033–040 and 043 to Implemented only when the architect confirms after the release; here only record "implemented in this train, awaiting release"); handoff files marked historical per RFC 000 after release.
 5. **Carried over from the RFC 034 review:** (a) split `crates/pdf_engine/src/navigation.rs` (409 effective lines) by responsibility — move the destination conversion (`destination_view`, `fit_at`, `fit_without_coordinate` and helpers) into `navigation/destination.rs`; a pure move, test names unchanged, same gate; (b) add a `UserUnit` fixture (`/UserUnit 2`) to the generator, record what PDFium reports for it, and assert that the document still opens and renders and that overlay geometry is either correct or absent (never misplaced) without a crash; document the limitation in `docs/src/new-users/search.md` ("highlights may be missing on pages with unusual page-size settings").
 6. Mark `pdf_engine::worker::EngineHandle::unavailable()` as `#[doc(hidden)]` with a doc line stating that it is test support (RFC 035 review).
-7. Gate green; link check over `README*.md`, `docs/`, `rfcs/`; `mdbook build docs`.
+7. **Carried over from the RFC 033 review (code; the only code allowed in this slice besides items 5–6):**
+   (a) *Focus after the password prompt closes.* When the prompt was opened from the dashboard, closing it leaves the focus on nothing (the fallback id `viewer-root` exists only in the viewer, and clicking a button does not focus it in WKWebView, so the recorded opener is the page body). Give `modal::use_modal` an ordered list of fallback ids (first one that exists wins; for the prompt: `viewer-root`, then the dashboard's *Open PDF…* button, to which you add a stable id), and show with a recorded-state check (accessibility tree) that after Cancel and after Escape the focus is on the *Open PDF…* button; keep the unit tests of the script builders and the `node --check` dump green. (b) *Split `crates/app/src/screens/viewer.rs`* (about 470 lines after RFC 033, and RFC 037 adds more) by responsibility, for example the toolbar and the shortcut dispatcher into submodules; a pure move, test names unchanged, same gate; do this **after** RFC 037 is committed.
+8. Gate green; link check over `README*.md`, `docs/`, `rfcs/`; `mdbook build docs`.
 
 ## Non-change scope
-Code, workflows, versions (CI sets them), Store text.
+Code other than items 5–7, workflows, versions (CI sets them), Store text.
 
 ## Review request
 `.git-exclude/review-request/final-sync/README.md` (single entry point): checklist results line by line, markers removed or kept, diffs of statements, CHANGELOG text.

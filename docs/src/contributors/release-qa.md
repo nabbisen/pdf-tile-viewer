@@ -51,7 +51,7 @@ must not close or freeze at any step.
 - [ ] `Ctrl` + scroll down ×20: scale falls by 0.2 per notch (zoom out), stops at 0.2.
 - [ ] Toolbar `−` and `+` buttons each change the scale by 0.2.
 - [ ] Dragging the slider changes the scale continuously from 0.2× to 5.0×.
-- [ ] After changing the scale, visible tiles end up sharp (not blurry) — **known failing until RFC 035**.
+- [ ] After changing the scale, visible tiles end up sharp (not blurry); the old image stays visible until the sharper one arrives (RFC 035).
 - [ ] The stderr log of this whole section contains no `panicked`.
 
 ## 3. Viewer shortcuts
