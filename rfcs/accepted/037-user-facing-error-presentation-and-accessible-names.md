@@ -9,7 +9,7 @@ baseline: PDF Tile Viewer 2.0.0
 priority: Corrective
 depends_on: RFC 013, RFC 016, RFC 017, RFC 025
 amends: RFC 017 (§ error mapping), RFC 025 (§ error semantics)
-amended: 2026-10-24 — § 5.6 accessibility extensions (WP0 Part C findings)
+amended: 2026-10-24 — § 5.6 accessibility extensions (WP0 Part C findings); 2026-10-25 — § 5.1 debug detail goes to stderr, not the UI
 origin: architect onboarding review 2026-10-21 (internal)
 ---
 
@@ -71,9 +71,12 @@ State types store a `MessageKey`, not a `String`:
 `SearchState::Failed(MessageKey)`, `TileImageState::Failed(MessageKey)`,
 `ZoomImageState::Failed(MessageKey)`, `reveal_error: Option<MessageKey>`.
 Messages are written for users ("Search could not be completed. Try again.").
-Internal detail is shown only in debug builds, appended after the localized text
-using the existing `DiagnosticDetailsLabel` pattern; release builds never show
-it. No message contains a file path (RFC 016 § 8).
+Internal detail is never shown in the UI. Debug builds print it to stderr from one
+function (`i18n::failure::log_detail`, the single sanctioned `Debug` use); release
+builds drop it. (Amended 2026-10-25: the original text asked for the detail to be
+appended to the UI message in debug builds, which contradicts key-only state; the
+review of the implementation resolved it in favor of key-only state.) No message
+contains a file path (RFC 016 § 8).
 
 Add English and Japanese catalog entries and extend the completeness tests.
 
