@@ -11,6 +11,7 @@ use domain::search::{SearchQuery, SearchRequest};
 use pdf_engine::worker::EngineHandle;
 
 use crate::i18n::{Locale, MessageKey, t};
+use crate::keys::editable_field_keys;
 use crate::state::SearchState;
 
 #[component]
@@ -111,12 +112,13 @@ pub fn SearchPanel(
                     value: "{input_text.read()}",
                     disabled: *is_running.read(),
                     oninput: move |e| input_text.set(e.value()),
-                    onkeydown: {
-                        let ds = do_search;
-                        move |e: Event<KeyboardData>| {
-                            if e.key() == Key::Enter { ds.call(()); }
-                        }
+                    // Opening the panel puts the cursor in the field (RFC 033 § 5.5).
+                    onmounted: move |evt: Event<MountedData>| {
+                        spawn(async move {
+                            let _ = evt.set_focus(true).await;
+                        });
                     },
+                    onkeydown: editable_field_keys(on_close, Some(do_search)),
                 }
                 button {
                     class: "primary search-btn",

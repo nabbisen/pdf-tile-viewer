@@ -16,13 +16,16 @@ use domain::layout::{
 };
 use domain::search::{PageHighlightSet, PageSearchSummary};
 use domain::settings::{AppSettingsV1, PagesPerRowPreference};
+use domain::shortcuts::{Dismissal, Layer, ShortcutAction, ShortcutContext, resolve};
 
+use crate::components::modal;
 use crate::components::outline_panel::{OutlinePanel, OutlinePanelState};
 use crate::components::search_panel::SearchPanel;
 use crate::components::tile_grid::TileGrid;
 use crate::components::viewer_controls::ViewerControls;
 use crate::components::zoom_overlay::ZoomOverlay;
 use crate::i18n::{Locale, MessageKey, t};
+use crate::keys::key_descriptor;
 use crate::state::{OpenDocumentView, Phase, SearchState, TileImageState, TileImages};
 
 const TILE_GAP_PX: f32 = 12.0;
@@ -78,7 +81,7 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
     let mut reveal_error: Signal<Option<String>> = use_signal(|| None);
     let search_state: Signal<SearchState> = use_signal(SearchState::default);
     let mut outline_state: Signal<OutlinePanelState> = use_signal(|| OutlinePanelState::Idle);
-    let zoom_page: Signal<Option<PageIndex>> = use_signal(|| None);
+    let mut zoom_page: Signal<Option<PageIndex>> = use_signal(|| None);
     let page_descriptors = session.pages.clone();
     let rs_for_search = render_service.clone();
 
@@ -220,6 +223,51 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
         }
     };
     let default_scale = settings.read().viewer.default_scale;
+
+    // Closing the transient panels returns focus to the button that opened them (RFC 033 § 5.5).
+    let mut close_search = move || {
+        show_search.set(false);
+        modal::focus_by_id("viewer-search-button");
+    };
+    let mut close_outline = move || {
+        show_outline.set(false);
+        modal::focus_by_id("viewer-outline-button");
+    };
+    // Leaving Zen focuses the toolbar's Zen button; entering Zen focuses the viewer container
+    // (the toolbar button disappears with the toolbar, which would drop focus to the page body).
+    let mut was_zen = use_signal(|| false);
+    use_effect(move || {
+        let zen_now = *zen_mode.read();
+        let before = *was_zen.peek();
+        if zen_now != before {
+            was_zen.set(zen_now);
+            modal::focus_by_id(if zen_now {
+                "viewer-root"
+            } else {
+                "viewer-zen-button"
+            });
+        }
+    });
+    // The single dispatcher of the shortcut resolver (RFC 033 § 5.3).
+    let mut dispatch = move |action: ShortcutAction| match action {
+        ShortcutAction::ToggleZen => zen_mode.toggle(),
+        ShortcutAction::ScaleUp => change_scale(ScaleChange::By(0.2)),
+        ShortcutAction::ScaleDown => change_scale(ScaleChange::By(-0.2)),
+        ShortcutAction::ResetScale => change_scale(ScaleChange::To(default_scale)),
+        ShortcutAction::Dismiss(Dismissal::Dialog | Dismissal::Zoom) => zoom_page.set(None),
+        ShortcutAction::Dismiss(Dismissal::Search) => close_search(),
+        ShortcutAction::Dismiss(Dismissal::Outline) => close_outline(),
+        ShortcutAction::Dismiss(Dismissal::Zen) => zen_mode.set(false),
+        ShortcutAction::Dismiss(Dismissal::LeaveDocument) => phase.set(Phase::Dashboard),
+        ShortcutAction::Dismiss(Dismissal::Nothing) => {}
+        // zoom-layer actions belong to the zoom overlay, which never lets them reach this handler
+        ShortcutAction::ZoomScaleUp
+        | ShortcutAction::ZoomScaleDown
+        | ShortcutAction::ZoomPrev
+        | ShortcutAction::ZoomNext
+        | ShortcutAction::ZoomFirst
+        | ShortcutAction::ZoomLast => {}
+    };
     let on_jump = Callback::new(move |idx: usize| scroll_tile_into_view(PageIndex(idx)));
     let on_outline_navigate = Callback::new(move |idx: PageIndex| scroll_tile_into_view(idx));
     let reveal_path = doc_path.clone();
@@ -243,25 +291,33 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
 
     rsx! {
         div {
+            id: "viewer-root",
             class: if in_zen { "viewer zen" } else { "viewer" },
             tabindex: "0",
+            // A freshly opened document starts with the viewer focused, so shortcuts work at once.
+            onmounted: move |evt: Event<MountedData>| {
+                spawn(async move {
+                    let _ = evt.set_focus(true).await;
+                });
+            },
             onkeydown: move |evt: Event<KeyboardData>| {
-                match evt.key() {
-                    Key::Character(ref s) => match s.as_str() {
-                        "z" | "Z" => zen_mode.toggle(),
-                        "+" | "=" => change_scale(ScaleChange::By(0.2)),
-                        "-" => change_scale(ScaleChange::By(-0.2)),
-                        "0" => change_scale(ScaleChange::To(default_scale)),
-                        _ => {}
-                    },
-                    Key::Escape => {
-                        if zoom_page.peek().is_some() { zoom_page.clone().set(None); }
-                        else if in_zen { zen_mode.set(false); }
-                        else if *show_search.peek() { show_search.set(false); }
-                        else if *show_outline.peek() { show_outline.set(false); }
-                        else { phase.set(Phase::Dashboard); }
-                    }
-                    _ => {}
+                // Each read in its own statement: no guard may be alive when a signal is set.
+                let zoom_open = zoom_page.peek().is_some();
+                let search_open = *show_search.peek();
+                let outline_open = *show_outline.peek();
+                let zen = *zen_mode.peek();
+                let top_layer = if zoom_open {
+                    Layer::Zoom
+                } else if search_open {
+                    Layer::Search
+                } else if outline_open {
+                    Layer::Outline
+                } else {
+                    Layer::Base
+                };
+                let key = key_descriptor(&evt.data());
+                if let Some(action) = resolve(ShortcutContext { top_layer, zen }, &key) {
+                    dispatch(action);
                 }
             },
             onwheel: move |evt: Event<WheelData>| {
@@ -279,6 +335,7 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
                     }
                     h1 { class: "viewer-title", "{display_name}" }
                     button {
+                        id: "viewer-outline-button",
                         class: if *show_outline.read() { "ghost icon-btn active" } else { "ghost icon-btn" },
                         title: t(locale(), MessageKey::OutlinePanelLabel),
                         "aria-label": t(locale(), MessageKey::OutlinePanelLabel),
@@ -287,6 +344,7 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
                         "☰"
                     }
                     button {
+                        id: "viewer-search-button",
                         class: if *show_search.read() { "ghost icon-btn active" } else { "ghost icon-btn" },
                         title: t(locale(), MessageKey::SearchButton),
                         onclick: move |_| show_search.toggle(),
@@ -304,6 +362,7 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
                         span { class: "toast-error", "{e}" }
                     }
                     button {
+                        id: "viewer-zen-button",
                         class: "ghost icon-btn",
                         title: t(locale(), MessageKey::ZenModeEnter),
                         onclick: move |_| zen_mode.set(true),
@@ -318,12 +377,12 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
                     session_id: view.session.id,
                     generation: view.session.generation,
                     search_state,
-                    on_close: Callback::new(move |_| show_search.set(false)),
+                    on_close: Callback::new(move |_| close_search()),
                 }
             }
 
             if !in_zen {
-                ViewerControls { page_count, scale, mode, show_page_numbers, on_jump }
+                ViewerControls { page_count, scale, mode, show_page_numbers, displayed_columns: displayed_columns(&layout.read()), on_jump }
             }
 
             // Tile grid — scroll position feeds the render scheduler.
@@ -331,7 +390,7 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
                 if !in_zen && *show_outline.read() {
                     OutlinePanel {
                         state: outline_state.read().clone(),
-                        on_close: Callback::new(move |_| show_outline.set(false)),
+                        on_close: Callback::new(move |_| close_outline()),
                         on_navigate: on_outline_navigate,
                     }
                 }
@@ -390,6 +449,16 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
             }
         }
     }
+}
+
+/// Columns the grid shows right now: the tile count of its widest row.
+fn displayed_columns(layout: &domain::layout::TileLayout) -> usize {
+    layout
+        .rows
+        .iter()
+        .map(|row| row.tile_indices.len())
+        .max()
+        .unwrap_or(1)
 }
 
 fn scroll_tile_into_view(idx: PageIndex) {

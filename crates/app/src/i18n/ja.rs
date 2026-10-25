@@ -95,6 +95,7 @@ pub fn message(key: MessageKey) -> Option<&'static str> {
         MessageKey::MoreControls => "その他の操作",
         MessageKey::ColumnsLabel => "列数",
         MessageKey::ColumnsAuto => "自動",
+        MessageKey::ColumnsFixed => "固定",
         MessageKey::PageNumbersLabel => "ページ番号",
         MessageKey::JumpToPageLabel => "ページへ移動",
         MessageKey::JumpGoButton => "移動",

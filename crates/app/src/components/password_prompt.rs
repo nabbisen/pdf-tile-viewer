@@ -2,7 +2,11 @@
 
 use dioxus::prelude::*;
 
+use domain::shortcuts::{Layer, ShortcutAction};
+
+use crate::components::modal;
 use crate::i18n::{Locale, MessageKey, t};
+use crate::keys::editable_field_keys;
 
 #[component]
 pub fn PasswordPrompt(
@@ -13,6 +17,8 @@ pub fn PasswordPrompt(
 ) -> Element {
     let locale: Memo<Locale> = use_context();
     let mut password = use_signal(String::new);
+    // Modal focus contract (RFC 033 § 5.5): focus the field, trap Tab, make the page inert.
+    modal::use_modal("password-dialog-root", "password-input", "viewer-root");
 
     let submit = Callback::new(move |_: ()| {
         if submitting {
@@ -24,13 +30,15 @@ pub fn PasswordPrompt(
 
     rsx! {
         div {
+            id: "password-dialog-root",
             class: "modal-backdrop",
             role: "presentation",
-            onkeydown: {
-                move |e: Event<KeyboardData>| {
-                    if e.key() == Key::Escape {
-                        on_cancel.call(());
-                    }
+            // The prompt owns the keyboard: nothing it receives reaches the page behind it.
+            onkeydown: move |e: Event<KeyboardData>| {
+                if let Some(ShortcutAction::Dismiss(_)) =
+                    modal::modal_key(&e, "password-dialog-root", Layer::Dialog)
+                {
+                    on_cancel.call(());
                 }
             },
             section {
@@ -55,13 +63,7 @@ pub fn PasswordPrompt(
                     value: "{password.read()}",
                     disabled: submitting,
                     oninput: move |e| password.set(e.value()),
-                    onkeydown: {
-                        move |e: Event<KeyboardData>| {
-                            if e.key() == Key::Enter {
-                                submit.call(());
-                            }
-                        }
-                    },
+                    onkeydown: editable_field_keys(on_cancel, Some(submit)),
                 }
                 if rejected {
                     p {

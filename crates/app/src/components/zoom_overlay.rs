@@ -30,6 +30,9 @@ use domain::layout::RectPx;
 use domain::search::PageHighlightSet;
 use domain::settings::AppSettingsV1;
 
+use domain::shortcuts::{Layer, ShortcutAction};
+
+use crate::components::modal;
 use crate::i18n::{Locale, MessageKey, t};
 
 use external_uri_dialog::ExternalUriDialogState;
@@ -77,6 +80,10 @@ pub fn ZoomOverlay(
     // Client-viewport coordinates avoid target-relative offsetX/offsetY when
     // mouse events originate from selectable text spans inside the wrapper.
     let mut link_pointer_down: Signal<Option<(f64, f64)>> = use_signal(|| None);
+
+    // Modal focus contract (RFC 033 § 5.5): focus the close button on open, keep Tab inside,
+    // make the viewer inert, give the focus back to the viewer on close.
+    modal::use_modal("zoom-overlay-root", "zoom-close-button", "viewer-root");
 
     let current_idx = page_index.read().unwrap_or(PageIndex(0));
     let display_num = current_idx.display_number();
@@ -163,34 +170,35 @@ pub fn ZoomOverlay(
 
     rsx! {
             div {
+                id: "zoom-overlay-root",
                 class: "zoom-backdrop",
                 role: "dialog",
                 "aria-modal": "true",
                 "aria-label": t(locale(), MessageKey::PageZoomView),
                 tabindex: "-1",
-                // Keyboard navigation (RFC 012 §9)
+                // The overlay owns the keyboard (RFC 033 § 5.3): `modal_key` always stops the event here.
                 onkeydown: move |evt: Event<KeyboardData>| {
-                    match evt.key() {
-                        Key::Escape => on_close.call(()),
-                        Key::ArrowLeft | Key::PageUp => {
+                    let Some(action) = modal::modal_key(&evt, "zoom-overlay-root", Layer::Zoom) else {
+                        return;
+                    };
+                    match action {
+                        ShortcutAction::Dismiss(_) => on_close.call(()),
+                        ShortcutAction::ZoomPrev => {
                             if can_prev { goto(current_idx.0 - 1); }
                         }
-                        Key::ArrowRight | Key::PageDown => {
+                        ShortcutAction::ZoomNext => {
                             if can_next { goto(current_idx.0 + 1); }
                         }
-                        Key::Home => goto(0),
-                        Key::End => goto(page_count.saturating_sub(1)),
-                        Key::Character(ref s) => match s.as_str() {
-                            "+" | "=" => {
-                                let v = (*zoom_scale.peek() + ZOOM_SCALE_STEP).min(ZOOM_SCALE_MAX);
-                                zoom_scale.set(v);
-                            }
-                            "-" => {
-                                let v = (*zoom_scale.peek() - ZOOM_SCALE_STEP).max(ZOOM_SCALE_MIN);
-                                zoom_scale.set(v);
-                            }
-                            _ => {}
-                        },
+                        ShortcutAction::ZoomFirst => goto(0),
+                        ShortcutAction::ZoomLast => goto(page_count.saturating_sub(1)),
+                        ShortcutAction::ZoomScaleUp => {
+                            let v = (*zoom_scale.peek() + ZOOM_SCALE_STEP).min(ZOOM_SCALE_MAX);
+                            zoom_scale.set(v);
+                        }
+                        ShortcutAction::ZoomScaleDown => {
+                            let v = (*zoom_scale.peek() - ZOOM_SCALE_STEP).max(ZOOM_SCALE_MIN);
+                            zoom_scale.set(v);
+                        }
                         _ => {}
                     }
                 },
@@ -241,7 +249,6 @@ pub fn ZoomOverlay(
                         button {
                             id: "zoom-close-button",
                             class: "ghost zoom-close",
-                            autofocus: true,
                             "aria-label": t(locale(), MessageKey::ZoomClose),
                             onclick: move |_| on_close.call(()),
                             {t(locale(), MessageKey::ZoomClose)}

@@ -96,6 +96,7 @@ pub fn message(key: MessageKey) -> &'static str {
         MessageKey::MoreControls => "More controls",
         MessageKey::ColumnsLabel => "Columns",
         MessageKey::ColumnsAuto => "Auto",
+        MessageKey::ColumnsFixed => "Fixed",
         MessageKey::PageNumbersLabel => "Page numbers",
         MessageKey::JumpToPageLabel => "Go to page",
         MessageKey::JumpGoButton => "Go",

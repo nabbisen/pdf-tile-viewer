@@ -33,9 +33,17 @@ pub fn OutlinePanel(
             div { class: "outline-header",
                 h2 { {t(locale(), MessageKey::OutlinePanelLabel)} }
                 button {
+                    id: "outline-close",
                     class: "ghost icon-btn",
                     "aria-label": t(locale(), MessageKey::OutlineClose),
                     title: t(locale(), MessageKey::OutlineClose),
+                    // Opening the panel moves focus into it (RFC 033 § 5.5); once the entries
+                    // have loaded, the first entry takes over.
+                    onmounted: move |evt: Event<MountedData>| {
+                        spawn(async move {
+                            let _ = evt.set_focus(true).await;
+                        });
+                    },
                     onclick: move |_| on_close.call(()),
                     "×"
                 }
@@ -53,11 +61,12 @@ pub fn OutlinePanel(
                 },
                 OutlinePanelState::Ready(outline) => rsx! {
                     nav { class: "outline-tree",
-                        for node in outline.roots {
+                        for (position, node) in outline.roots.into_iter().enumerate() {
                             OutlineNodeRow {
                                 key: "{node.id.0}",
                                 node,
                                 depth: 0,
+                                first_entry: position == 0,
                                 expanded,
                                 on_navigate,
                             }
@@ -73,11 +82,20 @@ pub fn OutlinePanel(
 fn OutlineNodeRow(
     node: OutlineNode,
     depth: usize,
+    /// The first entry of the panel: it receives the focus when the entries have loaded.
+    #[props(default = false)]
+    first_entry: bool,
     expanded: Signal<HashSet<String>>,
     on_navigate: Callback<PageIndex>,
 ) -> Element {
     let locale: Memo<Locale> = use_context();
     let node_id = node.id.0.clone();
+    // The first focusable control of the first entry: its expander, or its title when it has none.
+    let focus_first = |evt: Event<MountedData>| {
+        spawn(async move {
+            let _ = evt.set_focus(true).await;
+        });
+    };
     let has_children = !node.children.is_empty();
     let is_expanded = expanded.read().contains(&node_id);
     let title = outline_title_label(&node.title, locale());
@@ -95,6 +113,7 @@ fn OutlineNodeRow(
                 if has_children {
                     button {
                         class: "outline-expander",
+                        onmounted: move |evt| { if first_entry { focus_first(evt); } },
                         "aria-label": if is_expanded {
                             t(locale(), MessageKey::OutlineCollapse)
                         } else {
@@ -120,6 +139,7 @@ fn OutlineNodeRow(
                     button {
                         class: "outline-title",
                         title: "{title}",
+                        onmounted: move |evt| { if first_entry && !has_children { focus_first(evt); } },
                         onclick: move |_| on_navigate.call(page_index),
                         "{title}"
                     }

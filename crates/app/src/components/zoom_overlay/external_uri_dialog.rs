@@ -1,5 +1,6 @@
 //! External-link dialog of the zoom overlay (RFC 026 PR4): copy-only inspection
-//! of an external URI, with its own modal focus handling.
+//! of an external URI. It is a modal layer: keyboard and focus follow the shared contract in
+//! `components::modal`.
 
 use dioxus::document::eval;
 use dioxus::prelude::*;
@@ -7,6 +8,9 @@ use dioxus::prelude::*;
 use app_services::uri_policy::{ExternalUriOpenDecision, validate_external_uri_for_open};
 use domain::navigation::NavigationResourceLimits;
 
+use domain::shortcuts::{Layer, ShortcutAction};
+
+use crate::components::modal;
 use crate::i18n::{Locale, MessageKey, t};
 
 #[derive(Clone, Debug, PartialEq)]
@@ -23,8 +27,8 @@ pub(super) enum ExternalUriCopyStatus {
     Failed,
 }
 
-/// Renders the dialog while `external_uri_dialog` holds a state; closing it
-/// returns focus to the overlay's close button.
+/// Renders the dialog while `external_uri_dialog` holds a state; closing it returns focus to the
+/// control that opened it, or to the overlay's close button.
 pub(super) fn external_uri_dialog_layer(
     mut external_uri_dialog: Signal<Option<ExternalUriDialogState>>,
 ) -> Element {
@@ -62,10 +66,7 @@ pub(super) fn external_uri_dialog_layer(
                         }));
                     });
                 }),
-                on_close: Callback::new(move |_| {
-                    external_uri_dialog.set(None);
-                    focus_zoom_close_button();
-                }),
+                on_close: Callback::new(move |_| external_uri_dialog.set(None)),
             }
         }
     }
@@ -80,6 +81,11 @@ fn ExternalUriDialog(
     on_close: Callback<()>,
 ) -> Element {
     let locale: Memo<Locale> = use_context();
+    modal::use_modal(
+        "external-uri-dialog-root",
+        "external-uri-cancel",
+        "zoom-close-button",
+    );
     let open_decision =
         validate_external_uri_for_open(&raw_uri, &NavigationResourceLimits::default());
     let policy_message = match open_decision {
@@ -89,17 +95,15 @@ fn ExternalUriDialog(
 
     rsx! {
         div {
+            id: "external-uri-dialog-root",
             class: "modal-backdrop",
             role: "presentation",
+            // The dialog owns the keyboard: nothing it receives reaches the overlay or the viewer.
             onkeydown: move |evt: Event<KeyboardData>| {
-                evt.stop_propagation();
-                match evt.key() {
-                    Key::Escape => on_close.call(()),
-                    Key::Tab => {
-                        evt.prevent_default();
-                        trap_external_uri_dialog_focus(evt.modifiers().shift());
-                    }
-                    _ => {}
+                if let Some(ShortcutAction::Dismiss(_)) =
+                    modal::modal_key(&evt, "external-uri-dialog-root", Layer::Dialog)
+                {
+                    on_close.call(());
                 }
             },
             section {
@@ -107,9 +111,6 @@ fn ExternalUriDialog(
                 role: "dialog",
                 "aria-modal": "true",
                 "aria-labelledby": "external-uri-dialog-title",
-                onmounted: move |_| {
-                    focus_external_uri_cancel_button();
-                },
                 h2 {
                     id: "external-uri-dialog-title",
                     {t(locale(), MessageKey::ExternalUriDialogTitle)}
@@ -143,7 +144,6 @@ fn ExternalUriDialog(
                     button {
                         id: "external-uri-cancel",
                         class: "ghost",
-                        autofocus: true,
                         onclick: move |_| on_close.call(()),
                         {t(locale(), MessageKey::ExternalUriCancel)}
                     }
@@ -157,30 +157,6 @@ fn ExternalUriDialog(
             }
         }
     }
-}
-
-fn focus_external_uri_cancel_button() {
-    let _ = eval(
-        "const focusCancel = () => document.getElementById('external-uri-cancel')?.focus();\
-         focusCancel();\
-         setTimeout(focusCancel, 0);",
-    );
-}
-
-pub(super) fn focus_zoom_close_button() {
-    let _ = eval("setTimeout(() => document.getElementById('zoom-close-button')?.focus(), 0);");
-}
-
-fn trap_external_uri_dialog_focus(backward: bool) {
-    let step = if backward { "-1" } else { "1" };
-    let script = format!(
-        "const ids = ['external-uri-cancel', 'external-uri-copy'];\
-         const active = document.activeElement && document.activeElement.id;\
-         const current = ids.indexOf(active);\
-         const next = current < 0 ? 0 : (current + ({step}) + ids.length) % ids.length;\
-         document.getElementById(ids[next])?.focus();"
-    );
-    let _ = eval(&script);
 }
 
 async fn copy_text_to_clipboard(text: String) -> bool {

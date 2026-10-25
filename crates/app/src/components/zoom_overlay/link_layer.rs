@@ -14,6 +14,22 @@ use super::util;
 
 const LINK_CLICK_DRAG_THRESHOLD_PX: f64 = 4.0;
 
+/// Opens the external-link dialog for `raw_uri`: the one place that starts a dialog (mouse-up,
+/// Enter and Space all use it).
+fn open_external_uri_dialog(
+    mut dialog_seq: Signal<u64>,
+    mut dialog: Signal<Option<ExternalUriDialogState>>,
+    raw_uri: String,
+) {
+    let dialog_id = *dialog_seq.peek() + 1;
+    dialog_seq.set(dialog_id);
+    dialog.set(Some(ExternalUriDialogState {
+        raw_uri,
+        copy_status: ExternalUriCopyStatus::Idle,
+        dialog_id,
+    }));
+}
+
 /// Link hit areas for the current page; empty when the page has no links.
 pub(super) fn link_layer(
     page_link_rects: &[util::ZoomPageLinkRect],
@@ -21,8 +37,8 @@ pub(super) fn link_layer(
     page_count: usize,
     locale: Memo<Locale>,
     on_internal_link: Callback<PageIndex>,
-    mut external_uri_dialog_seq: Signal<u64>,
-    mut external_uri_dialog: Signal<Option<ExternalUriDialogState>>,
+    external_uri_dialog_seq: Signal<u64>,
+    external_uri_dialog: Signal<Option<ExternalUriDialogState>>,
 ) -> Element {
     rsx! {
         if !page_link_rects.is_empty() {
@@ -75,24 +91,12 @@ pub(super) fn link_layer(
                                         match evt.key() {
                                             Key::Enter => {
                                                 evt.stop_propagation();
-                                                let dialog_id = *external_uri_dialog_seq.peek() + 1;
-                                                external_uri_dialog_seq.set(dialog_id);
-                                                external_uri_dialog.set(Some(ExternalUriDialogState {
-                                                    raw_uri: raw_uri.clone(),
-                                                    copy_status: ExternalUriCopyStatus::Idle,
-                                                    dialog_id,
-                                                }));
+                                                open_external_uri_dialog(external_uri_dialog_seq, external_uri_dialog, raw_uri.clone());
                                             }
                                             Key::Character(ref value) if value == " " => {
                                                 evt.prevent_default();
                                                 evt.stop_propagation();
-                                                let dialog_id = *external_uri_dialog_seq.peek() + 1;
-                                                external_uri_dialog_seq.set(dialog_id);
-                                                external_uri_dialog.set(Some(ExternalUriDialogState {
-                                                    raw_uri: raw_uri.clone(),
-                                                    copy_status: ExternalUriCopyStatus::Idle,
-                                                    dialog_id,
-                                                }));
+                                                open_external_uri_dialog(external_uri_dialog_seq, external_uri_dialog, raw_uri.clone());
                                             }
                                             _ => {}
                                         }
@@ -124,8 +128,8 @@ pub(super) fn image_mouseup_handler(
     page_count: usize,
     on_internal_link: Callback<PageIndex>,
     mut link_pointer_down: Signal<Option<(f64, f64)>>,
-    mut external_uri_dialog_seq: Signal<u64>,
-    mut external_uri_dialog: Signal<Option<ExternalUriDialogState>>,
+    external_uri_dialog_seq: Signal<u64>,
+    external_uri_dialog: Signal<Option<ExternalUriDialogState>>,
 ) -> impl FnMut(Event<MouseData>) {
     move |evt: Event<MouseData>| {
         let point = evt.client_coordinates();
@@ -163,13 +167,11 @@ pub(super) fn image_mouseup_handler(
                         on_internal_link.call(target);
                     }
                     util::ZoomLinkActivation::ExternalUri(raw_uri) => {
-                        let dialog_id = *external_uri_dialog_seq.peek() + 1;
-                        external_uri_dialog_seq.set(dialog_id);
-                        external_uri_dialog.set(Some(ExternalUriDialogState {
+                        open_external_uri_dialog(
+                            external_uri_dialog_seq,
+                            external_uri_dialog,
                             raw_uri,
-                            copy_status: ExternalUriCopyStatus::Idle,
-                            dialog_id,
-                        }));
+                        );
                     }
                 }
             }

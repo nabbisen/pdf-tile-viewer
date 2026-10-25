@@ -8,6 +8,7 @@
 mod app;
 mod components;
 mod i18n;
+mod keys;
 mod screens;
 mod state;
 
