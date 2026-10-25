@@ -11,4 +11,5 @@ pub mod navigation;
 pub mod render;
 pub mod search;
 pub mod settings;
+pub mod shortcuts;
 pub mod text;
