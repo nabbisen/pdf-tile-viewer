@@ -55,29 +55,106 @@ fn js_str(value: &str) -> String {
     serde_json::to_string(value).unwrap_or_else(|_| "\"\"".to_string())
 }
 
+// The scripts are plain multi-line JavaScript with `__NAME__` placeholders (no `\` line
+// continuations: those would join the lines and let a `//` comment swallow the rest).
+
+const FOCUS_SCRIPT: &str = r#"
+const m = window.__ptvModal;
+m.later(() => {
+  const e = document.getElementById(__ID__);
+  if (!e) return false;
+  e.focus();
+  return document.activeElement === e;
+});
+"#;
+
+const TRAP_SCRIPT: &str = r#"
+const m = window.__ptvModal;
+const root = document.getElementById(__ROOT__);
+if (root) {
+  const f = m.focusable(root);
+  if (f.length) {
+    const backward = __BACKWARD__;
+    const i = f.indexOf(document.activeElement);
+    const next = i < 0 ? (backward ? f.length - 1 : 0) : (i + (backward ? -1 : 1) + f.length) % f.length;
+    f[next].focus();
+  }
+}
+"#;
+
+const OPEN_SCRIPT: &str = r#"
+const m = window.__ptvModal;
+m.later(() => {
+  const root = document.getElementById(__ROOT__);
+  if (!root) return false;
+  const active = document.activeElement;
+  const opener = (active && root.contains(active)) ? m.prev : active;
+  const firstControl = () => document.getElementById(__FIRST__) || m.focusable(root)[0];
+  // A focused control that becomes disabled (Next on the last page, a zoom limit) drops the focus
+  // to the page body, where the layer would no longer receive keys: put it back.
+  const watch = new MutationObserver(() => requestAnimationFrame(() => setTimeout(() => {
+    const a = document.activeElement;
+    if (root.isConnected && (!a || a === document.body)) {
+      const f = firstControl();
+      if (f) f.focus();
+    }
+  }, 0)));
+  watch.observe(root, { subtree: true, childList: true, attributes: true, attributeFilter: ['disabled'] });
+  m.stacks[__ROOT__] = { opener, marks: m.isolate(root), watch };
+  const first = firstControl();
+  if (first) first.focus();
+  return true;
+});
+"#;
+
+const CLOSE_SCRIPT: &str = r#"
+const m = window.__ptvModal;
+const st = m.stacks[__ROOT__];
+delete m.stacks[__ROOT__];
+if (st) { m.release(st.marks); st.watch.disconnect(); }
+m.later(() => {
+  let t = st && st.opener;
+  if (!t || !t.isConnected || t.disabled || t.closest('[inert]')) t = document.getElementById(__FALLBACK__);
+  if (!t) return false;
+  t.focus();
+  return document.activeElement === t;
+});
+"#;
+
+fn focus_script(id: &str) -> String {
+    FOCUS_SCRIPT.replace("__ID__", &js_str(id))
+}
+
+fn trap_script(root_id: &str, backward: bool) -> String {
+    TRAP_SCRIPT
+        .replace("__ROOT__", &js_str(root_id))
+        .replace("__BACKWARD__", if backward { "true" } else { "false" })
+}
+
+fn open_script(root_id: &str, first_focus_id: &str) -> String {
+    OPEN_SCRIPT
+        .replace("__ROOT__", &js_str(root_id))
+        .replace("__FIRST__", &js_str(first_focus_id))
+}
+
+fn close_script(root_id: &str, fallback_focus_id: &str) -> String {
+    CLOSE_SCRIPT
+        .replace("__ROOT__", &js_str(root_id))
+        .replace("__FALLBACK__", &js_str(fallback_focus_id))
+}
+
 fn run(call: &str) {
     let _ = eval(&format!("{HELPER}\n{call}"));
 }
 
 /// Focus the element with `id`, retrying for a few frames until it exists.
 pub fn focus_by_id(id: &str) {
-    run(&format!(
-        "const m = window.__ptvModal; m.later(() => {{ const e = document.getElementById({}); \
-         if (!e) return false; e.focus(); return document.activeElement === e; }});",
-        js_str(id)
-    ));
+    run(&focus_script(id));
 }
 
 /// Move focus to the next (or previous) control inside the modal `root_id`, wrapping around.
 pub fn trap_tab(root_id: &str, backward: bool) {
-    run(&format!(
-        "const m = window.__ptvModal; const root = document.getElementById({}); if (root) {{ \
-         const f = m.focusable(root); if (f.length) {{ const i = f.indexOf(document.activeElement); \
-         const next = i < 0 ? (({}) ? f.length - 1 : 0) : (i + ({}) + f.length) % f.length; f[next].focus(); }} }}",
-        js_str(root_id),
-        if backward { "true" } else { "false" },
-        if backward { "-1" } else { "1" }
-    ));
+    run(&trap_script(root_id, backward));
 }
 
 /// Registers a modal layer for the lifetime of the calling component: on mount it records the
@@ -89,24 +166,7 @@ pub fn use_modal(
     fallback_focus_id: &'static str,
 ) {
     use_effect(move || {
-        run(&format!(
-            "const m = window.__ptvModal; m.later(() => {{ const root = document.getElementById({root}); \
-             if (!root) return false; \
-             const active = document.activeElement; \
-             const opener = (active && root.contains(active)) ? m.prev : active; \
-             const firstControl = () => document.getElementById({first}) || m.focusable(root)[0]; \
-             // A focused control that becomes disabled (Next on the last page, a zoom limit) drops the focus to the page \
-             // body, where the layer would no longer receive keys: put it back on the first control. \
-             const watch = new MutationObserver(() => requestAnimationFrame(() => setTimeout(() => {{ \
-               const a = document.activeElement; \
-               if (root.isConnected && (!a || a === document.body)) {{ const f = firstControl(); if (f) f.focus(); }} }}, 0))); \
-             watch.observe(root, {{ subtree: true, childList: true, attributes: true, attributeFilter: ['disabled'] }}); \
-             m.stacks[{root}] = {{ opener, marks: m.isolate(root), watch }}; \
-             const first = firstControl(); \
-             if (first) first.focus(); return true; }});",
-            root = js_str(root_id),
-            first = js_str(first_focus_id),
-        ));
+        run(&open_script(root_id, first_focus_id));
         if cfg!(debug_assertions) {
             spawn(async move {
                 let mode = eval(&format!("{HELPER}\nreturn window.__ptvModal.mode;"))
@@ -118,17 +178,7 @@ pub fn use_modal(
             });
         }
     });
-    use_drop(move || {
-        run(&format!(
-            "const m = window.__ptvModal; const st = m.stacks[{root}]; delete m.stacks[{root}]; \
-             if (st) {{ m.release(st.marks); st.watch.disconnect(); }} \
-             m.later(() => {{ let t = st && st.opener; \
-             if (!t || !t.isConnected || t.disabled || t.closest('[inert]')) t = document.getElementById({fallback}); \
-             if (!t) return false; t.focus(); return document.activeElement === t; }});",
-            root = js_str(root_id),
-            fallback = js_str(fallback_focus_id),
-        ));
-    });
+    use_drop(move || run(&close_script(root_id, fallback_focus_id)));
 }
 
 /// The `onkeydown` body of a modal layer's root: the layer owns the keyboard, so the event is
