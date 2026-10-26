@@ -3,7 +3,7 @@ project: PDF Tile Viewer
 document_family: 2.0 corrective RFCs
 language: English
 date: 2026-10-24
-status: Implemented in the 2.0.2 train — awaiting release (the architect moves it to done/ after the release)
+status: Implemented in the 2.0.2 train — awaiting release; measured acceptance partly met (§ 9: image-heavy met, long text not; shipped as is by owner decision 2026-10-25). The architect moves it to done/ after the release
 accepted: 2026-10-24
 baseline: PDF Tile Viewer 2.0.1
 priority: Corrective
