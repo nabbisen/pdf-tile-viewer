@@ -66,6 +66,13 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - The toolbar's search button is now named "Find in document" (its tooltip and accessible name; it used to be
   "Search", the same as the button inside the panel). A search for fewer than two characters now says so instead of
   doing nothing.
+- **Build and release process (RFC 036).** The PDFium library that builds download is verified against pinned
+  SHA-256 values and the download fails if they differ; the Rust toolchain is pinned; dependency advisories
+  (`cargo deny`) block CI; workflows use least privilege and commit-pinned actions; release versions and tags are
+  checked against each other, the release assets are checked before publication, and the GitHub release notes are
+  taken from this file.
+- The Microsoft Store package manifest declares Japanese (`ja-JP`) next to English (`en-US`) as a supported
+  language.
 - New dependency: `sys-locale` (MIT OR Apache-2.0), used to read the system language. Routine dependency updates
   (lockfile only): Dioxus 0.7.9 → 0.7.10, `serde` 1.0.228 → 1.0.229 (adds `syn` 3 as a build-time dependency of
   `serde_derive`), `futures-*` 0.3.32 → 0.3.34.
