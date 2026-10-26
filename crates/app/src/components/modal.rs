@@ -114,7 +114,8 @@ delete m.stacks[__ROOT__];
 if (st) { m.release(st.marks); st.watch.disconnect(); }
 m.later(() => {
   let t = st && st.opener;
-  const usable = (e) => e && e.isConnected && !e.disabled && !e.closest('[inert]');
+  // The page body is not a place to return to: focusing it does nothing (an opener that was never focused).
+  const usable = (e) => e && e !== document.body && e !== document.documentElement && e.isConnected && !e.disabled && !e.closest('[inert]');
   // The opener may be gone (or never was a control): the first fallback id that exists wins.
   if (!usable(t)) {
     t = null;

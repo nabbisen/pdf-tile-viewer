@@ -129,3 +129,15 @@ fn the_close_script_lists_the_fallback_ids_in_order() {
 fn an_empty_fallback_list_is_a_valid_array() {
     assert!(close_script("r", &[]).contains("of []"));
 }
+
+#[test]
+fn the_page_body_is_never_a_focus_target_on_close() {
+    // Regression (final sync 7a): a prompt opened by an action that did not focus a control records the
+    // body as its opener; `body.focus()` is a no-op, so the fallback list must be used instead.
+    let script = close_script(
+        "password-dialog-root",
+        &["viewer-root", "dashboard-open-button"],
+    );
+    assert!(script.contains("e !== document.body"));
+    assert!(script.contains("e !== document.documentElement"));
+}
