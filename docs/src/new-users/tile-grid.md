@@ -8,7 +8,7 @@ linearly.
 
 | Method | Action |
 |--------|--------|
-| Scale slider in the toolbar | Drag to any value 0.2×–5.0× |
+| Scale slider in the toolbar (`Tile size`) | Drag to any value 0.2×–5.0× |
 | ± buttons | Step by 0.2 |
 | `Ctrl + Scroll` | Scroll up = zoom in, down = zoom out |
 | `+` / `=` key (viewer focused) | Step up |
@@ -17,21 +17,32 @@ linearly.
 
 ## Pages per row
 
-The toolbar has an **Auto / Fixed** toggle:
+Under **⚙ More controls**, the **Columns** control is **Auto | Fixed**:
 
-- **Auto** — computes columns from the window width and current tile size.
-- **Fixed** — use the number input to set a fixed column count (1–24).
+- **Auto** — computes columns from the window width and the tile size when the
+  document opens and when the scale changes. It does not re-flow while you
+  resize the window yet.
+- **Fixed** — switching to Fixed starts at the number of columns shown at that
+  moment; use the number field to set any count from 1 to 24. **Auto** goes
+  back to the automatic count.
 
 ## Page numbers
 
-Toggle the checkbox (`#`) in the toolbar to show or hide a per-tile page
-number label below each tile image.
+Toggle the **Page numbers** checkbox (under **⚙ More controls**) to show or hide
+a per-tile page number label below each tile image.
 
 ## Jump to page
 
-Type a page number in the `p.` input and press Go or Enter. The grid
-scrolls that tile into view. The input accepts 1-based page numbers
-(the same numbers printed at the bottom of PDF viewers).
+Type a page number in the **Go to page** field (under **⚙ More controls**) and
+press Go or Enter. The grid scrolls that tile into view. The field accepts
+1-based page numbers (the same numbers printed at the bottom of PDF viewers);
+anything else shows one hint: *Enter a page number between 1 and the last page.*
+
+## Pages far from the view
+
+To keep memory use down, rendered pages are kept only near what you are looking
+at. Pages far away are released and show a loading placeholder for a moment when
+you scroll back (see the [FAQ](faq.md)).
 
 ## Zoom overlay
 

@@ -122,7 +122,8 @@ change_scale(current + 0.2);
   every rendered page was also kept in UI state as a `data:image/png;base64,…`
   string. On a release build, a 1000-page text PDF reached about 600 MB and a
   100-page image PDF about 1 GB, and memory was never reclaimed while scrolling
-  away. Tracked in RFC 035 and RFC 040.
+  away. Fixed in part in 2.0.2: closed documents are released (RFC 035) and rendered
+  tiles far from the view are released (RFC 040, results below).
 - **Retention alone was not enough (Observed).** A **retention window** (keep rendered
   items only near the viewport; the backend cache re-serves them cheaply) roughly
   halved the memory of the application process, but the WebView's own processes did

@@ -9,62 +9,66 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+---
+
+## [2.0.2] - unreleased
+
 ### Fixed
 
-- The interface language now follows the operating system on Windows, macOS and Linux (RFC 043). It
-  used to be English unless the `LANG` environment variable said otherwise, which Windows and macOS
-  do not set, so a Japanese system showed English. `LANG` still decides first when it is set to a real
-  locale, and `ui.locale` still overrides everything. Also fixed: `LANG=ja_JP.UTF-8` (the usual
-  spelling) now selects Japanese; only `ja` and `ja-…` were recognised before. New dependency:
-  `sys-locale` (MIT OR Apache-2.0).
-- Error and status messages are now written for people and translated (RFC 037). A failed search, a page
-  that cannot be rendered, a file manager that cannot be opened, an outline that cannot be read and a
-  wrong page number in "Go to page" each show a plain, localized sentence in English or Japanese; the
-  internal text (`SearchFailed("…")` and similar) is no longer shown. A search for fewer than two
-  characters now says so instead of doing nothing, and "1 match" / "N matches" use the right form.
-- Accessibility: icon buttons, the tile-size slider and the page-number fields have names; results and
-  errors are announced as live regions; the viewer has a main landmark (also in zen mode); the window
-  title and the page language follow the interface language and the open document.
-- Keyboard handling is now one consistent model (RFC 033). Typing `z`, `0`, `-`, `+` or `=` in the
-  search box, the jump-to-page or columns field, or the password field no longer changes the zoom or
-  toggles zen mode; keys pressed in the zoom overlay or in a dialog no longer reach the tile grid
-  underneath; one `Escape` closes exactly one layer (dialog, zoom overlay, search, outline, zen) and
-  never also leaves the document. `Escape` with nothing open still returns to the dashboard in this
-  release (that step is planned for 2.1.0).
-- Dialogs and the zoom overlay now keep the keyboard and the focus: focus moves into the layer, `Tab`
-  stays inside, the page behind is inert while it is open, and the focus returns to where it was when
-  it closes. The same focus rules apply to the search and outline panels and to leaving zen mode
-  (focus used to be lost on the page body, which made the keyboard inert).
-- The columns control is now **Auto | Fixed** with a number field for Fixed (it used to be impossible
-  to reach Fixed from Auto). Switching to Fixed starts at the number of columns shown at that moment.
-- Reduced memory growth while scrolling through long documents (RFC 040): rendered pages
-  are kept only within about two screen heights of the view (and at most 80 at a time);
-  pages further away are released and show the loading placeholder when you scroll back
-  to them. In our measurements on Linux, a 100-page image-heavy document used about half the
-  memory after scrolling to the end and back; long text documents improved much less, because
-  the web view's own memory is not reduced by this change.
-- Closing a document now releases it. Returning to the dashboard or opening another file used to
-  leave the native PDFium document, its text/link data and its cached page images in memory for the
-  rest of the process; one `SessionService` now closes everything, and results that arrive after the
-  close are refused by every cache (RFC 035).
-- The page-image cache is now a true least-recently-used cache that evicts images of other documents
-  first (it was oldest-first without that priority), and its documentation matches.
-- After changing the scale, tiles that were already rendered are re-rendered at the new scale
-  (they used to stay blurry until the document was reopened); the old image stays visible until the
-  sharper one arrives. The zoom overlay likewise keeps the previous image while the next scale renders
-  instead of flashing blank (RFC 035).
-- Search highlights, text selection areas and link areas on pages with a `/Rotate`
-  of 90°, 180° or 270° or with a crop box that does not start at the origin are now
-  placed correctly (they were computed for upright, uncropped pages only). The
-  engine now converts all page geometry, including link and outline destination
-  coordinates, to the displayed page in one place (RFC 034). Pages whose geometry
-  PDFium reports inconsistently are still shown; only their overlays are omitted.
-- Dependency advisories fixed by lockfile-only updates: `crossbeam-epoch`
-  0.9.18 → 0.9.21 (RUSTSEC-2026-0204), `webbrowser` 1.2.1 → 1.2.5
-  (RUSTSEC-2026-0257), `wayland-scanner` 0.31.10 → 0.31.11 and `quick-xml`
-  0.39.4 → 0.41.0 (RUSTSEC-2026-0194, -0195); `serde_json` 1.0.150 → 1.0.154.
-- Routine dependency updates (lockfile only): Dioxus 0.7.9 → 0.7.10, `serde` 1.0.228 → 1.0.229
-  (adds `syn` 3 as a build-time dependency of `serde_derive`), `futures-*` 0.3.32 → 0.3.34.
+- **Page geometry (RFC 034).** Search highlights, text selection areas and link areas on pages with a `/Rotate`
+  of 90°, 180° or 270°, or with a crop box that does not start at the origin, are now placed correctly (they were
+  computed for upright, uncropped pages only). One place in the engine converts all page geometry, including link
+  and outline destination coordinates, to the displayed page. Pages whose geometry PDFium reports inconsistently
+  (for example unusual page-size settings) are still shown; only their overlays are omitted, never misplaced.
+- **Keyboard (RFC 033).** Typing `z`, `0`, `-`, `+` or `=` in the search box, the jump-to-page or columns field, or
+  the password field no longer changes the zoom or toggles zen mode; keys pressed in the zoom overlay or in a
+  dialog no longer reach the tile grid underneath; one `Escape` closes exactly one layer (dialog, zoom overlay,
+  search, outline, zen) and never also leaves the document. `Escape` with nothing open still returns to the
+  dashboard in this release (that step is planned for 2.1.0).
+- **Focus (RFC 033).** Dialogs and the zoom overlay now keep the keyboard and the focus: focus moves into the
+  layer, `Tab` stays inside, the page behind is inert while it is open, and the focus returns to where it was when
+  it closes (to the *Open PDF…* button when the password prompt was opened from the dashboard). The search and
+  outline panels and leaving zen mode follow the same rules; focus used to be lost on the page body, which made the
+  keyboard inert.
+- **Closing a document releases it (RFC 035).** Returning to the dashboard or opening another file used to leave
+  the native PDFium document, its text and link data and its cached page images in memory for the rest of the
+  process; one session owner now closes everything, and results that arrive after the close are refused by every
+  cache. The page-image cache is now a true least-recently-used cache that evicts images of other documents first.
+- **Tiles follow the scale (RFC 035).** After changing the scale, tiles that were already rendered are re-rendered at
+  the new scale (they used to stay blurry until the document was reopened); the old image stays visible until the
+  sharper one arrives. The zoom overlay likewise keeps the previous image while the next scale renders instead of
+  flashing blank.
+- **Memory while scrolling (RFC 040).** Rendered pages are kept only within about two screen heights of the view
+  (and at most 80 at a time); pages further away are released and show the loading placeholder when you scroll back
+  to them. In our measurements on Linux, a 100-page image-heavy document used about half the memory after
+  scrolling to the end and back; long text documents improved much less, because the web view's own memory is not
+  reduced by this change.
+- **Messages (RFC 037).** A failed search, a page that cannot be rendered, a file manager that cannot be opened, an
+  outline that cannot be read and a wrong page number in "Go to page" each show a plain, localized sentence in
+  English or Japanese; internal text (`SearchFailed("…")` and similar) is no longer shown. "1 match" / "N matches"
+  use the right form.
+- **Accessibility (RFC 037).** Icon buttons, the tile-size slider and the page-number fields have names; results and
+  errors are exposed as live regions; the viewer has a main landmark (also in zen mode); the window title and the
+  page language follow the interface language and the open document.
+- **Interface language (RFC 043).** The interface now follows the operating system's language on Windows, macOS and
+  Linux. It used to be English unless the `LANG` environment variable said otherwise, which Windows and macOS do
+  not set, so a Japanese system showed English. `LANG` still decides first when it is set to a real locale, and
+  `ui.locale` still overrides everything. Also fixed: `LANG=ja_JP.UTF-8` (the usual spelling) now selects Japanese;
+  only `ja` and `ja-…` were recognised before.
+- Dependency advisories fixed by lockfile-only updates: `crossbeam-epoch` 0.9.18 → 0.9.21 (RUSTSEC-2026-0204),
+  `webbrowser` 1.2.1 → 1.2.5 (RUSTSEC-2026-0257), `wayland-scanner` 0.31.10 → 0.31.11 and `quick-xml` 0.39.4 →
+  0.41.0 (RUSTSEC-2026-0194, -0195); `serde_json` 1.0.150 → 1.0.154.
+
+### Changed
+
+- The columns control is now **Auto | Fixed** with a number field for Fixed (it used to be impossible to reach
+  Fixed from Auto). Switching to Fixed starts at the number of columns shown at that moment.
+- The toolbar's search button is now named "Find in document" (its tooltip and accessible name; it used to be
+  "Search", the same as the button inside the panel). A search for fewer than two characters now says so instead of
+  doing nothing.
+- New dependency: `sys-locale` (MIT OR Apache-2.0), used to read the system language. Routine dependency updates
+  (lockfile only): Dioxus 0.7.9 → 0.7.10, `serde` 1.0.228 → 1.0.229 (adds `syn` 3 as a build-time dependency of
+  `serde_derive`), `futures-*` 0.3.32 → 0.3.34.
 
 ### Documentation
 
@@ -82,6 +86,10 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Added the versioning policy (contributor guide), linked the privacy policy from
   the READMEs, and corrected documentation drift (platform list, RFC index, roadmap,
   architecture notes).
+- Keyboard shortcuts reference rewritten around layers ("Escape closes one layer") and checked against the code
+  by a test; new FAQ entries (language, loading placeholder on far pages); a note in the search guide that
+  highlights may be missing on pages with unusual page-size settings; release QA checklist extended (focus and
+  layers, names and messages); architecture overview and the "Lessons for Dioxus Desktop Apps" chapter updated.
 
 ---
 

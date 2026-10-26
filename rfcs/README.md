@@ -17,21 +17,22 @@ implementation may start) in `rfcs/accepted/`; proposed follow-up work in
 
 ## Accepted — 2.0 Corrective Track (planned for 2.0.2)
 
-Owner-accepted 2026-10-21; implementers may start. The release version,
+Owner-accepted 2026-10-21. **Implemented in the 2.0.2 train and awaiting release** (RFC 039 shipped in 2.0.1):
+the RFCs stay here until the architect confirms them after the release and moves them to `done/` (RFC 000). The release version,
 schedule and gates are proposed by the architect and authorized by the owner.
 Execution order is serial and recorded in the Developer Handoffs below.
 
 | ID | Title | Status |
 |----|-------|--------|
-| 033 | [Keyboard Routing, Modal Layers, and Dismissal Model](accepted/033-keyboard-routing-and-dismissal-model.md) | Accepted — planned 2.0.2 |
-| 034 | [Display-Space Page Geometry](accepted/034-display-space-page-geometry.md) | Accepted — planned 2.0.2 |
-| 035 | [Document Session Lifecycle and Render Freshness](accepted/035-document-session-lifecycle-and-render-freshness.md) | Accepted — planned 2.0.2 |
-| 036 | [Release Supply-Chain and Workflow Hardening](accepted/036-release-supply-chain-and-workflow-hardening.md) | Accepted — planned 2.0.2 |
-| 037 | [User-Facing Error Presentation and Accessible Names](accepted/037-user-facing-error-presentation-and-accessible-names.md) | Accepted — planned 2.0.2 |
-| 038 | [Corrective Documentation, Governance, and Repository Hygiene](accepted/038-corrective-documentation-governance-and-repository-hygiene.md) | Accepted — planned 2.0.2 |
+| 033 | [Keyboard Routing, Modal Layers, and Dismissal Model](accepted/033-keyboard-routing-and-dismissal-model.md) | Implemented in the 2.0.2 train — awaiting release |
+| 034 | [Display-Space Page Geometry](accepted/034-display-space-page-geometry.md) | Implemented in the 2.0.2 train — awaiting release |
+| 035 | [Document Session Lifecycle and Render Freshness](accepted/035-document-session-lifecycle-and-render-freshness.md) | Implemented in the 2.0.2 train — awaiting release |
+| 036 | [Release Supply-Chain and Workflow Hardening](accepted/036-release-supply-chain-and-workflow-hardening.md) | Implemented in the 2.0.2 train — awaiting release |
+| 037 | [User-Facing Error Presentation and Accessible Names](accepted/037-user-facing-error-presentation-and-accessible-names.md) | Implemented in the 2.0.2 train — awaiting release |
+| 038 | [Corrective Documentation, Governance, and Repository Hygiene](accepted/038-corrective-documentation-governance-and-repository-hygiene.md) | Implemented in the 2.0.2 train — awaiting release |
 | 039 | [Viewer Scale Shortcut Crash (Emergency Fix)](accepted/039-scale-shortcut-crash-hotfix.md) | Accepted — emergency, released in 2.0.1 |
-| 040 | [Tile Retention Window](accepted/040-tile-retention-window.md) | Accepted — planned 2.0.2 |
-| 043 | [System Locale Detection](accepted/043-system-locale-detection.md) | Accepted — planned 2.0.2 |
+| 040 | [Tile Retention Window](accepted/040-tile-retention-window.md) | Implemented in the 2.0.2 train — awaiting release |
+| 043 | [System Locale Detection](accepted/043-system-locale-detection.md) | Implemented in the 2.0.2 train — awaiting release |
 
 ## Proposed Follow-Ups
 

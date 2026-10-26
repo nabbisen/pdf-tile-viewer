@@ -1,6 +1,6 @@
 # Features
 
-> **Status:** `2.0.1` release documentation.
+> **Status:** `2.0.2` release documentation.
 
 ## All pages as a tile grid
 
@@ -9,8 +9,10 @@ grid. You can see the whole document at once and navigate without reading
 linearly.
 
 - **Scale control**: slider, ± buttons, or Ctrl+scroll wheel — range 0.2×–5.0×.
-- **Auto pages-per-row**: the grid adapts to your window width automatically,
-  or you can fix the column count manually.
+- **Auto pages-per-row**: the column count is chosen from your window width and
+  the tile size when the document opens and when you change the scale (it does
+  not re-flow while you resize the window yet), or you can fix it manually with
+  **Fixed** (1–24; it starts at the number of columns shown).
 - **Page-number labels**: toggle per-tile page numbers on or off.
 - **Jump to page**: type a page number and hit Go or Enter.
 
@@ -34,7 +36,8 @@ linearly.
   usable text layer.
 - Activate internal PDF links from the zoomed page, or inspect and copy
   external PDF link targets without launching another application.
-- Close with Escape or the × button; focus returns to the tile grid.
+- Close with Escape or the **Close** button; the focus returns to the viewer.
+  The page behind the overlay is inert while it is open, and `Tab` stays inside it.
 
 ## Outlines and PDF links
 
@@ -73,5 +76,6 @@ restarts by default.
 ## Multilingual
 
 The interface is available in English (complete, compiler-enforced) and
-Japanese. The locale can be forced in settings or auto-detected from your
-system.
+Japanese. By default it follows your system language (the `LANG` variable when
+it names a locale, otherwise the operating system's language on Windows, macOS
+and Linux); the language can be forced with `ui.locale` in the settings.
