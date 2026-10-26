@@ -38,6 +38,7 @@ pub fn Dashboard(
                 },
                 h2 { {t(locale(), MessageKey::DashboardHeading)} }
                 button {
+                    id: "dashboard-open-button",
                     class: "primary",
                     "aria-label": t(locale(), MessageKey::OpenPdfButton),
                     onclick: move |_| on_open.call(()),

@@ -24,5 +24,11 @@ the highlight state is app-side only.
 - The search is case-insensitive by default (PDFium's default options).
 - Search never modifies the PDF file on disk (RFC 010/011 non-mutating rule).
 - Highlights in the zoom overlay are aligned using coordinate transforms from
-  PDF point space to rendered pixel space (RFC 011).
-- The minimum query length is 2 characters to avoid expensive accidental searches.
+  PDF point space to the displayed page, including rotated and cropped pages (RFC 011, RFC 034).
+- The minimum query length is 2 characters to avoid expensive accidental searches; a shorter
+  query shows a hint instead of searching.
+- **Highlights may be missing on pages with unusual page-size settings.** If the app cannot be
+  sure where a page's text lies on the displayed page (its size as computed from the page
+  boxes and rotation disagrees with what the PDF engine reports), it shows the page normally but
+  draws no highlight, text selection or link area on it rather than drawing them in the wrong
+  place. The matches are still counted and listed.

@@ -84,7 +84,7 @@ fn ExternalUriDialog(
     modal::use_modal(
         "external-uri-dialog-root",
         "external-uri-cancel",
-        "zoom-close-button",
+        &["zoom-close-button"],
     );
     let open_decision =
         validate_external_uri_for_open(&raw_uri, &NavigationResourceLimits::default());

@@ -148,6 +148,9 @@ impl EngineHandle {
     ///
     /// For callers that need the services' cache logic without PDFium (tests of
     /// `app_services`); it never binds or spawns anything.
+    ///
+    /// **Test support only**: not part of the engine's public contract, hidden from the docs.
+    #[doc(hidden)]
     pub fn unavailable() -> Self {
         let (sender, _receiver) = mpsc::channel::<Command>();
         EngineHandle {

@@ -114,7 +114,15 @@ delete m.stacks[__ROOT__];
 if (st) { m.release(st.marks); st.watch.disconnect(); }
 m.later(() => {
   let t = st && st.opener;
-  if (!t || !t.isConnected || t.disabled || t.closest('[inert]')) t = document.getElementById(__FALLBACK__);
+  const usable = (e) => e && e.isConnected && !e.disabled && !e.closest('[inert]');
+  // The opener may be gone (or never was a control): the first fallback id that exists wins.
+  if (!usable(t)) {
+    t = null;
+    for (const id of __FALLBACKS__) {
+      const e = document.getElementById(id);
+      if (usable(e)) { t = e; break; }
+    }
+  }
   if (!t) return false;
   t.focus();
   return document.activeElement === t;
@@ -137,10 +145,15 @@ fn open_script(root_id: &str, first_focus_id: &str) -> String {
         .replace("__FIRST__", &js_str(first_focus_id))
 }
 
-fn close_script(root_id: &str, fallback_focus_id: &str) -> String {
+fn close_script(root_id: &str, fallback_focus_ids: &[&str]) -> String {
+    let ids = fallback_focus_ids
+        .iter()
+        .map(|id| js_str(id))
+        .collect::<Vec<_>>()
+        .join(", ");
     CLOSE_SCRIPT
         .replace("__ROOT__", &js_str(root_id))
-        .replace("__FALLBACK__", &js_str(fallback_focus_id))
+        .replace("__FALLBACKS__", &format!("[{ids}]"))
 }
 
 fn run(call: &str) {
@@ -159,11 +172,12 @@ pub fn trap_tab(root_id: &str, backward: bool) {
 
 /// Registers a modal layer for the lifetime of the calling component: on mount it records the
 /// opener, makes the rest of the page inert and focuses `first_focus_id`; on drop it lifts the
-/// isolation and focuses the opener, or `fallback_focus_id` when the opener is gone.
+/// isolation and focuses the opener, or, when the opener is gone, the first of `fallback_focus_ids`
+/// that exists (in order).
 pub fn use_modal(
     root_id: &'static str,
     first_focus_id: &'static str,
-    fallback_focus_id: &'static str,
+    fallback_focus_ids: &'static [&'static str],
 ) {
     use_effect(move || {
         run(&open_script(root_id, first_focus_id));
@@ -178,7 +192,7 @@ pub fn use_modal(
             });
         }
     });
-    use_drop(move || run(&close_script(root_id, fallback_focus_id)));
+    use_drop(move || run(&close_script(root_id, fallback_focus_ids)));
 }
 
 /// The `onkeydown` body of a modal layer's root: the layer owns the keyboard, so the event is

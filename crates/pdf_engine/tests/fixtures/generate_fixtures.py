@@ -29,6 +29,11 @@ Fixtures:
                           link on page N points to page (N+1) mod 4,
                           /XYZ 100 500 0.
 
+  user-unit.pdf           RFC 034 final sync: one 612x792 page with /UserUnit 2 (each user-space
+                          unit is 2/72 inch), same text and link as rotate-0.pdf. PDFium's
+                          reported size and geometry for this page are recorded in the smoke
+                          test `user_unit_page_opens_renders_and_never_misplaces_overlays`.
+
 Expected display-space geometry (RFC 034 section 5.3: origin top-left, y down,
 points; user-space point (ux, uy) in page box (x0 y0 x1 y1)):
   r0   (ux-x0, y1-uy)    r90  (uy-y0, ux-x0)
@@ -297,9 +302,10 @@ def build_geometry_pdf(pages: list[dict]) -> bytes:
         crop = ""
         if page.get("crop"):
             crop = "/CropBox [%s] " % " ".join(str(v) for v in page["crop"])
+        unit = f"/UserUnit {page['user_unit']} " if page.get("user_unit") else ""
         objects.append(
             (
-                f"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] {crop}"
+                f"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] {crop}{unit}"
                 f"/Rotate {page['rotate']} "
                 f"/Resources << /Font << /F1 3 0 R >> >> "
                 f"/Annots [{first_annot + i} 0 R] "
@@ -377,6 +383,9 @@ def main() -> None:
             ]
         )
     )
+    user_unit_page = standard_page(0)
+    user_unit_page["user_unit"] = 2
+    (OUT_DIR / "user-unit.pdf").write_bytes(build_geometry_pdf([user_unit_page]))
     (OUT_DIR / "mixed-rotation.pdf").write_bytes(
         build_geometry_pdf(
             [standard_page(r, (i + 1) % 4) for i, r in enumerate((0, 90, 180, 270))]
@@ -395,6 +404,7 @@ def main() -> None:
         "rotate-270.pdf",
         "crop-offset.pdf",
         "mixed-rotation.pdf",
+        "user-unit.pdf",
     ):
         print(f"wrote {OUT_DIR / name}")
 

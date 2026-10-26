@@ -1,11 +1,17 @@
 //! Document viewer screen (M9: viewport-aware rendering, scroll tracking).
 
+mod persistence;
 mod render;
+mod shortcuts;
+mod toolbar;
+
+use shortcuts::LayerFlags;
+use toolbar::ViewerToolbar;
 
 use dioxus::document::eval;
 use dioxus::prelude::*;
 
-use app_services::navigation_service::{NavigationService, default_outline_request};
+use app_services::navigation_service::NavigationService;
 use app_services::platform::reveal_in_file_manager;
 use app_services::render_service::RenderService;
 use app_services::session_service::SessionService;
@@ -16,7 +22,7 @@ use domain::layout::{
 };
 use domain::search::{PageHighlightSet, PageSearchSummary};
 use domain::settings::{AppSettingsV1, PagesPerRowPreference};
-use domain::shortcuts::{Dismissal, Layer, ShortcutAction, ShortcutContext, resolve};
+use domain::shortcuts::{Dismissal, ShortcutAction};
 
 use crate::components::modal;
 use crate::components::outline_panel::{OutlinePanel, OutlinePanelState};
@@ -26,7 +32,6 @@ use crate::components::viewer_controls::ViewerControls;
 use crate::components::zoom_overlay::ZoomOverlay;
 use crate::i18n::failure;
 use crate::i18n::{Locale, MessageKey, t};
-use crate::keys::key_descriptor;
 use crate::state::{OpenDocumentView, Phase, SearchState, TileImageState, TileImages};
 
 const TILE_GAP_PX: f32 = 12.0;
@@ -68,7 +73,7 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
     let mut zen_mode: Signal<bool> = use_signal(|| false);
     let mut show_outline: Signal<bool> = use_signal(|| false);
     let mut show_search: Signal<bool> = use_signal(|| false);
-    let mut viewport_width: Signal<f32> = use_signal(|| DEFAULT_VIEWPORT_PX);
+    let viewport_width: Signal<f32> = use_signal(|| DEFAULT_VIEWPORT_PX);
     let mut viewport_height: Signal<f32> = use_signal(|| DEFAULT_VIEWPORT_HEIGHT_PX);
     let mut scroll_y: Signal<f32> = use_signal(|| 0.0);
     let mut tile_images: Signal<TileImages> = use_signal(|| {
@@ -81,75 +86,25 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
     let mut render_gen: Signal<u64> = use_signal(|| 0u64);
     let mut reveal_error: Signal<Option<MessageKey>> = use_signal(|| None);
     let search_state: Signal<SearchState> = use_signal(SearchState::default);
-    let mut outline_state: Signal<OutlinePanelState> = use_signal(|| OutlinePanelState::Idle);
+    let outline_state: Signal<OutlinePanelState> = use_signal(|| OutlinePanelState::Idle);
     let mut zoom_page: Signal<Option<PageIndex>> = use_signal(|| None);
     let page_descriptors = session.pages.clone();
     let rs_for_search = render_service.clone();
 
-    // ── Outline loading (RFC 026 PR2) ─────────────────────────────────────
-    let nav_for_outline = navigation_service.clone();
-    let outline_session = session.clone();
-    use_effect(move || {
-        if !*show_outline.read() {
-            return;
-        }
-
-        let request = default_outline_request(outline_session.id, outline_session.generation);
-        let service = nav_for_outline.clone();
-        outline_state.set(OutlinePanelState::Loading);
-        spawn(async move {
-            match service.get_or_extract_outline(request).await {
-                Ok(outline)
-                    if outline.document_id == request.document_id
-                        && outline.generation == request.generation =>
-                {
-                    outline_state.set(OutlinePanelState::Ready((*outline).clone()));
-                }
-                Ok(_) => {
-                    outline_state.set(OutlinePanelState::Unavailable(
-                        MessageKey::ErrNavigationFailed,
-                    ));
-                }
-                Err(e) => {
-                    outline_state.set(OutlinePanelState::Unavailable(failure::navigation_failed(
-                        &e,
-                    )));
-                }
-            }
-        });
-    });
-
-    // ── Measure viewport on mount ─────────────────────────────────────────
-    use_effect(move || {
-        spawn(async move {
-            if let Ok(w) = eval("return window.innerWidth").join::<f64>().await
-                && w > 0.0
-            {
-                viewport_width.set(w as f32);
-            }
-            if let Ok(h) = eval("return window.innerHeight").join::<f64>().await
-                && h > 0.0
-            {
-                viewport_height.set(h as f32);
-            }
-        });
-    });
-
-    // ── Save window size on viewport change (RFC 008 window settings) ────────
-    let store_for_size = settings_store.clone();
-    use_effect(move || {
-        let w = *viewport_width.read();
-        let h = *viewport_height.read();
-        if w > 100.0 && h > 100.0 {
-            let store = store_for_size.clone();
-            spawn(async move {
-                let (mut s, _) = store.load();
-                s.window.width = Some(w.round() as u32);
-                s.window.height = Some(h.round() as u32);
-                let _ = store.save(&s);
-            });
-        }
-    });
+    // ── Outline loading, viewport measurement and persistence (see `persistence.rs`) ──
+    persistence::use_outline_loader(
+        navigation_service.clone(),
+        session.id,
+        session.generation,
+        show_outline,
+        outline_state,
+    );
+    persistence::use_viewport_measurement(viewport_width, viewport_height);
+    persistence::use_window_size_persistence(
+        settings_store.clone(),
+        viewport_width,
+        viewport_height,
+    );
 
     // ── Layout memo ────────────────────────────────────────────────────────
     let session_pages = session.pages.clone();
@@ -190,22 +145,12 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
         );
     });
 
-    // ── Settings persistence ──────────────────────────────────────────────
-    let store_clone = settings_store.clone();
-    use_effect(move || {
-        let (ns, nm, nsp) = (*scale.read(), *mode.read(), *show_page_numbers.read());
-        let store = store_clone.clone();
-        spawn(async move {
-            let (mut s, _) = store.load();
-            s.viewer.default_scale = ns;
-            s.viewer.pages_per_row = match nm {
-                PagesPerRowMode::Auto => PagesPerRowPreference::Auto,
-                PagesPerRowMode::Fixed(n) => PagesPerRowPreference::Fixed(n),
-            };
-            s.viewer.show_page_numbers = nsp;
-            let _ = store.save(&s);
-        });
-    });
+    persistence::use_viewer_settings_persistence(
+        settings_store.clone(),
+        scale,
+        mode,
+        show_page_numbers,
+    );
 
     // ── Helpers ────────────────────────────────────────────────────────────
     // After a scale change: tiles that have no image yet go back to `Pending`; tiles that
@@ -314,17 +259,11 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
                 let search_open = *show_search.peek();
                 let outline_open = *show_outline.peek();
                 let zen = *zen_mode.peek();
-                let top_layer = if zoom_open {
-                    Layer::Zoom
-                } else if search_open {
-                    Layer::Search
-                } else if outline_open {
-                    Layer::Outline
-                } else {
-                    Layer::Base
-                };
-                let key = key_descriptor(&evt.data());
-                if let Some(action) = resolve(ShortcutContext { top_layer, zen }, &key) {
+                if let Some(action) = shortcuts::action_for_key(
+                    &evt.data(),
+                    LayerFlags { zoom_open, search_open, outline_open },
+                    zen,
+                ) {
                     dispatch(action);
                 }
             },
@@ -337,52 +276,15 @@ pub fn Viewer(view: OpenDocumentView, mut phase: Signal<Phase>) -> Element {
             },
 
             if !in_zen {
-                header { class: "viewer-header",
-                    button { class: "ghost", onclick: move |_| phase.set(Phase::Dashboard),
-                        {t(locale(), MessageKey::ViewerBackToDashboard)}
-                    }
-                    h1 { class: "viewer-title", "{display_name}" }
-                    button {
-                        id: "viewer-outline-button",
-                        class: if *show_outline.read() { "ghost icon-btn active" } else { "ghost icon-btn" },
-                        title: t(locale(), MessageKey::OutlinePanelLabel),
-                        "aria-label": t(locale(), MessageKey::OutlinePanelLabel),
-                        "aria-expanded": if *show_outline.read() { "true" } else { "false" },
-                        onclick: move |_| show_outline.toggle(),
-                        "☰"
-                    }
-                    button {
-                        id: "viewer-search-button",
-                        class: if *show_search.read() { "ghost icon-btn active" } else { "ghost icon-btn" },
-                        title: t(locale(), MessageKey::SearchToggleLabel),
-                        "aria-label": t(locale(), MessageKey::SearchToggleLabel),
-                        "aria-expanded": if *show_search.read() { "true" } else { "false" },
-                        onclick: move |_| show_search.toggle(),
-                        "🔍"
-                    }
-                    if doc_path.is_some() {
-                        button {
-                            class: "ghost icon-btn",
-                            title: t(locale(), MessageKey::RevealInFileManager),
-                            "aria-label": t(locale(), MessageKey::RevealInFileManager),
-                            onclick: move |_| on_reveal.call(()),
-                            "📂"
-                        }
-                    }
-                    // a live region that exists before its text changes (RFC 037 § 5.6.3)
-                    span { role: "alert",
-                        if let Some(key) = *reveal_error.read() {
-                            span { class: "toast-error", {t(locale(), key)} }
-                        }
-                    }
-                    button {
-                        id: "viewer-zen-button",
-                        class: "ghost icon-btn",
-                        title: t(locale(), MessageKey::ZenModeEnter),
-                        "aria-label": t(locale(), MessageKey::ZenModeEnter),
-                        onclick: move |_| zen_mode.set(true),
-                        "⊞"
-                    }
+                ViewerToolbar {
+                    display_name: display_name.clone(),
+                    can_reveal: doc_path.is_some(),
+                    show_outline,
+                    show_search,
+                    zen_mode,
+                    reveal_error,
+                    on_reveal,
+                    phase,
                 }
             }
 

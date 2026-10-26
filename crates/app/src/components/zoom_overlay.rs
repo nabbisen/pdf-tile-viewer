@@ -83,7 +83,7 @@ pub fn ZoomOverlay(
 
     // Modal focus contract (RFC 033 § 5.5): focus the close button on open, keep Tab inside,
     // make the viewer inert, give the focus back to the viewer on close.
-    modal::use_modal("zoom-overlay-root", "zoom-close-button", "viewer-root");
+    modal::use_modal("zoom-overlay-root", "zoom-close-button", &["viewer-root"]);
 
     let current_idx = page_index.read().unwrap_or(PageIndex(0));
     let display_num = current_idx.display_number();

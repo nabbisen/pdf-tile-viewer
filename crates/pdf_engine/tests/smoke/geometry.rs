@@ -333,3 +333,58 @@ fn rendered_bitmap_aspect_ratio_matches_the_descriptor_for_quarter_turns() {
         );
     }
 }
+
+/// `/UserUnit 2` (fixture `user-unit.pdf`, RFC 034 final sync). Recorded with PDFium chromium/7920:
+/// the reported page size stays 612x792 (UserUnit is ignored for size, text and link rectangles), so
+/// the page is consistent and its overlays equal those of `rotate-0.pdf`. The assertion is written
+/// for both outcomes the RFC allows: overlay geometry is either correct (as today) or absent (a future
+/// PDFium that scales the size would flag the page inconsistent); it must never be misplaced.
+#[test]
+fn user_unit_page_opens_renders_and_never_misplaces_overlays() {
+    let engine = require_engine!();
+    let session = open(&engine, "user-unit.pdf");
+    assert_eq!(session.pages.len(), 1);
+    let page = session.pages[0];
+    assert!(page.display_width_points > 0.0 && page.display_height_points > 0.0);
+
+    // It renders (no crash, a PNG at the descriptor's size).
+    let image = block_on(engine.render_page(RenderPageRequest {
+        document_id: session.id,
+        generation: session.generation,
+        page_index: PageIndex(0),
+        scale_bucket: ScaleBucket::from_scale(1.0),
+        flags: RenderFlags::default(),
+        format: RenderOutputFormat::Png,
+    }))
+    .unwrap()
+    .unwrap();
+    let RenderedImagePayload::Bytes(png) = &image.payload;
+    assert_eq!(&png[..8], b"\x89PNG\r\n\x1a\n");
+    assert_eq!(image.pixel_width, page.display_width_points.round() as u32);
+
+    // Overlay geometry: correct or absent. The reference is the same content on `rotate-0.pdf`.
+    let reference = open(&engine, "rotate-0.pdf");
+    let expected_text = text_rect(&engine, &reference, 0);
+    let layer = block_on(engine.extract_page_text_layer(TextLayerRequest {
+        document_id: session.id,
+        generation: session.generation,
+        page_index: PageIndex(0),
+    }))
+    .unwrap()
+    .unwrap();
+    for segment in &layer.segments {
+        assert_rect(
+            segment.rect,
+            (
+                expected_text.x,
+                expected_text.y,
+                expected_text.width,
+                expected_text.height,
+            ),
+            "user-unit text segment",
+        );
+    }
+    for link in links(&engine, &session, 0) {
+        assert_rect(link.rect, LINK_RECT[0].1, "user-unit link rect");
+    }
+}

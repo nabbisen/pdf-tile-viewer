@@ -18,7 +18,13 @@ pub fn PasswordPrompt(
     let locale: Memo<Locale> = use_context();
     let mut password = use_signal(String::new);
     // Modal focus contract (RFC 033 § 5.5): focus the field, trap Tab, make the page inert.
-    modal::use_modal("password-dialog-root", "password-input", "viewer-root");
+    // Opened from the dashboard (no viewer) or over a viewer: after closing, the focus goes to the
+    // viewer if there is one, else to the dashboard's *Open PDF…* button.
+    modal::use_modal(
+        "password-dialog-root",
+        "password-input",
+        &["viewer-root", "dashboard-open-button"],
+    );
 
     let submit = Callback::new(move |_: ()| {
         if submitting {
