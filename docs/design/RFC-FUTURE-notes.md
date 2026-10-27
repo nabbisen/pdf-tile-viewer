@@ -324,3 +324,7 @@ roadmap checkpoint.
 - With retention, the saving depends on the document: image-heavy 100 pages about 50 %,
   1000 text pages about 9 %. Judge a transport change per document type.
 
+### Locale polish found in the 2.0.2 screen-reader log (2026-10-27)
+
+- The native window title at launch is always the English application title (`main.rs` uses `en::message(AppTitle)`); under the Japanese locale it is replaced by the Japanese title only after the page loads, so a screen reader first speaks the English one. Use the resolved locale for the initial title (with RFC 031, settings integrity).
+
