@@ -11,8 +11,11 @@ Context: the 2.0.2 train (RFC 033–037, 038, 040, 043 and the final sync) is on
 
 Report: `.git-exclude/review-request/release-2.0.2/README.md` (single entry point): commands and results, hashes, the `set-version.sh` diff, CHANGELOG discrepancies, anything surprising.
 
+## A2. Dev team — workflow dry run and Linux screen-reader log (owner-authorized 2026-10-27)
+Executed from `rfcs/handoffs/release-2.0.2/dry-run-and-linux-screen-reader.md` (own report: `.git-exclude/review-request/release-2.0.2-dry-run/README.md`). It replaces B1 (the dry run) and prepares B3 (the owner's listening session still judges what a person hears).
+
 ## B. Owner (not the dev team)
-1. **Fork dry run** of the workflows (`dev.md` § *Trying workflow changes on a fork*; steps: `.git-exclude/review-request/036-supply-chain/README.md` § 9). Pre-release tag on the fork only, for example `2.0.2-rc.1`. Expect: `verify-tag` passes, four platform builds, source archive, asset gate, exactly five release files.
+1. **Fork dry run** of the workflows — *done by the dev team under A2 (the owner only deletes the throw-away repository afterwards)*; original text: (`dev.md` § *Trying workflow changes on a fork*; steps: `.git-exclude/review-request/036-supply-chain/README.md` § 9). Pre-release tag on the fork only, for example `2.0.2-rc.1`. Expect: `verify-tag` passes, four platform builds, source archive, asset gate, exactly five release files.
 2. **Cross-platform manual QA** on Windows (WebView2) and macOS (WKWebView) with `release-qa.md` and the case lists in `.git-exclude/review-request/033-keyboard/README.md` § 7 and `.git-exclude/review-request/043-system-locale/README.md` § 5: especially `inert` backgrounds and Tab containment, Japanese UI on Japanese Windows, and the Windows memory check (long text PDF and 100-page image PDF, scroll to the end and back twice).
 3. **Screen-reader listening session**: `rfcs/handoffs/037-user-facing-error-presentation-and-accessible-names/screen-reader-listening-session.md`.
 4. After 1–3 and the architect's readiness report: go / no-go. On *go*: run **Prepare release** with `2.0.2` (or hand it over), the architect checks the printed commit, then the owner tags that commit and publishes (`dev.md` steps 2–5). The Store listing Japanese-UI claim stays on hold until B2's Japanese-Windows case passes.
