@@ -93,6 +93,8 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Added the versioning policy (contributor guide), linked the privacy policy from
   the READMEs, and corrected documentation drift (platform list, RFC index, roadmap,
   architecture notes).
+- Installation guide: the prebuilt Linux package needs GTK 3, WebKitGTK 4.1 and `libxdo` (Ubuntu name
+  `libxdo.so.3`) at run time; on distributions with another `libxdo` version, build from source.
 - Keyboard shortcuts reference rewritten around layers ("Escape closes one layer") and checked against the code
   by a test; new FAQ entries (language, loading placeholder on far pages); a note in the search guide that
   highlights may be missing on pages with unusual page-size settings; release QA checklist extended (focus and

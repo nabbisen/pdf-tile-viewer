@@ -38,7 +38,7 @@ a patch, minor or major release means are in
 | `2.0.0 RC` | Release-candidate validation after RFC 026 follow-up acceptance |
 | `2.0.0` | Released (tag `2.0.0`, 2026-07-14) |
 | `2.0.1` | Hotfix, RFC 039 only: no abort on the scale shortcuts — released 2026-10-24 |
-| `2.0.2` | Corrective train (RFC 033–040): fixes only |
+| `2.0.2` | Corrective train (RFC 033–043): fixes only — release candidate |
 | `2.1.0` | Post-2.0 candidates: settings/history policy, viewport tracking, grid keyboard navigation, picker/zoom polish; **Escape no longer leaves the document when idle (RFC 033, step 2)** |
 
 ---

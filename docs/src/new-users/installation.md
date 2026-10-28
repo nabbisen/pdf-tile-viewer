@@ -1,6 +1,6 @@
 # Installation
 
-> Latest release artifacts are available for `2.0.1`.
+> Latest release artifacts are available for `2.0.2`.
 > Building from source is also supported; a packaging script for Linux is provided.
 
 ## Build from source
@@ -40,6 +40,13 @@ README.md
 notes.txt
 ```
 
+**Running the prebuilt Linux package.** The release archive is built on Ubuntu and needs
+the system libraries GTK 3, WebKitGTK 4.1 and `libxdo` at run time (on Debian/Ubuntu:
+`sudo apt-get install libwebkit2gtk-4.1-0 libgtk-3-0 libxdo3`). `libxdo` is linked by its
+Ubuntu name (`libxdo.so.3`); on a distribution that ships another version (for example
+`libxdo.so.4`) the program does not start with *error while loading shared libraries*. On
+such a distribution, build from source (above).
+
 Launch from the artifact directory:
 
 ```sh
@@ -52,6 +59,6 @@ extraction directory.
 
 ## Security note
 
-The `2.0.1` release is **unsigned**. On macOS or Windows the OS may show a security
+The `2.0.2` release is **unsigned**. On macOS or Windows the OS may show a security
 prompt the first time you run the executable. See `NOTICE` for PDFium
 provenance and version information.
