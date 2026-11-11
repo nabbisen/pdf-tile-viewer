@@ -14,6 +14,8 @@ Report: `.git-exclude/review-request/release-2.0.2/README.md` (single entry poin
 ## A2. Dev team — workflow dry run and Linux screen-reader log (owner-authorized 2026-10-27)
 Executed from `rfcs/handoffs/release-2.0.2/dry-run-and-linux-screen-reader.md` (own report: `.git-exclude/review-request/release-2.0.2-dry-run/README.md`). It replaces B1 (the dry run) and prepares B3 (the owner's listening session still judges what a person hears).
 
+**Dry run done (2026-10-27/29, head `852b07f`).** `.github/`, `ci/`, `packaging/` and the manifests are unchanged since then (checked 2026-11-11 with `git diff 852b07f HEAD -- .github ci packaging Cargo.toml`: empty), so the dry run is **not** repeated before the tag unless one of those paths changes (rule: do not repeat an expensive pass on unchanged code; the tag run itself is the per-release pass).
+
 ## B. Owner (not the dev team)
 1. **Fork dry run** of the workflows — *done by the dev team under A2 (the owner only deletes the throw-away repository afterwards)*; original text: (`dev.md` § *Trying workflow changes on a fork*; steps: `.git-exclude/review-request/036-supply-chain/README.md` § 9). Pre-release tag on the fork only, for example `2.0.2-rc.1`. Expect: `verify-tag` passes, four platform builds, source archive, asset gate, exactly five release files.
 2. **Cross-platform manual QA** on Windows (WebView2) and macOS (WKWebView) with `release-qa.md` and the case lists in `.git-exclude/review-request/033-keyboard/README.md` § 7 and `.git-exclude/review-request/043-system-locale/README.md` § 5: especially `inert` backgrounds and Tab containment, Japanese UI on Japanese Windows, and the Windows memory check (long text PDF and 100-page image PDF, scroll to the end and back twice).

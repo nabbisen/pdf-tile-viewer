@@ -333,7 +333,8 @@ pin and checksums (DEC-012, above), and the config ignores it; `dirs >= 7` and
 ### Trying workflow changes on a fork (dry run)
 
 Workflows cannot be fully tested locally. For a change to a release workflow, the
-owner creates a throw-away fork, pushes a pre-release tag **on the fork only**
+owner creates a throw-away fork (or, when the repository is the owner's own, a separate
+throw-away repository: GitHub does not fork a repository into the same account), pushes a pre-release tag **on the fork only**
 (for example `2.0.2-rc.1` on a commit whose CHANGELOG, versions and manifest were
 prepared with `ci/set-version.sh`) and checks that: `verify-tag` passes, all four
 platform builds and the source archive succeed, the asset gate passes, and the
@@ -343,3 +344,8 @@ by `verify-tag`. *Prepare release* is dry-run the same way (dispatch it on the f
 with a pre-release version and a matching `unreleased` CHANGELOG heading): the new
 commit must contain only the four version files, CI must run on it, and no tag must
 exist afterwards.
+
+**When to repeat it.** The dry run is an expensive pass that exercises `.github/`, `ci/` and
+`packaging/`. Repeat it only when one of those changed since the last recorded dry run
+(commit and date go into the release's readiness report); otherwise the tag run on the
+release commit is the per-release pass. Dry run of 2.0.2: head `852b07f`, 2026-10-27/29.
