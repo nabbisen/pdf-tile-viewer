@@ -39,3 +39,13 @@ The headless render-test harness (names, labels, landmarks, plurals, layout/cont
 
 ## Review request
 `.git-exclude/review-request/test-infra-slice1/README.md` (single entry point): what exists, the self-test output, the Q4 comparison, anomalies, and what you would change next.
+
+## Architect ruling after the Slice 1 report (C4 anomaly)
+Accepted: Q1–Q3, the fixtures, the names port (Q4 names: raw trees identical), S1/S2 (reported, each run once). Open: Q4 C4 (Return on *Find in document* did nothing; Escape then left the document). Do **not** edit any script before the next run.
+
+**Run 2 of C4 — one run, and it must discriminate between the two hypotheses (the environment changed vs. the new library differs):** run, unchanged, the **old** script that produced `.git-exclude/review-request/final-sync/results/rfc033-c4.txt` (accepted binary `94bb5eb9e133`'s evidence) against the **same binary** as the failed run (`.git-exclude/fixtures/builds/c4855d8b4b14`), X11 backend, same window request, throw-away XDG directories (the old script's own isolation, as it was run then). Same questions, same step list; keep its output as `results/c4-old-script-on-current-env.txt` in the Slice 1 review package.
+- If the old script **passes** at the search step: the cause is in the new library or its launch (differences you listed: `ui.locale` written explicitly; `PDF_TILE_VIEWER_PDFIUM_DIR` unset; no 0.3 s wait after `niri focus-window`). Find it at level 1 (read both scripts side by side, then compare the exact commands each one issues, for example with `bash -x` on a dry run that has `xdotool`/`niri`/`wtype` replaced by logging stubs — no GUI). Report the difference and the proposed fix; a **third** GUI run needs my go.
+- If the old script **fails the same way**: the library is vindicated, the environment (or the product on the updated WebKit/XWayland stack) is the cause. Stop, report, and do not run anything more on the GUI. This is potentially a release-relevant finding and goes to the owner/architect.
+- If the result is something else: stop and report.
+After that (and only then): add the optional "expect a state change" form to `gs_key` (assert the effect of a key instead of sleeping; abort with the observed state), make `smoke.sh` press one key (a lesson from this slice), and run the Japanese `names.sh` once (a new question, not a repeat). Items 3 and 4 of "What I would change next" are not wanted now.
+
