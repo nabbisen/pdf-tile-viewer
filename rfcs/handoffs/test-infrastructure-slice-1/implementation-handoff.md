@@ -70,3 +70,9 @@ Run 3 (idle machine) and the changed C4 both match the accepted result with 0 di
 Do E1 and E2 first (no GUI), then E3. Replace the remaining `sleep`s in `examples/c4.sh` with `gs_press_expect` **only** if you can show with the same wants-versus-accepted check (as in `results/c4-v2-wants-vs-accepted.txt`) that the wants hold in the matching accepted steps and not before; no new GUI run of C4 for this (it is not needed to prove the helper: E1 and the existing proof of `gs_key_expect` suffice). If E3 aborts at the first anomaly, stop and report; a repeat needs my go.
 Report under "Addendum 3" in the same README. Hand-over: tell the owner the review-request path only.
 
+## Architect ruling 4 — Slice 1 closed; E3 deferred
+E1 and E2 are accepted (27 new level-1 checks; all self-tests pass; `GS_REQUIRE_QUIET` refuses correctly on the live machine, naming the foreign build processes). E3 was correctly **not run**: the machine never became quiet (other projects' builds, load up to 52), and the rule is to refuse rather than to run the smoke under load. **Slice 1 is closed.**
+- E3 (`smoke.sh wayland open`, then `smoke.sh x11 open`, each with `GS_REQUIRE_QUIET=1`) stays a **standing item with no deadline**: run it when the owner says the machine is quiet, or as the first real-window run of the next task that needs the GUI. A run refused as "not quiet" does not count as a run. Do not wait or poll for it; the owner will say.
+- `examples/c4.sh` v3 (one step changed by `gs_press_expect`) is **unproven on the GUI** and must not be quoted as evidence until it has run once; its first run is the first run of that version (not a repeat). Until then v2 is the proven version.
+- Nothing else is open in this handoff. The dev team is idle until the 2.0.2 release is out; then Slice 2 (an RFC for headless render tests) starts with the architect.
+
