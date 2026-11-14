@@ -58,3 +58,15 @@ Run 2 is accepted: the old script passes on the same binary in today's environme
 
 **Then, in this order:** (1) the "expect a state change" form of `gs_key`: after the key, **poll** the named state once per 0.2 s up to a timeout (default 5 s) and abort with the observed state if it never comes (a poll with a deadline replaces the fixed sleep; it must never re-send the key, since a repeated Return on a toggle would undo the first); update `examples/c4.sh` to use it for every key whose effect is a state change; self-test it at level 1 with stubs (a delayed state change passes; no change aborts and prints the observed state; the key is sent exactly once). (2) `smoke.sh` presses one key and asserts its effect. (3) The Japanese `names.sh`, once (new question). (4) Run the **changed** `c4.sh` once as the proof that the poll form works on the real app (this is a different script version and the first run of it; it is not a repeat of the unchanged set). Report under "Addendum 2" in the same README.
 
+## Architect ruling 3 — Slice 1 accepted; closing items (last ones)
+Run 3 (idle machine) and the changed C4 both match the accepted result with 0 differences; the first failure is attributed to load or timing (unproven) and C4 is closed. Slice 1 is **accepted**. Three small closing items, then Slice 1 is done and the dev team is idle until the 2.0.2 release is out (Slice 2 is an RFC after the release).
+
+**Evidence plan for the closing items**
+| # | Question | Level | How |
+|---|---|---|---|
+| E1 | Does `gs_press_expect` (an AT-SPI action followed by the same polling) act exactly once, poll with a deadline, and abort with the observed state? | 1 | stubs, same shape as `tests/test_keyexpect.sh` |
+| E2 | Does `GS_REQUIRE_QUIET=1` refuse to launch while a build process runs or `load1` is above the limit, accept when quiet, and write the readings into the footer? | 1 | stubbed `pgrep`/`/proc/loadavg` in `tests/` (busy, loaded, quiet) |
+| E3 | Does the Wayland key path of the library work (`wtype` + pid-based focus guard + `gs_key_expect`)? | 3, recorded state | `smoke.sh wayland open` **once**, then `smoke.sh x11 open` **once**, each with `GS_REQUIRE_QUIET=1` (so E2 is used for real); no pictures |
+Do E1 and E2 first (no GUI), then E3. Replace the remaining `sleep`s in `examples/c4.sh` with `gs_press_expect` **only** if you can show with the same wants-versus-accepted check (as in `results/c4-v2-wants-vs-accepted.txt`) that the wants hold in the matching accepted steps and not before; no new GUI run of C4 for this (it is not needed to prove the helper: E1 and the existing proof of `gs_key_expect` suffice). If E3 aborts at the first anomaly, stop and report; a repeat needs my go.
+Report under "Addendum 3" in the same README. Hand-over: tell the owner the review-request path only.
+
