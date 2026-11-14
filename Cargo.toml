@@ -27,7 +27,7 @@ dioxus                      = { version = "0.7", features = ["document"] }
 dirs                        = "6"
 pdfium-render               = "0.9"
 png                         = "0.18"
-rfd                         = { version = "0.17", features = ["xdg-portal"] }
+rfd                         = { version = "0.18", features = ["xdg-portal"] }
 
 base64                      = "0.22"
 futures-channel             = "0.3"
