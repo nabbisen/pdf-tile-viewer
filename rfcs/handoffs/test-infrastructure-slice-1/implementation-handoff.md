@@ -1,0 +1,41 @@
+# Handoff — Test infrastructure, Slice 1: one shared GUI session script and a checksummed fixtures folder
+
+Rules this slice implements: `.git-exclude/rules/project-instructions-gui-common.md`, *Test Optimization Rules* ("Reuse the setup; don't rebuild it") and *GUI Evidence and Automation Rules* (all of it applies to every run you do here). Owner decision 2026-11-14: yes. Working model: one actor at a time; **nothing in this slice touches tracked files** (the 2.0.2 release candidate is frozen; no commit to `main`, no tag, no workflow, DEC-001). All new files live under `.git-exclude/` (untracked). If a tracked change seems necessary, stop and ask the architect.
+
+## Why
+Every evidence package carries its own copy of the session code (`wp0-evidence-run/scripts/lib.sh`, `039-…/lib.sh`, `033-keyboard/scripts/lib033.sh`, `040-…/lib040.sh`, `ev037.sh`, `ev043.sh`, `pwfocus.sh`, `orca_run.sh`, three AT-SPI helpers). They drifted (stale button names broke three sets in the final sync; an old helper resized a running window and isolated only one XDG directory). Each task rebuilt the same setup and re-found the same quirks. One maintained script removes that cost and the class of defect.
+
+## Evidence plan (the rule asks for it before work starts)
+| # | Question | Level | How | Pictures |
+|---|---|---|---|---|
+| Q1 | Does the key→string catalog extraction give the same set of keys and texts as the app's catalog, in English and Japanese? | 1 (logic, no GUI) | self-test: parse `crates/app/src/i18n/{en,ja}.rs`; compare the key list with `MessageKey::ALL` in `crates/app/src/i18n.rs` and require equal counts and no empty text | none |
+| Q2 | Does the focus guard accept exactly the right window? | 1 (logic, no GUI) | self-test with canned `niri msg -j focused-window` / `windows` JSON: matching pid (Wayland) passes; matching window id (X11) passes; another pid or id, no focused window, bridge pid on X11 all fail | none |
+| Q3 | Do checksum verification and fixture rebuilding behave (verify ok; tampered file detected; missing file rebuilt; nothing rebuilt when unchanged)? | 1 (logic, no GUI) | self-test in a temporary directory | none |
+| Q4 | Does the shared script give the **same answers** as the accepted evidence for two real runs? | 3 (real UI), only because nothing cheaper reaches the real WebKit tree | port exactly two existing sets onto the shared script and compare the machine-readable output with the accepted result: RFC 033 **C4** (focus after open/close; accepted `.git-exclude/review-request/033-keyboard/results/final-c4.txt`) and RFC 037 **C1–C3 names/landmarks** on the dashboard and viewer states (accepted `.git-exclude/review-request/037-errors-names/results/analysis-after-en.txt` and the dumps) | none (AT-SPI state only) |
+Remaining real-window captures: **two sets, one run each** (Q4), on one release build of current `main` head, X11 backend, window 1280×720 requested at launch. No screenshots. A mismatch with the accepted result is an anomaly: stop and report, do not "fix" either side.
+
+## Deliverables (all under `.git-exclude/`)
+1. `tools/gui-session/` — the shared session library and helpers:
+   - `session.sh` (sourced by every evidence script) with small, documented functions: create a scratch root with **all four** `XDG_CONFIG_HOME`, `XDG_STATE_HOME`, `XDG_CACHE_HOME`, `XDG_DATA_HOME` and a pre-written `settings.json` (`window.width/height`, `ui.locale`, theme; app config folder is the constant `pdf-tile-viewer`); stage a built binary into the package layout (`bin/pdf-tile-viewer` — keep the real file name — plus `resources/pdfium/linux-x86_64/`); require zero running instances; launch (Wayland or `env -u WAYLAND_DISPLAY` X11) and record the backend, binary SHA-256 and the window size actually obtained; select the window (Wayland: pid; X11: class with zero-before/one-after, then window id); `focus_guard` (the check before every keystroke, backend-aware: pid on Wayland, window id on X11); open a file through the portal chooser (accept a dialog only if it appeared after the click; re-enter the path when the chooser needs it); capture with an **absolute** `niri msg action screenshot-window --id … --path …`; teardown (kill by exact process name, verify none left, `screen-reader-enabled` untouched); stderr size and `panicked` count in a standard footer.
+   - `atspi_state.py` — one AT-SPI helper replacing `atspi.py` (WP0/039), `ptv_state.py` (033) and `ptv_act.py` (037): dump, press by role/name, focus trace (FOCUSED = deepest focused node), state summary JSON, the unnamed/glyph-only analysis of `analyze_dump.py`. Role and name come from arguments, never hard-coded strings.
+   - `catalog.py` — reads `crates/app/src/i18n/en.rs` and `ja.rs` and prints `MessageKey → text` (JSON). Evidence scripts refer to **keys** (for example `OpenPdfButton`), so a renamed button can no longer silently break a reader. No change to the app is needed for this.
+   - `tests/` — the self-tests of Q1–Q3 (bash/python, no GUI, runnable in a second: `bash .git-exclude/tools/gui-session/tests/run.sh`).
+   - `README.md` — usage with one minimal example, the backend table (what works on Wayland/X11), the known quirks (niri tiles the window: requested 1280×720 may yield another size, record it; niri reports the XWayland bridge's pid for X11 windows; web inputs expose no AT-SPI `EditableText` so text entry on X11 uses focus-guarded `xdotool type`, the one documented exception to "AT-SPI actions first"; the portal chooser needs the path twice).
+2. `fixtures/` — git-excluded, **inside the project**, built or fetched once:
+   - `fixtures/README.md`, `fixtures/CHECKSUMS.sha256` (path, SHA-256, how it was made) and `tools/gui-session/fixtures.sh` (`verify` | `build` — idempotent: verifies checksums, rebuilds only what is missing or differs, never touches what is unchanged).
+   - Contents: the WP0 corpus (text-100, text-1000, image-100 from the WP0 generator copied here with its own checksum; the project's own fixtures stay where they are and are only referenced), the **previous release's Linux build** (the published `2.0.1` archive downloaded with `gh release download`, its SHA-256 compared with GitHub's digest and recorded; extracted into its own empty directory), baseline release builds keyed by commit hash (built in throw-away `git clone`s, never worktrees; the hash of each binary recorded), and the pinned PDFium from `ci/.pdfium`/`ci/fetch-pdfium.sh` (verified, not copied unverified).
+3. Two ported evidence sets (`tools/gui-session/examples/c4.sh`, `names.sh`) that use only the shared script and produce output comparable to the accepted files (Q4), plus a machine comparison (a diff or a small compare script) with its result.
+
+## Rules for the work
+- Treat downloaded archives as untrusted data (own empty directory each; no member run except the app binary under test). Do not touch `~/.config/pdf-tile-viewer` or any real XDG directory. One app instance at a time; abort on the first anomaly; a capture set run twice → stop and ask before a third time.
+- Do not edit the old evidence packages: leave them as the historical record; the new script is for new work.
+- The `libxdo.so.3` problem (CI-built Linux archives do not start on Arch) is known: for builds you need locally, build from source; the downloaded 2.0.1 archive may not start on this machine — record that as a fact in `fixtures/README.md` (use it for byte or metadata comparison only unless it starts).
+
+## Acceptance
+Q1–Q3 self-tests pass; Q4 matches the accepted results (or the difference is reported, not hidden); the README lets a person who has not seen this handoff run an evidence script in ten minutes; every fixture has a checksum and `fixtures.sh verify` passes; nothing under tracked paths changed (`git status --short` shows nothing new).
+
+## Not in this slice
+The headless render-test harness (names, labels, landmarks, plurals, layout/contrast across languages and sizes), `docs/src/contributors/testing.md` changes and any dev-dependency: that is Slice 2, an RFC after the 2.0.2 release.
+
+## Review request
+`.git-exclude/review-request/test-infra-slice1/README.md` (single entry point): what exists, the self-test output, the Q4 comparison, anomalies, and what you would change next.
